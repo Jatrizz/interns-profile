@@ -27,8 +27,32 @@ func Dashboard(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	// Get username from query parameter
+	// Get query parameters
 	username := r.URL.Query().Get("username")
+	search := r.URL.Query().Get("search")
+	sortBy := r.URL.Query().Get("sort_by")
+	sortOrder := r.URL.Query().Get("sort_order")
+
+	// Default sort
+	if sortBy == "" {
+		sortBy = "created_at"
+	}
+
+	// Validate sort_by to prevent SQL injection
+	allowedSortFields := map[string]bool{
+		"name":       true,
+		"school":     true,
+		"program":    true,
+		"created_at": true,
+	}
+	if !allowedSortFields[sortBy] {
+		sortBy = "created_at"
+	}
+
+	// Default sort order
+	if sortOrder != "asc" && sortOrder != "desc" {
+		sortOrder = "desc"
+	}
 
 	// Get total interns count
 	var totalInterns int
@@ -38,8 +62,14 @@ func Dashboard(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	// Get all interns
-	rows, err := db.Query("SELECT id, COALESCE(photo, ''), name, school, program, contact_number, created_at FROM interns ORDER BY created_at DESC")
+	// Build query with search and sort
+	query := `SELECT id, COALESCE(photo, ''), name, school, program, contact_number, created_at 
+			  FROM interns 
+			  WHERE name ILIKE $1 OR school ILIKE $1 OR program ILIKE $1
+			  ORDER BY ` + sortBy + ` ` + sortOrder
+
+	searchTerm := "%" + search + "%"
+	rows, err := db.Query(query, searchTerm)
 	if err != nil {
 		http.Error(w, "Error getting interns", http.StatusInternalServerError)
 		return
@@ -65,7 +95,6 @@ func Dashboard(w http.ResponseWriter, r *http.Request) {
 		interns = append(interns, intern)
 	}
 
-	// Return empty array instead of null if no interns
 	if interns == nil {
 		interns = []Intern{}
 	}
