@@ -21,6 +21,7 @@ func main() {
 	r.HandleFunc("/login", Login).Methods("POST")
 	r.HandleFunc("/dashboard", Dashboard).Methods("GET")
 	r.HandleFunc("/add-student", AddStudent).Methods("POST")
+	r.HandleFunc("/update-student", Updatestudent).Methods("PUT")
 	r.HandleFunc("/delete-student", Deletestudent).Methods("DELETE")
 
 	log.Println("Server running on :8080")
