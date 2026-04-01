@@ -15,6 +15,7 @@ type Intern struct {
 	Program       string `json:"program"`
 	Email         string `json:"email"`
 	ContactNumber string `json:"contact_number"`
+	Resume        string `json:"resume"`
 	CreatedAt     string `json:"created_at"`
 }
 

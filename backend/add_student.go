@@ -52,10 +52,14 @@ func AddStudent(w http.ResponseWriter, r *http.Request) {
 		http.Error(w, "Invalid contact number", http.StatusBadRequest)
 		return
 	}
+	if strings.TrimSpace(intern.Resume) == "" {
+		http.Error(w, "Resume is required", http.StatusBadRequest)
+		return
+	}
 
 	// Insert intern into database
-	_, err = db.Exec("INSERT INTO interns (photo, id_number, first_name, last_name, school, program, email, contact_number) VALUES ($1, $2, $3, $4, $5, $6, $7, $8)",
-		intern.Photo, intern.IDNumber, intern.FirstName, intern.LastName, intern.School, intern.Program, intern.Email, intern.ContactNumber)
+	_, err = db.Exec("INSERT INTO interns (photo, id_number, first_name, last_name, school, program, email, contact_number, resume) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9)",
+		intern.Photo, intern.IDNumber, intern.FirstName, intern.LastName, intern.School, intern.Program, intern.Email, intern.ContactNumber, intern.Resume)
 	if err != nil {
 		http.Error(w, "Error adding intern", http.StatusInternalServerError)
 		return

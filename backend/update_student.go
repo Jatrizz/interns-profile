@@ -80,10 +80,14 @@ func Updatestudent(w http.ResponseWriter, r *http.Request) {
 		http.Error(w, "Invalid contact number - must start with 09 and be 11 digits", http.StatusBadRequest)
 		return
 	}
+	if strings.TrimSpace(intern.Resume) == "" {
+		http.Error(w, "Resume is required", http.StatusBadRequest)
+		return
+	}
 
 	// Update in database
-	_, err = db.Exec("UPDATE interns SET id_number=$1, first_name=$2, last_name=$3, school=$4, program=$5, email=$6, contact_number=$7, photo=$8 WHERE id=$9",
-		intern.IDNumber, intern.FirstName, intern.LastName, intern.School, intern.Program, intern.Email, intern.ContactNumber, intern.Photo, id)
+	_, err = db.Exec("UPDATE interns SET id_number=$1, first_name=$2, last_name=$3, school=$4, program=$5, email=$6, contact_number=$7, photo=$8, resume=$9 WHERE id=$10",
+		intern.IDNumber, intern.FirstName, intern.LastName, intern.School, intern.Program, intern.Email, intern.ContactNumber, intern.Photo, intern.Resume, id)
 	if err != nil {
 		http.Error(w, "Error updating intern", http.StatusInternalServerError)
 		return
