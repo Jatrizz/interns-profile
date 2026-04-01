@@ -40,7 +40,7 @@ func Updatestudent(w http.ResponseWriter, r *http.Request) {
 	}
 
 	// Decode request body
-	var intern Intern
+	var intern InternList
 	err = json.NewDecoder(r.Body).Decode(&intern)
 	if err != nil {
 		http.Error(w, "Invalid request body", http.StatusBadRequest)

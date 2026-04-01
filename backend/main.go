@@ -17,16 +17,8 @@ func main() {
 	// Create router
 	r := mux.NewRouter()
 
-	r.HandleFunc("/register", registerHandler).Methods("POST")
-	r.HandleFunc("/login", Login).Methods("POST")
-	r.HandleFunc("/dashboard", Dashboard).Methods("GET")
-	r.HandleFunc("/add-student", AddStudent).Methods("POST")
-	r.HandleFunc("/update-student", Updatestudent).Methods("PUT")
-	r.HandleFunc("/delete-student", Deletestudent).Methods("DELETE")
+	RegisterRoutes(r) 
 
 	log.Println("Server running on :8080")
-	err = http.ListenAndServe(":8080", r)
-	if err != nil {
-		log.Fatal("Server error:", err)
-	}
+	http.ListenAndServe(":8080", r)
 }

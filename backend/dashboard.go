@@ -5,7 +5,7 @@ import (
 	"net/http"
 )
 
-type Intern struct {
+type InternList struct {
 	ID            int    `json:"id"`
 	Photo         string `json:"photo"`
 	Name          string `json:"name"`
@@ -17,7 +17,7 @@ type Intern struct {
 
 type DashboardResponse struct {
 	TotalInterns int      `json:"total_interns"`
-	Interns      []Intern `json:"interns"`
+	Interns      []InternList `json:"interns"`
 	Username     string   `json:"username"`
 }
 
@@ -35,7 +35,7 @@ func Dashboard(w http.ResponseWriter, r *http.Request) {
 
 	// Default sort
 	if sortBy == "" {
-		sortBy = "created_at"
+	    sortBy = "created_at"
 	}
 
 	// Validate sort_by to prevent SQL injection
@@ -76,9 +76,9 @@ func Dashboard(w http.ResponseWriter, r *http.Request) {
 	}
 	defer rows.Close()
 
-	var interns []Intern
+	var interns []InternList
 	for rows.Next() {
-		var intern Intern
+		var intern InternList
 		err := rows.Scan(
 			&intern.ID,
 			&intern.Photo,
@@ -96,7 +96,7 @@ func Dashboard(w http.ResponseWriter, r *http.Request) {
 	}
 
 	if interns == nil {
-		interns = []Intern{}
+		interns = []InternList{}
 	}
 
 	w.Header().Set("Content-Type", "application/json")
