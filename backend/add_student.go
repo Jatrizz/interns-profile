@@ -20,8 +20,16 @@ func AddStudent(w http.ResponseWriter, r *http.Request) {
 	}
 
 	// Input validation
-	if strings.TrimSpace(intern.Name) == "" {
-		http.Error(w, "Name is required", http.StatusBadRequest)
+	if strings.TrimSpace(intern.IDNumber) == "" {
+		http.Error(w, "ID number is required", http.StatusBadRequest)
+		return
+	}
+	if strings.TrimSpace(intern.FirstName) == "" {
+		http.Error(w, "First name is required", http.StatusBadRequest)
+		return
+	}
+	if strings.TrimSpace(intern.LastName) == "" {
+		http.Error(w, "Last name is required", http.StatusBadRequest)
 		return
 	}
 	if strings.TrimSpace(intern.School) == "" {
@@ -30,6 +38,10 @@ func AddStudent(w http.ResponseWriter, r *http.Request) {
 	}
 	if strings.TrimSpace(intern.Program) == "" {
 		http.Error(w, "Program is required", http.StatusBadRequest)
+		return
+	}
+	if strings.TrimSpace(intern.Email) == "" {
+		http.Error(w, "Email is required", http.StatusBadRequest)
 		return
 	}
 	if strings.TrimSpace(intern.ContactNumber) == "" {
@@ -42,8 +54,8 @@ func AddStudent(w http.ResponseWriter, r *http.Request) {
 	}
 
 	// Insert intern into database
-	_, err = db.Exec("INSERT INTO interns (photo, name, school, program, contact_number) VALUES ($1, $2, $3, $4, $5)",
-		intern.Photo, intern.Name, intern.School, intern.Program, intern.ContactNumber)
+	_, err = db.Exec("INSERT INTO interns (photo, id_number, first_name, last_name, school, program, email, contact_number) VALUES ($1, $2, $3, $4, $5, $6, $7, $8)",
+		intern.Photo, intern.IDNumber, intern.FirstName, intern.LastName, intern.School, intern.Program, intern.Email, intern.ContactNumber)
 	if err != nil {
 		http.Error(w, "Error adding intern", http.StatusInternalServerError)
 		return

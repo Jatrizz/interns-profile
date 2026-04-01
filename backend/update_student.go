@@ -48,8 +48,16 @@ func Updatestudent(w http.ResponseWriter, r *http.Request) {
 	}
 
 	// Input validation
-	if strings.TrimSpace(intern.Name) == "" {
+	if strings.TrimSpace(intern.IDNumber) == "" {
+		http.Error(w, "ID number is required", http.StatusBadRequest)
+		return
+	}
+	if strings.TrimSpace(intern.FirstName) == "" {
 		http.Error(w, "Name is required", http.StatusBadRequest)
+		return
+	}
+	if strings.TrimSpace(intern.LastName) == "" {
+		http.Error(w, "Last name is required", http.StatusBadRequest)
 		return
 	}
 	if strings.TrimSpace(intern.School) == "" {
@@ -58,6 +66,10 @@ func Updatestudent(w http.ResponseWriter, r *http.Request) {
 	}
 	if strings.TrimSpace(intern.Program) == "" {
 		http.Error(w, "Program is required", http.StatusBadRequest)
+		return
+	}
+	if strings.TrimSpace(intern.Email) == "" {
+		http.Error(w, "Email is required", http.StatusBadRequest)
 		return
 	}
 	if strings.TrimSpace(intern.ContactNumber) == "" {
@@ -70,8 +82,8 @@ func Updatestudent(w http.ResponseWriter, r *http.Request) {
 	}
 
 	// Update in database
-	_, err = db.Exec("UPDATE interns SET name=$1, school=$2, program=$3, contact_number=$4, photo=$5 WHERE id=$6",
-		intern.Name, intern.School, intern.Program, intern.ContactNumber, intern.Photo, id)
+	_, err = db.Exec("UPDATE interns SET id_number=$1, first_name=$2, last_name=$3, school=$4, program=$5, email=$6, contact_number=$7, photo=$8 WHERE id=$9",
+		intern.IDNumber, intern.FirstName, intern.LastName, intern.School, intern.Program, intern.Email, intern.ContactNumber, intern.Photo, id)
 	if err != nil {
 		http.Error(w, "Error updating intern", http.StatusInternalServerError)
 		return

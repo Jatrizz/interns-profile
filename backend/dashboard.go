@@ -7,18 +7,22 @@ import (
 
 type Intern struct {
 	ID            int    `json:"id"`
+	IDNumber      string `json:"id_number"`
 	Photo         string `json:"photo"`
-	Name          string `json:"name"`
+	FirstName     string `json:"first_name"`
+	LastName      string `json:"last_name"`
 	School        string `json:"school"`
 	Program       string `json:"program"`
+	Email         string `json:"email"`
 	ContactNumber string `json:"contact_number"`
 	CreatedAt     string `json:"created_at"`
 }
 
 type DashboardResponse struct {
-	TotalInterns int      `json:"total_interns"`
-	Interns      []Intern `json:"interns"`
-	Username     string   `json:"username"`
+	Username     string `json:"username"`
+	TotalInterns int    `json:"total_interns"`
+	NewInterns   int    `json:"new_interns"`
+	TotalSchools int    `json:"total_schools"`
 }
 
 func Dashboard(w http.ResponseWriter, r *http.Request) {
@@ -27,34 +31,11 @@ func Dashboard(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	// Get query parameters
+	// Get usename from query parameters (for welcome message in the dashboard)
 	username := r.URL.Query().Get("username")
-	search := r.URL.Query().Get("search")
-	sortBy := r.URL.Query().Get("sort_by")
-	sortOrder := r.URL.Query().Get("sort_order")
-
-	// Default sort
-	if sortBy == "" {
-		sortBy = "created_at"
-	}
-
-	// Validate sort_by to prevent SQL injection
-	allowedSortFields := map[string]bool{
-		"name":       true,
-		"school":     true,
-		"program":    true,
-		"created_at": true,
-	}
-	if !allowedSortFields[sortBy] {
-		sortBy = "created_at"
-	}
-
-	// Default sort order
-	if sortOrder != "asc" && sortOrder != "desc" {
-		sortOrder = "desc"
-	}
 
 	// Get total interns count
+	// Shows the Total Number of Interns in the Dashboard
 	var totalInterns int
 	err := db.QueryRow("SELECT COUNT(*) FROM interns").Scan(&totalInterns)
 	if err != nil {
@@ -62,47 +43,31 @@ func Dashboard(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	// Build query with search and sort
-	query := `SELECT id, COALESCE(photo, ''), name, school, program, contact_number, created_at 
-			  FROM interns 
-			  WHERE name ILIKE $1 OR school ILIKE $1 OR program ILIKE $1
-			  ORDER BY ` + sortBy + ` ` + sortOrder
-
-	searchTerm := "%" + search + "%"
-	rows, err := db.Query(query, searchTerm)
+	// Get new interns this month
+	// Shown as "No. of New Interns: 3" on dashboard
+	var newInterns int
+	err = db.QueryRow(`SELECT COUNT(*) FROM interns 
+		WHERE EXTRACT(MONTH FROM created_at) = EXTRACT(MONTH FROM CURRENT_DATE)
+		AND EXTRACT(YEAR FROM created_at) = EXTRACT(YEAR FROM CURRENT_DATE)`).Scan(&newInterns)
 	if err != nil {
-		http.Error(w, "Error getting interns", http.StatusInternalServerError)
+		http.Error(w, "Error getting new interns", http.StatusInternalServerError)
 		return
 	}
-	defer rows.Close()
 
-	var interns []Intern
-	for rows.Next() {
-		var intern Intern
-		err := rows.Scan(
-			&intern.ID,
-			&intern.Photo,
-			&intern.Name,
-			&intern.School,
-			&intern.Program,
-			&intern.ContactNumber,
-			&intern.CreatedAt,
-		)
-		if err != nil {
-			http.Error(w, "Error reading intern data", http.StatusInternalServerError)
-			return
-		}
-		interns = append(interns, intern)
-	}
-
-	if interns == nil {
-		interns = []Intern{}
+	// Get total schools count
+	// Shows the Total Number of Schools in the Dashboard
+	var totalSchools int
+	err = db.QueryRow("SELECT COUNT(DISTINCT school) FROM interns").Scan(&totalSchools)
+	if err != nil {
+		http.Error(w, "Error getting total schools", http.StatusInternalServerError)
+		return
 	}
 
 	w.Header().Set("Content-Type", "application/json")
 	json.NewEncoder(w).Encode(DashboardResponse{
-		TotalInterns: totalInterns,
-		Interns:      interns,
 		Username:     username,
+		TotalInterns: totalInterns,
+		NewInterns:   newInterns,
+		TotalSchools: totalSchools,
 	})
 }
