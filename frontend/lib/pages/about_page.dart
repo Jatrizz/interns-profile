@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:interfaces/widgets/Homepage-Widgets/Aboutpage-Widgets/herosection_about.dart';
 import '../widgets/Homepage-Widgets/navbar.dart';
 import '../widgets/Homepage-Widgets/footer.dart';
 
@@ -11,6 +12,7 @@ class AboutPage extends StatelessWidget{
       appBar: NavBar(),
       body: ListView(
           children: [
+            HerosectionAbout(),
             Footer()
           ],
       ),
