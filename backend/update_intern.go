@@ -7,7 +7,7 @@ import (
 	"strings"
 )
 
-func Updatestudent(w http.ResponseWriter, r *http.Request) {
+func UpdateIntern(w http.ResponseWriter, r *http.Request) {
 	if r.Method != http.MethodPut {
 		http.Error(w, "Invalid Request Method", http.StatusMethodNotAllowed)
 		return

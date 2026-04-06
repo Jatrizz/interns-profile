@@ -7,6 +7,7 @@ import (
 	"net/http"
 	"os"
 	"path/filepath"
+	"strings"
 	"time"
 )
 
@@ -23,7 +24,7 @@ func UploadHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	// Limit upload size (e.g., 5MB)
+	// Limit upload size (5MB)
 	err := r.ParseMultipartForm(5 << 20)
 	if err != nil {
 		http.Error(w, "File too large", http.StatusBadRequest)
@@ -38,6 +39,13 @@ func UploadHandler(w http.ResponseWriter, r *http.Request) {
 	}
 	defer file.Close()
 
+	// Only allow JPG, JPEG, PNG
+	ext := strings.ToLower(filepath.Ext(handler.Filename))
+	if ext != ".jpg" && ext != ".jpeg" && ext != ".png" {
+		http.Error(w, "Only JPG, JPEG, PNG files are allowed", http.StatusBadRequest)
+		return
+	}
+
 	// Create uploads folder if not exists
 	uploadDir := "uploads"
 	err = os.MkdirAll(uploadDir, os.ModePerm)
@@ -47,9 +55,7 @@ func UploadHandler(w http.ResponseWriter, r *http.Request) {
 	}
 
 	// Generate unique filename
-	ext := filepath.Ext(handler.Filename)
 	fileName := fmt.Sprintf("%d%s", time.Now().UnixNano(), ext)
-
 	filePath := filepath.Join(uploadDir, fileName)
 
 	// Create file on server
