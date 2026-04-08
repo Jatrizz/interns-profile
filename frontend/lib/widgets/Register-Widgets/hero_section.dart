@@ -1,11 +1,88 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/gestures.dart';
 
-class HeroSection extends StatelessWidget {
+class HeroSection extends StatefulWidget {
   const HeroSection({super.key});
+
+  @override
+  _HeroSectionState createState() => _HeroSectionState();
+}
+
+class _HeroSectionState extends State<HeroSection> {
+  final _formKey = GlobalKey<FormState>();
+
+  final _firstNameController = TextEditingController();
+  final _lastNameController = TextEditingController();
+  final _schoolController = TextEditingController();
+  final _programController = TextEditingController();
+  final _emailController = TextEditingController();
+  final _passwordController = TextEditingController();
+
+  final List<String> existingEmails = ['test@example.com', 'user@domain.com'];
+
+  final Map<String, String?> _errors = {};
+
+  @override
+  void dispose() {
+    _firstNameController.dispose();
+    _lastNameController.dispose();
+    _schoolController.dispose();
+    _programController.dispose();
+    _emailController.dispose();
+    _passwordController.dispose();
+    super.dispose();
+  }
+
+  bool _isPasswordValid(String password) {
+    final regex = RegExp(r'^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)[A-Za-z\d]{8,}$');
+    return regex.hasMatch(password);
+  }
+
+  bool _isEmailDuplicate(String email) {
+    return existingEmails.contains(email.trim().toLowerCase());
+  }
+
+  void _validateForm() {
+    setState(() {
+      _errors['firstName'] = _firstNameController.text.isEmpty
+          ? 'First name is required'
+          : null;
+      _errors['lastName'] = _lastNameController.text.isEmpty
+          ? 'Last name is required'
+          : null;
+      _errors['school'] = _schoolController.text.isEmpty
+          ? 'School is required'
+          : null;
+      _errors['program'] = _programController.text.isEmpty
+          ? 'Program is required'
+          : null;
+
+      if (_emailController.text.isEmpty) {
+        _errors['email'] = 'Email is required';
+      } else if (!RegExp(
+        r'^[^@]+@[^@]+\.[^@]+',
+      ).hasMatch(_emailController.text)) {
+        _errors['email'] = 'Invalid email format';
+      } else if (_isEmailDuplicate(_emailController.text)) {
+        _errors['email'] = 'Email already exists';
+      } else {
+        _errors['email'] = null;
+      }
+
+      if (_passwordController.text.isEmpty) {
+        _errors['password'] = 'Password is required';
+      } else if (!_isPasswordValid(_passwordController.text)) {
+        _errors['password'] = 'Min 8 chars, include upper, lower & number';
+      } else {
+        _errors['password'] = null;
+      }
+    });
+  }
+
   @override
   Widget build(BuildContext context) {
     return Row(
+      mainAxisAlignment: MainAxisAlignment.center,
       children: [
         Expanded(
           child: SizedBox(
@@ -14,230 +91,184 @@ class HeroSection extends StatelessWidget {
           ),
         ),
         Expanded(
-          child: Column(
-            children: [
-              Text(
-                'Create your Account',
-                style: TextStyle(
-                  color: Colors.white,
-                  fontSize: 40,
-                  fontWeight: FontWeight(600),
-                ),
-              ),
-              SizedBox(height: 15),
-              SizedBox(
-                width: 400,
-                child: Row(
-                  children: [
-                    Container(
-                      width: 195,
-                      decoration: BoxDecoration(
-                        gradient: LinearGradient(
-                          colors: [Colors.black, Colors.grey],
-                          begin: Alignment.topLeft,
-                          end: Alignment.bottomRight,
+          child: SingleChildScrollView(
+            child: Form(
+              key: _formKey,
+              child: Column(
+                children: [
+                  Text(
+                    'Create your Account',
+                    style: TextStyle(
+                      color: Colors.white,
+                      fontSize: 40,
+                      fontWeight: FontWeight.w600,
+                    ),
+                  ),
+                  SizedBox(height: 15),
+                  SizedBox(
+                    width: 400,
+                    child: Row(
+                      children: [
+                        Expanded(
+                          child: _buildFieldWithError(
+                            controller: _firstNameController,
+                            label: 'First Name',
+                            errorKey: 'firstName',
+                          ),
                         ),
+                        SizedBox(width: 10),
+                        Expanded(
+                          child: _buildFieldWithError(
+                            controller: _lastNameController,
+                            label: 'Last Name',
+                            errorKey: 'lastName',
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                  SizedBox(height: 10),
+                  _buildFieldWithError(
+                    controller: _schoolController,
+                    label: 'School',
+                    errorKey: 'school',
+                  ),
+                  SizedBox(height: 10),
+                  _buildFieldWithError(
+                    controller: _programController,
+                    label: 'Program',
+                    errorKey: 'program',
+                  ),
+                  SizedBox(height: 10),
+                  _buildFieldWithError(
+                    controller: _emailController,
+                    label: 'Email',
+                    errorKey: 'email',
+                  ),
+                  SizedBox(height: 10),
+                  _buildFieldWithError(
+                    controller: _passwordController,
+                    label: 'Password',
+                    errorKey: 'password',
+                    obscureText: true,
+                  ),
+                  SizedBox(height: 10),
+                  Container(
+                    width: 400,
+                    decoration: BoxDecoration(
+                      gradient: LinearGradient(
+                        colors: [Colors.blue, Color.fromARGB(255, 2, 55, 230)],
+                        begin: Alignment.topLeft,
+                        end: Alignment.bottomRight,
                       ),
-                      padding: const EdgeInsets.symmetric(
-                        horizontal: 16,
-                        vertical: 3,
-                      ),
-                      child: TextField(
-                        decoration: InputDecoration(
-                          label: Text(
-                            'First Name',
-                            style: TextStyle(
-                              color: const Color.fromARGB(209, 255, 255, 255),
-                              fontSize: 12,
+                    ),
+                    padding: EdgeInsets.symmetric(horizontal: 16, vertical: 3),
+                    child: Material(
+                      color: Colors.transparent,
+                      child: InkWell(
+                        onTap: () {
+                          _validateForm();
+                          if (_errors.values.every((e) => e == null)) {
+                            ScaffoldMessenger.of(context).showSnackBar(
+                              SnackBar(
+                                content: Text('Account created successfully!'),
+                              ),
+                            );
+                          }
+                        },
+                        child: Padding(
+                          padding: EdgeInsets.symmetric(vertical: 14),
+                          child: Center(
+                            child: Text(
+                              'Register',
+                              style: TextStyle(color: Colors.white),
                             ),
                           ),
-                          border: InputBorder.none,
                         ),
-                        style: TextStyle(color: Colors.white),
                       ),
                     ),
-                    SizedBox(width: 10),
-                    Container(
-                      width: 195,
-                      decoration: BoxDecoration(
-                        gradient: LinearGradient(
-                          colors: [Colors.black, Colors.grey],
-                          begin: Alignment.topLeft,
-                          end: Alignment.bottomRight,
-                        ),
-                      ),
-                      padding: EdgeInsets.symmetric(
-                        horizontal: 16,
-                        vertical: 3,
-                      ),
-                      child: TextField(
-                        style: TextStyle(color: Colors.white),
-                        decoration: InputDecoration(
-                          label: Text(
-                            'Last Name',
-                            style: TextStyle(color: Colors.white, fontSize: 12),
+                  ),
+                  SizedBox(height: 10),
+                  SizedBox(
+                    width: 400,
+                    child: RichText(
+                      textAlign: TextAlign.center,
+                      text: TextSpan(
+                        style: TextStyle(color: Colors.white, fontSize: 12),
+                        children: [
+                          TextSpan(
+                            text: 'By creating an account, you agree to our ',
                           ),
-                          border: InputBorder.none,
-                        ),
-                      ),
-                    ),
-                  ],
-                ),
-              ),
-              SizedBox(height: 10),
-              Container(
-                width: 400,
-                decoration: BoxDecoration(
-                  gradient: LinearGradient(
-                    colors: [Colors.black, Colors.grey],
-                    begin: Alignment.topLeft,
-                    end: Alignment.bottomRight,
-                  ),
-                ),
-                padding: EdgeInsets.symmetric(horizontal: 16, vertical: 3),
-                child: TextField(
-                  style: TextStyle(color: Colors.white),
-                  decoration: InputDecoration(
-                    label: Text(
-                      'School',
-                      style: TextStyle(color: Colors.white, fontSize: 12),
-                    ),
-                    border: InputBorder.none,
-                  ),
-                ),
-              ),
-              SizedBox(height: 10),
-              Container(
-                width: 400,
-                decoration: BoxDecoration(
-                  gradient: LinearGradient(
-                    colors: [Colors.black, Colors.grey],
-                    begin: Alignment.bottomLeft,
-                    end: Alignment.bottomRight,
-                  ),
-                ),
-                padding: EdgeInsets.symmetric(horizontal: 16, vertical: 3),
-                child: TextField(
-                  style: TextStyle(color: Colors.white),
-                  decoration: InputDecoration(
-                    label: Text(
-                      'Program',
-                      style: TextStyle(color: Colors.white, fontSize: 12),
-                    ),
-                    border: InputBorder.none,
-                  ),
-                ),
-              ),
-              SizedBox(height: 10),
-              Container(
-                width: 400,
-                decoration: BoxDecoration(
-                  gradient: LinearGradient(
-                    colors: [Colors.black, Colors.grey],
-                    begin: Alignment.topLeft,
-                    end: Alignment.bottomRight,
-                  ),
-                ),
-                padding: EdgeInsets.symmetric(horizontal: 16, vertical: 3),
-                child: TextField(
-                  style: TextStyle(color: Colors.white),
-                  decoration: InputDecoration(
-                    label: Text(
-                      'Email',
-                      style: TextStyle(color: Colors.white, fontSize: 12),
-                    ),
-                    border: InputBorder.none,
-                  ),
-                ),
-              ),
-              SizedBox(height: 10),
-              Container(
-                width: 400,
-                decoration: BoxDecoration(
-                  gradient: LinearGradient(
-                    colors: [Colors.black, Colors.grey],
-                    begin: Alignment.topLeft,
-                    end: Alignment.bottomRight,
-                  ),
-                ),
-                padding: EdgeInsets.symmetric(horizontal: 16, vertical: 3),
-                child: TextField(
-                  style: TextStyle(color: Colors.white),
-                  decoration: InputDecoration(
-                    label: Text(
-                      'Password',
-                      style: TextStyle(color: Colors.white, fontSize: 12),
-                    ),
-                    border: InputBorder.none,
-                  ),
-                ),
-              ),
-              SizedBox(height: 10),
-              Container(
-                width: 400,
-                decoration: BoxDecoration(
-                  gradient: LinearGradient(
-                    colors: [
-                      Colors.blue,
-                      const Color.fromARGB(255, 2, 55, 230),
-                    ],
-                    begin: Alignment.topLeft,
-                    end: Alignment.bottomRight,
-                  ),
-                ),
-                padding: EdgeInsets.symmetric(horizontal: 16, vertical: 3),
-                child: Material(
-                  color: Colors.transparent,
-                  child: InkWell(
-                    onTap: () {},
-                    child: Padding(
-                      padding: EdgeInsets.symmetric(vertical: 14),
-                      child: Text(
-                        'Register',
-                        textAlign: TextAlign.center,
-                        style: TextStyle(color: Colors.white),
+                          TextSpan(
+                            text: 'Terms and Conditions',
+                            style: TextStyle(
+                              color: Colors.blue,
+                              decoration: TextDecoration.underline,
+                            ),
+                            recognizer: TapGestureRecognizer()..onTap = () {},
+                          ),
+                          TextSpan(text: ' and '),
+                          TextSpan(
+                            text: 'Privacy Policy',
+                            style: TextStyle(
+                              color: Colors.blue,
+                              decoration: TextDecoration.underline,
+                            ),
+                            recognizer: TapGestureRecognizer()..onTap = () {},
+                          ),
+                        ],
                       ),
                     ),
                   ),
-                ),
+                ],
               ),
-              SizedBox(height: 10),
-              SizedBox(
-                width: 400,
-                child: RichText(
-                  textAlign: TextAlign.center,
-                  text: TextSpan(
-                    style: TextStyle(color: Colors.white, fontSize: 12),
-                    children: [
-                      TextSpan(
-                        text: 'By creating an account, you agree to our ',
-                      ),
-                      TextSpan(
-                        text: 'Terms and Conditions',
-                        style: TextStyle(
-                          color: Colors.blue,
-                          decoration: TextDecoration.underline,
-                          fontSize: 12,
-                        ),
-                        recognizer: TapGestureRecognizer()..onTap = () {},
-                      ),
-                      TextSpan(text: ' and '),
-                      TextSpan(
-                        text: 'Privacy Policy',
-                        style: TextStyle(
-                          color: Colors.blue,
-                          decoration: TextDecoration.underline,
-                          fontSize: 12,
-                        ),
-                        recognizer: TapGestureRecognizer()..onTap = () {},
-                      ),
-                    ],
-                  ),
-                ),
-              ),
-            ],
+            ),
           ),
         ),
+      ],
+    );
+  }
+
+  Widget _buildFieldWithError({
+    required TextEditingController controller,
+    required String label,
+    required String errorKey,
+    bool obscureText = false,
+  }) {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Container(
+          width: 400,
+          decoration: BoxDecoration(
+            gradient: LinearGradient(
+              colors: [Colors.black, Colors.grey],
+              begin: Alignment.topLeft,
+              end: Alignment.bottomRight,
+            ),
+          ),
+          padding: EdgeInsets.symmetric(horizontal: 16, vertical: 3),
+          child: TextFormField(
+            controller: controller,
+            obscureText: obscureText,
+            style: TextStyle(color: Colors.white),
+            decoration: InputDecoration(
+              label: Text(
+                label,
+                style: TextStyle(color: Colors.white, fontSize: 12),
+              ),
+              border: InputBorder.none,
+            ),
+          ),
+        ),
+        if (_errors[errorKey] != null)
+          Padding(
+            padding: EdgeInsets.only(left: 8, top: 3),
+            child: Text(
+              _errors[errorKey]!,
+              style: TextStyle(color: Colors.red, fontSize: 12),
+            ),
+          ),
       ],
     );
   }

@@ -24,7 +24,7 @@ class _StatsSectionState extends State<StatsSection> {
   Future<void> fetchStats() async {
     try {
       final response = await http.get(
-        Uri.parse('https://localhost:8080/get-stats'),
+        Uri.parse('http://localhost:8080/get-stats'),
       );
 
       if (response.statusCode == 200) {
