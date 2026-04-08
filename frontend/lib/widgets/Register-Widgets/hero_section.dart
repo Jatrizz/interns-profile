@@ -1,5 +1,7 @@
+import 'dart:convert';
 import 'package:flutter/material.dart';
 import 'package:flutter/gestures.dart';
+import 'package:http/http.dart' as http;
 
 class HeroSection extends StatefulWidget {
   const HeroSection({super.key});
@@ -18,9 +20,9 @@ class _HeroSectionState extends State<HeroSection> {
   final _emailController = TextEditingController();
   final _passwordController = TextEditingController();
 
-  final List<String> existingEmails = ['test@example.com', 'user@domain.com'];
-
   final Map<String, String?> _errors = {};
+
+  bool _isLoading = false;
 
   @override
   void dispose() {
@@ -36,10 +38,6 @@ class _HeroSectionState extends State<HeroSection> {
   bool _isPasswordValid(String password) {
     final regex = RegExp(r'^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)[A-Za-z\d]{8,}$');
     return regex.hasMatch(password);
-  }
-
-  bool _isEmailDuplicate(String email) {
-    return existingEmails.contains(email.trim().toLowerCase());
   }
 
   void _validateForm() {
@@ -63,8 +61,6 @@ class _HeroSectionState extends State<HeroSection> {
         r'^[^@]+@[^@]+\.[^@]+',
       ).hasMatch(_emailController.text)) {
         _errors['email'] = 'Invalid email format';
-      } else if (_isEmailDuplicate(_emailController.text)) {
-        _errors['email'] = 'Email already exists';
       } else {
         _errors['email'] = null;
       }
@@ -77,6 +73,54 @@ class _HeroSectionState extends State<HeroSection> {
         _errors['password'] = null;
       }
     });
+  }
+
+  Future<void> _registerUser() async {
+    _validateForm();
+    if (_errors.values.any((e) => e != null)) return;
+
+    setState(() => _isLoading = true);
+
+    final url = Uri.parse('http://localhost:8080/register');
+
+    try {
+      final response = await http.post(
+        url,
+        headers: {'Content-Type': 'application/json'},
+        body: jsonEncode({
+          'first_name': _firstNameController.text.trim(),
+          'last_name': _lastNameController.text.trim(),
+          'school': _schoolController.text.trim(),
+          'program': _programController.text.trim(),
+          'email': _emailController.text.trim(),
+          'password': _passwordController.text.trim(),
+        }),
+      );
+
+      final data = jsonDecode(response.body);
+
+      if (response.statusCode == 200 && data['status'] == 'success') {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('Account created successfully!')),
+        );
+      } else {
+        setState(() {
+          if (data['field'] != null && data['message'] != null) {
+            _errors[data['field']] = data['message'];
+          } else {
+            ScaffoldMessenger.of(context).showSnackBar(
+              SnackBar(content: Text(data['message'] ?? 'Registration failed')),
+            );
+          }
+        });
+      }
+    } catch (e) {
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(SnackBar(content: Text('Error: $e')));
+    } finally {
+      setState(() => _isLoading = false);
+    }
   }
 
   @override
@@ -166,23 +210,16 @@ class _HeroSectionState extends State<HeroSection> {
                     child: Material(
                       color: Colors.transparent,
                       child: InkWell(
-                        onTap: () {
-                          _validateForm();
-                          if (_errors.values.every((e) => e == null)) {
-                            ScaffoldMessenger.of(context).showSnackBar(
-                              SnackBar(
-                                content: Text('Account created successfully!'),
-                              ),
-                            );
-                          }
-                        },
+                        onTap: _isLoading ? null : _registerUser,
                         child: Padding(
                           padding: EdgeInsets.symmetric(vertical: 14),
                           child: Center(
-                            child: Text(
-                              'Register',
-                              style: TextStyle(color: Colors.white),
-                            ),
+                            child: _isLoading
+                                ? CircularProgressIndicator(color: Colors.white)
+                                : Text(
+                                    'Register',
+                                    style: TextStyle(color: Colors.white),
+                                  ),
                           ),
                         ),
                       ),
