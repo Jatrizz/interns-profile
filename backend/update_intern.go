@@ -7,7 +7,7 @@ import (
 	"strings"
 )
 
-func Updatestudent(w http.ResponseWriter, r *http.Request) {
+func UpdateIntern(w http.ResponseWriter, r *http.Request) {
 	if r.Method != http.MethodPut {
 		http.Error(w, "Invalid Request Method", http.StatusMethodNotAllowed)
 		return
@@ -40,7 +40,7 @@ func Updatestudent(w http.ResponseWriter, r *http.Request) {
 	}
 
 	// Decode request body
-	var intern Intern
+	var intern InternList
 	err = json.NewDecoder(r.Body).Decode(&intern)
 	if err != nil {
 		http.Error(w, "Invalid request body", http.StatusBadRequest)

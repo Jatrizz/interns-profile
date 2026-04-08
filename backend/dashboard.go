@@ -5,7 +5,7 @@ import (
 	"net/http"
 )
 
-type Intern struct {
+type InternList struct {
 	ID            int    `json:"id"`
 	IDNumber      string `json:"id_number"`
 	Photo         string `json:"photo"`

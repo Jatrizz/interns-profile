@@ -6,7 +6,7 @@ import (
 	"strconv"
 )
 
-func Deletestudent(w http.ResponseWriter, r *http.Request) {
+func DeleteIntern(w http.ResponseWriter, r *http.Request) {
 	if r.Method != http.MethodDelete {
 		http.Error(w, "Invalid Request Method", http.StatusMethodNotAllowed)
 		return

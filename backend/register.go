@@ -14,6 +14,7 @@ type User struct {
 	Username    string `json:"username"`
 	PhoneNumber string `json:"phone_number"`
 	Password    string `json:"password"`
+	Role        string `json:"role"` // "admin" or "intern"
 }
 
 func registerHandler(w http.ResponseWriter, r *http.Request) {
@@ -51,6 +52,13 @@ func registerHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	// Role validation
+	user.Role = strings.ToLower(strings.TrimSpace(user.Role))
+	if user.Role != "admin" && user.Role != "intern" {
+		http.Error(w, "Role must be 'admin' or 'intern'", http.StatusBadRequest)
+		return
+	}
+
 	// Check for duplicate phone number
 	var exists bool
 	err = db.QueryRow("SELECT EXISTS(SELECT 1 FROM users WHERE phone_number = $1)",
@@ -71,13 +79,13 @@ func registerHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	// Save to database
-	_, err = db.Exec("INSERT INTO users (username, phone_number, password) VALUES ($1, $2, $3)",
-		user.Username, user.PhoneNumber, string(hashedPassword))
+	// Save to database including role
+	_, err = db.Exec("INSERT INTO users (username, phone_number, password_hash, role) VALUES ($1, $2, $3, $4)",
+		user.Username, user.PhoneNumber, string(hashedPassword), user.Role)
 	if err != nil {
 		http.Error(w, "Error saving user", http.StatusInternalServerError)
 		return
 	}
 
-	fmt.Fprintf(w, "User registered successfully")
+	fmt.Fprintf(w, "User registered successfully as %s", user.Role)
 }
