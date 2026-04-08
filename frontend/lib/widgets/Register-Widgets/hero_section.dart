@@ -21,8 +21,7 @@ class _HeroSectionState extends State<HeroSection> {
   final _passwordController = TextEditingController();
 
   final Map<String, String?> _errors = {};
-
-  bool _isLoading = false;
+  bool _isSubmitting = false;
 
   @override
   void dispose() {
@@ -36,7 +35,7 @@ class _HeroSectionState extends State<HeroSection> {
   }
 
   bool _isPasswordValid(String password) {
-    final regex = RegExp(r'^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)[A-Za-z\d]{8,}$');
+    final regex = RegExp(r'^(?=.[a-z])(?=.[A-Z])(?=.*\d)[A-Za-z\d]{8,}$');
     return regex.hasMatch(password);
   }
 
@@ -75,51 +74,42 @@ class _HeroSectionState extends State<HeroSection> {
     });
   }
 
-  Future<void> _registerUser() async {
+  Future<void> _submitForm() async {
     _validateForm();
     if (_errors.values.any((e) => e != null)) return;
 
-    setState(() => _isLoading = true);
-
-    final url = Uri.parse('http://localhost:8080/register');
+    setState(() => _isSubmitting = true);
 
     try {
       final response = await http.post(
-        url,
+        Uri.parse('http://localhost:8080/register'), // your backend URL
         headers: {'Content-Type': 'application/json'},
         body: jsonEncode({
-          'first_name': _firstNameController.text.trim(),
-          'last_name': _lastNameController.text.trim(),
-          'school': _schoolController.text.trim(),
-          'program': _programController.text.trim(),
-          'email': _emailController.text.trim(),
-          'password': _passwordController.text.trim(),
+          'first_name': _firstNameController.text,
+          'last_name': _lastNameController.text,
+          'school': _schoolController.text,
+          'program': _programController.text,
+          'email': _emailController.text,
+          'password': _passwordController.text,
         }),
       );
 
-      final data = jsonDecode(response.body);
-
-      if (response.statusCode == 200 && data['status'] == 'success') {
+      if (response.statusCode == 200) {
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Account created successfully!')),
+          const SnackBar(content: Text('Account created successfully!')),
         );
+        _formKey.currentState?.reset();
       } else {
-        setState(() {
-          if (data['field'] != null && data['message'] != null) {
-            _errors[data['field']] = data['message'];
-          } else {
-            ScaffoldMessenger.of(context).showSnackBar(
-              SnackBar(content: Text(data['message'] ?? 'Registration failed')),
-            );
-          }
-        });
+        ScaffoldMessenger.of(
+          context,
+        ).showSnackBar(SnackBar(content: Text('Error: ${response.body}')));
       }
     } catch (e) {
       ScaffoldMessenger.of(
         context,
-      ).showSnackBar(SnackBar(content: Text('Error: $e')));
+      ).showSnackBar(SnackBar(content: Text('Network error: $e')));
     } finally {
-      setState(() => _isLoading = false);
+      setState(() => _isSubmitting = false);
     }
   }
 
@@ -140,7 +130,7 @@ class _HeroSectionState extends State<HeroSection> {
               key: _formKey,
               child: Column(
                 children: [
-                  Text(
+                  const Text(
                     'Create your Account',
                     style: TextStyle(
                       color: Colors.white,
@@ -148,7 +138,7 @@ class _HeroSectionState extends State<HeroSection> {
                       fontWeight: FontWeight.w600,
                     ),
                   ),
-                  SizedBox(height: 15),
+                  const SizedBox(height: 15),
                   SizedBox(
                     width: 400,
                     child: Row(
@@ -160,7 +150,7 @@ class _HeroSectionState extends State<HeroSection> {
                             errorKey: 'firstName',
                           ),
                         ),
-                        SizedBox(width: 10),
+                        const SizedBox(width: 10),
                         Expanded(
                           child: _buildFieldWithError(
                             controller: _lastNameController,
@@ -171,52 +161,57 @@ class _HeroSectionState extends State<HeroSection> {
                       ],
                     ),
                   ),
-                  SizedBox(height: 10),
+                  const SizedBox(height: 10),
                   _buildFieldWithError(
                     controller: _schoolController,
                     label: 'School',
                     errorKey: 'school',
                   ),
-                  SizedBox(height: 10),
+                  const SizedBox(height: 10),
                   _buildFieldWithError(
                     controller: _programController,
                     label: 'Program',
                     errorKey: 'program',
                   ),
-                  SizedBox(height: 10),
+                  const SizedBox(height: 10),
                   _buildFieldWithError(
                     controller: _emailController,
                     label: 'Email',
                     errorKey: 'email',
                   ),
-                  SizedBox(height: 10),
+                  const SizedBox(height: 10),
                   _buildFieldWithError(
                     controller: _passwordController,
                     label: 'Password',
                     errorKey: 'password',
                     obscureText: true,
                   ),
-                  SizedBox(height: 10),
+                  const SizedBox(height: 10),
                   Container(
                     width: 400,
                     decoration: BoxDecoration(
-                      gradient: LinearGradient(
+                      gradient: const LinearGradient(
                         colors: [Colors.blue, Color.fromARGB(255, 2, 55, 230)],
                         begin: Alignment.topLeft,
                         end: Alignment.bottomRight,
                       ),
                     ),
-                    padding: EdgeInsets.symmetric(horizontal: 16, vertical: 3),
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 16,
+                      vertical: 3,
+                    ),
                     child: Material(
                       color: Colors.transparent,
                       child: InkWell(
-                        onTap: _isLoading ? null : _registerUser,
+                        onTap: _isSubmitting ? null : _submitForm,
                         child: Padding(
-                          padding: EdgeInsets.symmetric(vertical: 14),
+                          padding: const EdgeInsets.symmetric(vertical: 14),
                           child: Center(
-                            child: _isLoading
-                                ? CircularProgressIndicator(color: Colors.white)
-                                : Text(
+                            child: _isSubmitting
+                                ? const CircularProgressIndicator(
+                                    color: Colors.white,
+                                  )
+                                : const Text(
                                     'Register',
                                     style: TextStyle(color: Colors.white),
                                   ),
@@ -225,29 +220,32 @@ class _HeroSectionState extends State<HeroSection> {
                       ),
                     ),
                   ),
-                  SizedBox(height: 10),
+                  const SizedBox(height: 10),
                   SizedBox(
                     width: 400,
                     child: RichText(
                       textAlign: TextAlign.center,
                       text: TextSpan(
-                        style: TextStyle(color: Colors.white, fontSize: 12),
+                        style: const TextStyle(
+                          color: Colors.white,
+                          fontSize: 12,
+                        ),
                         children: [
-                          TextSpan(
+                          const TextSpan(
                             text: 'By creating an account, you agree to our ',
                           ),
                           TextSpan(
                             text: 'Terms and Conditions',
-                            style: TextStyle(
+                            style: const TextStyle(
                               color: Colors.blue,
                               decoration: TextDecoration.underline,
                             ),
                             recognizer: TapGestureRecognizer()..onTap = () {},
                           ),
-                          TextSpan(text: ' and '),
+                          const TextSpan(text: ' and '),
                           TextSpan(
                             text: 'Privacy Policy',
-                            style: TextStyle(
+                            style: const TextStyle(
                               color: Colors.blue,
                               decoration: TextDecoration.underline,
                             ),
@@ -277,22 +275,22 @@ class _HeroSectionState extends State<HeroSection> {
       children: [
         Container(
           width: 400,
-          decoration: BoxDecoration(
+          decoration: const BoxDecoration(
             gradient: LinearGradient(
               colors: [Colors.black, Colors.grey],
               begin: Alignment.topLeft,
               end: Alignment.bottomRight,
             ),
           ),
-          padding: EdgeInsets.symmetric(horizontal: 16, vertical: 3),
+          padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 3),
           child: TextFormField(
             controller: controller,
             obscureText: obscureText,
-            style: TextStyle(color: Colors.white),
+            style: const TextStyle(color: Colors.white),
             decoration: InputDecoration(
               label: Text(
                 label,
-                style: TextStyle(color: Colors.white, fontSize: 12),
+                style: const TextStyle(color: Colors.white, fontSize: 12),
               ),
               border: InputBorder.none,
             ),
@@ -300,10 +298,10 @@ class _HeroSectionState extends State<HeroSection> {
         ),
         if (_errors[errorKey] != null)
           Padding(
-            padding: EdgeInsets.only(left: 8, top: 3),
+            padding: const EdgeInsets.only(left: 8, top: 3),
             child: Text(
               _errors[errorKey]!,
-              style: TextStyle(color: Colors.red, fontSize: 12),
+              style: const TextStyle(color: Colors.red, fontSize: 12),
             ),
           ),
       ],
