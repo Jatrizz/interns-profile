@@ -18,7 +18,7 @@ class HomePage extends StatelessWidget {
         children: [
           HeroSection(),
           FeaturesSection(),
-          StatsSection(interns: 5, schools: 4, programs: 5),
+          StatsSection(),
           PreFooter(),
           Footer(),
         ],
