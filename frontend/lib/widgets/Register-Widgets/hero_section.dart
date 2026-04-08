@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/gestures.dart';
 
 class HeroSection extends StatelessWidget {
   const HeroSection({super.key});
@@ -47,6 +48,7 @@ class HeroSection extends StatelessWidget {
                             'First Name',
                             style: TextStyle(
                               color: const Color.fromARGB(209, 255, 255, 255),
+                              fontSize: 12,
                             ),
                           ),
                           border: InputBorder.none,
@@ -73,7 +75,7 @@ class HeroSection extends StatelessWidget {
                         decoration: InputDecoration(
                           label: Text(
                             'Last Name',
-                            style: TextStyle(color: Colors.white),
+                            style: TextStyle(color: Colors.white, fontSize: 12),
                           ),
                           border: InputBorder.none,
                         ),
@@ -98,7 +100,7 @@ class HeroSection extends StatelessWidget {
                   decoration: InputDecoration(
                     label: Text(
                       'School',
-                      style: TextStyle(color: Colors.white),
+                      style: TextStyle(color: Colors.white, fontSize: 12),
                     ),
                     border: InputBorder.none,
                   ),
@@ -120,7 +122,7 @@ class HeroSection extends StatelessWidget {
                   decoration: InputDecoration(
                     label: Text(
                       'Program',
-                      style: TextStyle(color: Colors.white),
+                      style: TextStyle(color: Colors.white, fontSize: 12),
                     ),
                     border: InputBorder.none,
                   ),
@@ -140,7 +142,10 @@ class HeroSection extends StatelessWidget {
                 child: TextField(
                   style: TextStyle(color: Colors.white),
                   decoration: InputDecoration(
-                    label: Text('Email', style: TextStyle(color: Colors.white)),
+                    label: Text(
+                      'Email',
+                      style: TextStyle(color: Colors.white, fontSize: 12),
+                    ),
                     border: InputBorder.none,
                   ),
                 ),
@@ -161,7 +166,7 @@ class HeroSection extends StatelessWidget {
                   decoration: InputDecoration(
                     label: Text(
                       'Password',
-                      style: TextStyle(color: Colors.white),
+                      style: TextStyle(color: Colors.white, fontSize: 12),
                     ),
                     border: InputBorder.none,
                   ),
@@ -193,6 +198,40 @@ class HeroSection extends StatelessWidget {
                         style: TextStyle(color: Colors.white),
                       ),
                     ),
+                  ),
+                ),
+              ),
+              SizedBox(height: 10),
+              SizedBox(
+                width: 400,
+                child: RichText(
+                  textAlign: TextAlign.center,
+                  text: TextSpan(
+                    style: TextStyle(color: Colors.white, fontSize: 12),
+                    children: [
+                      TextSpan(
+                        text: 'By creating an account, you agree to our ',
+                      ),
+                      TextSpan(
+                        text: 'Terms and Conditions',
+                        style: TextStyle(
+                          color: Colors.blue,
+                          decoration: TextDecoration.underline,
+                          fontSize: 12,
+                        ),
+                        recognizer: TapGestureRecognizer()..onTap = () {},
+                      ),
+                      TextSpan(text: ' and '),
+                      TextSpan(
+                        text: 'Privacy Policy',
+                        style: TextStyle(
+                          color: Colors.blue,
+                          decoration: TextDecoration.underline,
+                          fontSize: 12,
+                        ),
+                        recognizer: TapGestureRecognizer()..onTap = () {},
+                      ),
+                    ],
                   ),
                 ),
               ),
