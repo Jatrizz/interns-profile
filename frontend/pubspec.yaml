@@ -11,6 +11,7 @@ environment:
 dependencies:
   flutter:
     sdk: flutter
+  http: ^1.0.0
 
   cupertino_icons: ^1.0.8
   # Remove google_fonts for now to avoid version issues
@@ -22,6 +23,11 @@ dev_dependencies:
   flutter_lints: ^6.0.0
 
 flutter:
+  fonts:
+    - family: RobotoMono
+      fonts:
+        - asset: assets/fonts/RobotoMono-Regular.ttf
+        - asset: assets/fonts/RobotoMono-Italic.ttf
   uses-material-design: true
 
   assets:
