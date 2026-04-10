@@ -1,6 +1,8 @@
 import 'dart:convert';
 import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
+import 'package:flutter/gestures.dart';
+import 'package:flutter/services.dart';
 
 class HeroSection extends StatefulWidget {
   const HeroSection({super.key});
@@ -17,10 +19,22 @@ class _HeroSectionState extends State<HeroSection> {
   final _schoolController = TextEditingController();
   final _programController = TextEditingController();
   final _emailController = TextEditingController();
+  final _numberController = TextEditingController();
   final _passwordController = TextEditingController();
+  final _confirmpassController = TextEditingController();
 
   final Map<String, String?> _errors = {};
   bool _isSubmitting = false;
+
+  bool _showPassword = false;
+  bool _showConfirmPassword = false;
+
+  Map<String, bool> _passwordChecks = {
+    'minLength': false,
+    'uppercase': false,
+    'lowercase': false,
+    'number': false,
+  };
 
   @override
   void dispose() {
@@ -29,7 +43,9 @@ class _HeroSectionState extends State<HeroSection> {
     _schoolController.dispose();
     _programController.dispose();
     _emailController.dispose();
+    _numberController.dispose();
     _passwordController.dispose();
+    _confirmpassController.dispose();
     super.dispose();
   }
 
@@ -38,17 +54,29 @@ class _HeroSectionState extends State<HeroSection> {
     return regex.hasMatch(password);
   }
 
+  void _checkPassword(String password) {
+    setState(() {
+      _passwordChecks['minLength'] = password.length >= 8;
+      _passwordChecks['uppercase'] = RegExp(r'[A-Z]').hasMatch(password);
+      _passwordChecks['lowercase'] = RegExp(r'[a-z]').hasMatch(password);
+      _passwordChecks['number'] = RegExp(r'\d').hasMatch(password);
+    });
+  }
+
   void _validateForm() {
     setState(() {
       _errors['firstName'] = _firstNameController.text.isEmpty
           ? 'First name is required'
           : null;
+
       _errors['lastName'] = _lastNameController.text.isEmpty
           ? 'Last name is required'
           : null;
+
       _errors['school'] = _schoolController.text.isEmpty
           ? 'School is required'
           : null;
+
       _errors['program'] = _programController.text.isEmpty
           ? 'Program is required'
           : null;
@@ -63,12 +91,28 @@ class _HeroSectionState extends State<HeroSection> {
         _errors['email'] = null;
       }
 
+      if (_numberController.text.isEmpty) {
+        _errors['phonenum'] = 'Phone number is required';
+      } else if (_numberController.text.length != 11) {
+        _errors['phonenum'] = 'Phone number must be 11 digits';
+      } else {
+        _errors['phonenum'] = null;
+      }
+
       if (_passwordController.text.isEmpty) {
         _errors['password'] = 'Password is required';
       } else if (!_isPasswordValid(_passwordController.text)) {
         _errors['password'] = 'Min 8 chars, include upper, lower & number';
       } else {
         _errors['password'] = null;
+      }
+
+      if (_confirmpassController.text.isEmpty) {
+        _errors['confirmpass'] = 'Please confirm your password';
+      } else if (_confirmpassController.text != _passwordController.text) {
+        _errors['confirmpass'] = 'Passwords do not match';
+      } else {
+        _errors['confirmpass'] = null;
       }
     });
   }
@@ -81,7 +125,6 @@ class _HeroSectionState extends State<HeroSection> {
 
     try {
       final response = await http.post(
-        // Use your computer's LAN IP instead of localhost if testing on a device/emulator
         Uri.parse('http://localhost:8080/register'),
         headers: {'Content-Type': 'application/json'},
         body: jsonEncode({
@@ -90,6 +133,7 @@ class _HeroSectionState extends State<HeroSection> {
           'school': _schoolController.text,
           'program': _programController.text,
           'email': _emailController.text,
+          'phone_number': _numberController.text,
           'password': _passwordController.text,
         }),
       );
@@ -129,6 +173,7 @@ class _HeroSectionState extends State<HeroSection> {
             child: Image.asset('assets/images/logo.png', fit: BoxFit.contain),
           ),
         ),
+
         Expanded(
           child: SingleChildScrollView(
             child: Form(
@@ -143,7 +188,9 @@ class _HeroSectionState extends State<HeroSection> {
                       fontWeight: FontWeight.w600,
                     ),
                   ),
+
                   const SizedBox(height: 15),
+
                   SizedBox(
                     width: 400,
                     child: Row(
@@ -166,62 +213,180 @@ class _HeroSectionState extends State<HeroSection> {
                       ],
                     ),
                   ),
+
                   const SizedBox(height: 10),
+
                   _buildFieldWithError(
                     controller: _schoolController,
                     label: 'School',
                     errorKey: 'school',
                   ),
+
                   const SizedBox(height: 10),
+
                   _buildFieldWithError(
                     controller: _programController,
                     label: 'Program',
                     errorKey: 'program',
                   ),
+
                   const SizedBox(height: 10),
+
                   _buildFieldWithError(
                     controller: _emailController,
                     label: 'Email',
                     errorKey: 'email',
                   ),
+
                   const SizedBox(height: 10),
+
                   _buildFieldWithError(
-                    controller: _passwordController,
-                    label: 'Password',
-                    errorKey: 'password',
-                    obscureText: true,
+                    controller: _numberController,
+                    label: 'Phone Number',
+                    errorKey: 'phonenum',
+                    inputFormatters: [FilteringTextInputFormatter.digitsOnly],
                   ),
+
                   const SizedBox(height: 10),
+
+                  SizedBox(
+                    width: 400,
+                    child: Column(
+                      children: [
+                        Row(
+                          children: [
+                            Expanded(
+                              child: _buildFieldWithError(
+                                controller: _passwordController,
+                                label: 'Password',
+                                errorKey: 'password',
+                                obscureText: !_showPassword,
+                                onChanged: _checkPassword,
+                                suffixIcon: IconButton(
+                                  icon: Icon(
+                                    _showPassword
+                                        ? Icons.visibility
+                                        : Icons.visibility_off,
+                                    color: Colors.white,
+                                    size: 18,
+                                  ),
+                                  onPressed: () {
+                                    setState(() {
+                                      _showPassword = !_showPassword;
+                                    });
+                                  },
+                                ),
+                              ),
+                            ),
+                            const SizedBox(width: 10),
+                            Expanded(
+                              child: _buildFieldWithError(
+                                controller: _confirmpassController,
+                                label: 'Confirm Password',
+                                errorKey: 'confirmpass',
+                                obscureText: !_showConfirmPassword,
+                                suffixIcon: IconButton(
+                                  icon: Icon(
+                                    _showConfirmPassword
+                                        ? Icons.visibility
+                                        : Icons.visibility_off,
+                                    color: Colors.white,
+                                    size: 18,
+                                  ),
+                                  onPressed: () {
+                                    setState(() {
+                                      _showConfirmPassword =
+                                          !_showConfirmPassword;
+                                    });
+                                  },
+                                ),
+                              ),
+                            ),
+                          ],
+                        ),
+
+                        const SizedBox(height: 8),
+
+                        _buildCheck(
+                          'At least 8 characters',
+                          _passwordChecks['minLength']!,
+                        ),
+                        _buildCheck(
+                          'At least 1 uppercase letter',
+                          _passwordChecks['uppercase']!,
+                        ),
+                        _buildCheck(
+                          'At least 1 lowercase letter',
+                          _passwordChecks['lowercase']!,
+                        ),
+                        _buildCheck(
+                          'At least 1 number',
+                          _passwordChecks['number']!,
+                        ),
+                      ],
+                    ),
+                  ),
+
+                  const SizedBox(height: 10),
+
                   Container(
                     width: 400,
-                    decoration: BoxDecoration(
-                      gradient: const LinearGradient(
+                    decoration: const BoxDecoration(
+                      gradient: LinearGradient(
                         colors: [Colors.blue, Color.fromARGB(255, 2, 55, 230)],
-                        begin: Alignment.topLeft,
-                        end: Alignment.bottomRight,
                       ),
                     ),
-                    padding: const EdgeInsets.symmetric(
-                      horizontal: 16,
-                      vertical: 3,
-                    ),
-                    child: Material(
-                      color: Colors.transparent,
-                      child: InkWell(
-                        onTap: _isSubmitting ? null : _submitForm,
-                        child: Padding(
-                          padding: const EdgeInsets.symmetric(vertical: 14),
-                          child: Center(
-                            child: _isSubmitting
-                                ? const CircularProgressIndicator(
-                                    color: Colors.white,
-                                  )
-                                : const Text(
-                                    'Register',
-                                    style: TextStyle(color: Colors.white),
-                                  ),
-                          ),
+                    child: InkWell(
+                      onTap: _isSubmitting ? null : _submitForm,
+                      child: Padding(
+                        padding: const EdgeInsets.symmetric(vertical: 14),
+                        child: Center(
+                          child: _isSubmitting
+                              ? const CircularProgressIndicator(
+                                  color: Colors.white,
+                                )
+                              : const Text(
+                                  'Register',
+                                  style: TextStyle(color: Colors.white),
+                                ),
                         ),
+                      ),
+                    ),
+                  ),
+
+                  const SizedBox(height: 10),
+
+                  SizedBox(
+                    width: 400,
+                    child: RichText(
+                      textAlign: TextAlign.center,
+                      text: TextSpan(
+                        style: const TextStyle(
+                          color: Colors.white,
+                          fontSize: 12,
+                        ),
+                        children: [
+                          const TextSpan(
+                            text: 'By creating an account, you agree to our ',
+                          ),
+                          TextSpan(
+                            text: 'Terms and Conditions',
+                            style: const TextStyle(
+                              color: Colors.blue,
+                              decoration: TextDecoration.underline,
+                            ),
+                            recognizer: TapGestureRecognizer()..onTap = () {},
+                          ),
+                          const TextSpan(text: ' and '),
+                          TextSpan(
+                            text: 'Privacy Policy',
+                            style: const TextStyle(
+                              color: Colors.blue,
+                              decoration: TextDecoration.underline,
+                            ),
+                            recognizer: TapGestureRecognizer()..onTap = () {},
+                          ),
+                        ],
                       ),
                     ),
                   ),
@@ -239,6 +404,9 @@ class _HeroSectionState extends State<HeroSection> {
     required String label,
     required String errorKey,
     bool obscureText = false,
+    Widget? suffixIcon,
+    List<TextInputFormatter>? inputFormatters,
+    ValueChanged<String>? onChanged,
   }) {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
@@ -247,15 +415,15 @@ class _HeroSectionState extends State<HeroSection> {
           width: 400,
           decoration: const BoxDecoration(
             gradient: LinearGradient(
-              colors: [Colors.black, Colors.grey],
-              begin: Alignment.topLeft,
-              end: Alignment.bottomRight,
+              colors: [Colors.black, Color.fromARGB(131, 158, 158, 158)],
             ),
           ),
           padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 3),
           child: TextFormField(
             controller: controller,
             obscureText: obscureText,
+            onChanged: onChanged,
+            inputFormatters: inputFormatters,
             style: const TextStyle(color: Colors.white),
             decoration: InputDecoration(
               label: Text(
@@ -263,9 +431,11 @@ class _HeroSectionState extends State<HeroSection> {
                 style: const TextStyle(color: Colors.white, fontSize: 12),
               ),
               border: InputBorder.none,
+              suffixIcon: suffixIcon,
             ),
           ),
         ),
+
         if (_errors[errorKey] != null)
           Padding(
             padding: const EdgeInsets.only(left: 8, top: 3),
@@ -274,6 +444,26 @@ class _HeroSectionState extends State<HeroSection> {
               style: const TextStyle(color: Colors.red, fontSize: 12),
             ),
           ),
+      ],
+    );
+  }
+
+  Widget _buildCheck(String text, bool isValid) {
+    return Row(
+      children: [
+        Icon(
+          isValid ? Icons.check_circle : Icons.circle_outlined,
+          color: isValid ? Colors.green : Colors.grey,
+          size: 16,
+        ),
+        const SizedBox(width: 6),
+        Text(
+          text,
+          style: TextStyle(
+            color: isValid ? Colors.green : Colors.grey,
+            fontSize: 12,
+          ),
+        ),
       ],
     );
   }
