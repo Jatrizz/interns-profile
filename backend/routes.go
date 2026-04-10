@@ -8,6 +8,7 @@ func RegisterRoutes(r *mux.Router) {
 	r.HandleFunc("/login", Login).Methods("POST")
 	r.HandleFunc("/dashboard", Dashboard).Methods("GET")
 	r.HandleFunc("/get-stats", GetStats).Methods("GET")
+	r.HandleFunc("/school-stats", SchoolStats).Methods("GET")
 
 	// Intern CRUD
 	r.HandleFunc("/add-intern", AddIntern).Methods("POST")
@@ -19,4 +20,5 @@ func RegisterRoutes(r *mux.Router) {
 
 	// Admin list
 	r.HandleFunc("/admins", GetAdminsHandler).Methods("GET")
+
 }

@@ -13,8 +13,8 @@ import (
 )
 
 type LoginRequest struct {
-	PhoneNumber string `json:"phone_number"`
-	Password    string `json:"password"`
+	Email    string `json:"email"`
+	Password string `json:"password"`
 }
 
 func Login(w http.ResponseWriter, r *http.Request) {
@@ -31,8 +31,8 @@ func Login(w http.ResponseWriter, r *http.Request) {
 	}
 
 	// Input validation
-	if strings.TrimSpace(req.PhoneNumber) == "" {
-		http.Error(w, "Phone number is required", http.StatusBadRequest)
+	if strings.TrimSpace(req.Email) == "" {
+		http.Error(w, "Email is required", http.StatusBadRequest)
 		return
 	}
 	if strings.TrimSpace(req.Password) == "" {
@@ -43,8 +43,8 @@ func Login(w http.ResponseWriter, r *http.Request) {
 	// Find user by phone number
 	var user User
 	var hashedPassword string
-	err = db.QueryRow("SELECT id, username, password FROM users WHERE phone_number = $1",
-		req.PhoneNumber).Scan(&user.ID, &user.Username, &hashedPassword)
+	err = db.QueryRow("SELECT id, email, password FROM users WHERE email = $1",
+		req.Email).Scan(&user.ID, &user.Email, &hashedPassword)
 	if err == sql.ErrNoRows {
 		http.Error(w, "User not found", http.StatusUnauthorized)
 		return
@@ -67,9 +67,9 @@ func Login(w http.ResponseWriter, r *http.Request) {
 	}
 
 	token := jwt.NewWithClaims(jwt.SigningMethodHS256, jwt.MapClaims{
-		"id":       user.ID,
-		"username": user.Username,
-		"exp":      time.Now().Add(time.Hour * 24).Unix(), // expires in 24 hours
+		"id":    user.ID,
+		"email": user.Email,
+		"exp":   time.Now().Add(time.Hour * 24).Unix(), // expires in 24 hours
 	})
 
 	tokenString, err := token.SignedString([]byte(secret))
@@ -80,8 +80,8 @@ func Login(w http.ResponseWriter, r *http.Request) {
 
 	w.Header().Set("Content-Type", "application/json")
 	json.NewEncoder(w).Encode(map[string]string{
-		"message":  "Login successful",
-		"username": user.Username,
-		"token":    tokenString,
+		"message": "Login successful",
+		"email":   user.Email,
+		"token":   tokenString,
 	})
 }

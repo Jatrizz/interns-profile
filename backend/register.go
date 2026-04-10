@@ -11,7 +11,11 @@ import (
 
 type User struct {
 	ID          int    `json:"id"`
-	Username    string `json:"username"`
+	FirstName   string `json:"first_name"`
+	LastName    string `json:"last_name"`
+	School      string `json:"school"`
+	Program     string `json:"program"`
+	Email       string `json:"email"`
 	PhoneNumber string `json:"phone_number"`
 	Password    string `json:"password"`
 	Role        string `json:"role"` // "admin" or "intern"
@@ -31,12 +35,24 @@ func registerHandler(w http.ResponseWriter, r *http.Request) {
 	}
 
 	// Input validation
-	if strings.TrimSpace(user.Username) == "" {
-		http.Error(w, "Username is required", http.StatusBadRequest)
+	if strings.TrimSpace(user.FirstName) == "" {
+		http.Error(w, "First name is required", http.StatusBadRequest)
 		return
 	}
-	if strings.TrimSpace(user.PhoneNumber) == "" {
-		http.Error(w, "Phone number is required", http.StatusBadRequest)
+	if strings.TrimSpace(user.LastName) == "" {
+		http.Error(w, "Last name is required", http.StatusBadRequest)
+		return
+	}
+	if strings.TrimSpace(user.School) == "" {
+		http.Error(w, "School is required", http.StatusBadRequest)
+		return
+	}
+	if strings.TrimSpace(user.Program) == "" {
+		http.Error(w, "Program is required", http.StatusBadRequest)
+		return
+	}
+	if strings.TrimSpace(user.Email) == "" {
+		http.Error(w, "Email is required", http.StatusBadRequest)
 		return
 	}
 	if len(user.PhoneNumber) != 11 || !strings.HasPrefix(user.PhoneNumber, "09") {
@@ -80,8 +96,8 @@ func registerHandler(w http.ResponseWriter, r *http.Request) {
 	}
 
 	// Save to database including role
-	_, err = db.Exec("INSERT INTO users (username, phone_number, password_hash, role) VALUES ($1, $2, $3, $4)",
-		user.Username, user.PhoneNumber, string(hashedPassword), user.Role)
+	_, err = db.Exec("INSERT INTO users (first_name, last_name, email, school, program, phone_number, password_hash, role) VALUES ($1, $2, $3, $4, $5, $6, $7, $8)",
+		user.FirstName, user.LastName, user.Email, user.School, user.Program, user.PhoneNumber, string(hashedPassword), user.Role)
 	if err != nil {
 		http.Error(w, "Error saving user", http.StatusInternalServerError)
 		return

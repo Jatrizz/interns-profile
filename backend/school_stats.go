@@ -12,7 +12,7 @@ type SchoolStat struct {
 }
 
 // Handler
-func GetSchoolStats(w http.ResponseWriter, r *http.Request) {
+func SchoolStats(w http.ResponseWriter, r *http.Request) {
 	if r.Method != http.MethodGet {
 		http.Error(w, "Invalid Request Method", http.StatusMethodNotAllowed)
 		return
