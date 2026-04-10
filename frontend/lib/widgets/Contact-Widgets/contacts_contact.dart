@@ -168,7 +168,6 @@ class ContactsContact extends StatelessWidget {
                     ),
                     Container(
                       height: 50,
-                      width: 400,
                       decoration: BoxDecoration(
                         gradient: LinearGradient(
                           colors: [

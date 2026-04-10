@@ -1,8 +1,8 @@
 import 'package:flutter/material.dart';
-import 'package:interfaces/widgets/Homepage-Widgets/Aboutpage-Widgets/about_intro.dart';
-// import 'package:interfaces/widgets/Homepage-Widgets/Aboutpage-Widgets/getready_about.dart';
-import 'package:interfaces/widgets/Homepage-Widgets/Aboutpage-Widgets/herosection_about.dart';
-import 'package:interfaces/widgets/Homepage-Widgets/Aboutpage-Widgets/team_section.dart';
+import 'package:interfaces/widgets/Aboutpage-Widgets/about_intro.dart';
+// import 'package:interfaces/widgets/Aboutpage-Widgets/getready_about.dart';
+import 'package:interfaces/widgets/Aboutpage-Widgets/herosection_about.dart';
+import 'package:interfaces/widgets/Aboutpage-Widgets/team_section.dart';
 import '../widgets/Homepage-Widgets/navbar.dart';
 import '../widgets/Homepage-Widgets/footer.dart';
 
@@ -19,8 +19,6 @@ class AboutPage extends StatelessWidget {
           SizedBox(height: 50),
           AboutIntro(),
           TeamSection(),
-          SizedBox(height: 60),
-          // GetreadyAbout(),
           SizedBox(height: 30),
           Footer(),
         ],

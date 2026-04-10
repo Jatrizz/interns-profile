@@ -2,6 +2,7 @@ import 'dart:convert';
 import 'package:flutter/material.dart';
 import 'package:flutter/gestures.dart';
 import 'package:http/http.dart' as http;
+// import 'package:interfaces/pages/login_page.dart';
 import 'package:interfaces/pages/register_page.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
@@ -45,8 +46,8 @@ class _LoginState extends State<Login> {
     if (password.isEmpty) {
       _passwordError = "Password is required";
       isValid = false;
-    } else if (password.length < 6) {
-      _passwordError = "Minimum 6 characters";
+    } else if (password.length < 8) {
+      _passwordError = "Minimum 8 characters";
       isValid = false;
     }
 
@@ -84,7 +85,10 @@ class _LoginState extends State<Login> {
           context,
         ).showSnackBar(const SnackBar(content: Text('Login successful!')));
 
-        //dashboard dito bobo
+        // Navigator.pushReplacement(
+        //   context,
+        //   MaterialPageRoute(builder: (context) => const LoginPage()),
+        // );
       } else {
         final body = jsonDecode(response.body);
 

@@ -1,19 +1,41 @@
 import 'package:flutter/material.dart';
 
-class HeroSectionAbout extends StatelessWidget {
-  const HeroSectionAbout({super.key});
-
+class HerosectionAbout extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
-    return Container(
-      height: 300,
-      color: Colors.blueGrey,
-      child: const Center(
-        child: Text(
-          'About Us',
-          style: TextStyle(fontSize: 32, color: Colors.white),
+    return Row(
+      children: [
+        Expanded(
+          child: SizedBox(
+            height: 700,
+            child: Image.asset(
+              '../../../assets/images/logo.png',
+              fit: BoxFit.contain,
+            ),
+          ),
         ),
-      ),
+        Expanded(
+          child: Column(
+            mainAxisAlignment: MainAxisAlignment.center,
+            crossAxisAlignment: CrossAxisAlignment.center,
+            children: [
+              Text(
+                'About Us',
+                style: TextStyle(
+                  color: Colors.white,
+                  fontSize: 40,
+                  fontWeight: FontWeight(600),
+                ),
+              ),
+              Text(
+                'Learn more about our intern profile\nmanagement system and the team behind it.',
+                textAlign: TextAlign.center,
+                style: TextStyle(color: Colors.white, fontSize: 15),
+              ),
+            ],
+          ),
+        ),
+      ],
     );
   }
 }

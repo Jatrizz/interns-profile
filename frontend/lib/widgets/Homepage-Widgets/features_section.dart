@@ -113,7 +113,7 @@ class FeaturesSection extends StatelessWidget {
                           mainAxisAlignment: MainAxisAlignment.center,
                           children: [
                             Icon(
-                              Icons.contact_mail,
+                              Icons.contact_page,
                               size: 60,
                               color: Colors.white,
                             ),
