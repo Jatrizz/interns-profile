@@ -60,18 +60,10 @@ func UpdateIntern(w http.ResponseWriter, r *http.Request) {
 		http.Error(w, "Program is required", http.StatusBadRequest)
 		return
 	}
-	if strings.TrimSpace(intern.ContactNumber) == "" {
-		http.Error(w, "Contact number is required", http.StatusBadRequest)
-		return
-	}
-	if len(intern.ContactNumber) != 11 || !strings.HasPrefix(intern.ContactNumber, "09") {
-		http.Error(w, "Invalid contact number - must start with 09 and be 11 digits", http.StatusBadRequest)
-		return
-	}
 
 	// Update in database
 	_, err = db.Exec("UPDATE interns SET name=$1, school=$2, program=$3, contact_number=$4, photo=$5 WHERE id=$6",
-		intern.Name, intern.School, intern.Program, intern.ContactNumber, intern.Photo, id)
+		intern.Name, intern.School, intern.Program, intern.Photo, id)
 	if err != nil {
 		http.Error(w, "Error updating intern", http.StatusInternalServerError)
 		return

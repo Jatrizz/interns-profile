@@ -9,8 +9,8 @@ import (
 
 // Response struct for stats
 type StatsResponse struct {
-	Interns int `json:"interns"`
-	Schools int `json:"schools"`
+	Interns  int `json:"interns"`
+	Schools  int `json:"schools"`
 	Programs int `json:"programs"`
 }
 

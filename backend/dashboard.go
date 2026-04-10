@@ -11,7 +11,6 @@ type InternList struct {
 	Name          string `json:"name"`
 	School        string `json:"school"`
 	Program       string `json:"program"`
-	ContactNumber string `json:"contact_number"`
 	CreatedAt     string `json:"created_at"`
 }
 
@@ -85,7 +84,6 @@ func Dashboard(w http.ResponseWriter, r *http.Request) {
 			&intern.Name,
 			&intern.School,
 			&intern.Program,
-			&intern.ContactNumber,
 			&intern.CreatedAt,
 		)
 		if err != nil {
