@@ -29,7 +29,7 @@ class _HeroSectionState extends State<HeroSection> {
   bool _showPassword = false;
   bool _showConfirmPassword = false;
 
-  Map<String, bool> _passwordChecks = {
+  final Map<String, bool> _passwordChecks = {
     'minLength': false,
     'uppercase': false,
     'lowercase': false,
