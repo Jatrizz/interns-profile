@@ -4,11 +4,14 @@ import (
 	"encoding/json"
 	"fmt"
 	"net/http"
+	"regexp"
 	"strings"
+	"time"
 
 	"golang.org/x/crypto/bcrypt"
 )
 
+// User struct
 type User struct {
 	ID          int    `json:"id"`
 	FirstName   string `json:"first_name"`
@@ -16,92 +19,181 @@ type User struct {
 	School      string `json:"school"`
 	Program     string `json:"program"`
 	Email       string `json:"email"`
-	PhoneNumber string `json:"phone_number"`
 	Password    string `json:"password"`
-	Role        string `json:"role"` // "admin" or "intern"
+	PhoneNumber string `json:"phone_number"`
+}
+
+// 🔧 Generate Intern ID: YYYY-XXX
+func generateInternID() (string, error) {
+	year := time.Now().Year()
+
+	var lastNumber int
+	err := db.QueryRow(`
+		SELECT COALESCE(MAX(CAST(SPLIT_PART(intern_id, '-', 2) AS INT)), 0)
+		FROM interns
+		WHERE EXTRACT(YEAR FROM created_at) = $1
+	`, year).Scan(&lastNumber)
+
+	if err != nil {
+		return "", err
+	}
+
+	newNumber := lastNumber + 1
+	internID := fmt.Sprintf("%d-%03d", year, newNumber)
+
+	return internID, nil
 }
 
 func registerHandler(w http.ResponseWriter, r *http.Request) {
-	if r.Method != http.MethodPost {
-		http.Error(w, "Invalid Request Method", http.StatusMethodNotAllowed)
+	if r.Method == http.MethodOptions {
+		w.WriteHeader(http.StatusOK)
 		return
 	}
+
+	w.Header().Set("Content-Type", "application/json")
 
 	var user User
-	err := json.NewDecoder(r.Body).Decode(&user)
-	if err != nil {
-		http.Error(w, "Invalid request body", http.StatusBadRequest)
+	if err := json.NewDecoder(r.Body).Decode(&user); err != nil {
+		http.Error(w, "Invalid request body: "+err.Error(), http.StatusBadRequest)
 		return
 	}
 
-	// Input validation
+	errors := map[string]string{}
+
+	// ---------------- VALIDATION ----------------
+
 	if strings.TrimSpace(user.FirstName) == "" {
-		http.Error(w, "First name is required", http.StatusBadRequest)
-		return
+		errors["first_name"] = "First name is required"
 	}
 	if strings.TrimSpace(user.LastName) == "" {
-		http.Error(w, "Last name is required", http.StatusBadRequest)
-		return
+		errors["last_name"] = "Last name is required"
 	}
 	if strings.TrimSpace(user.School) == "" {
-		http.Error(w, "School is required", http.StatusBadRequest)
-		return
+		errors["school"] = "School is required"
 	}
 	if strings.TrimSpace(user.Program) == "" {
-		http.Error(w, "Program is required", http.StatusBadRequest)
-		return
+		errors["program"] = "Program is required"
 	}
+
 	if strings.TrimSpace(user.Email) == "" {
-		http.Error(w, "Email is required", http.StatusBadRequest)
-		return
+		errors["email"] = "Email is required"
+	} else if !strings.Contains(user.Email, "@") {
+		errors["email"] = "Invalid email format"
 	}
-	if len(user.PhoneNumber) != 11 || !strings.HasPrefix(user.PhoneNumber, "09") {
-		http.Error(w, "Invalid phone number", http.StatusBadRequest)
-		return
-	}
+
 	if strings.TrimSpace(user.Password) == "" {
-		http.Error(w, "Password is required", http.StatusBadRequest)
-		return
+		errors["password"] = "Password is required"
+	} else if len(user.Password) < 8 {
+		errors["password"] = "Password must be at least 8 characters"
 	}
-	if len(user.Password) < 6 {
-		http.Error(w, "Password must be at least 6 characters", http.StatusBadRequest)
+
+	// 📱 Phone validation
+	phone := strings.TrimSpace(user.PhoneNumber)
+
+	if phone == "" {
+		errors["phone_number"] = "Phone number is required"
+	} else {
+		matched, _ := regexp.MatchString(`^09\d{9}$`, phone)
+		if !matched {
+			errors["phone_number"] = "Phone must start with 09 and be 11 digits"
+		}
+	}
+
+	// If validation failed
+	if len(errors) > 0 {
+		w.WriteHeader(http.StatusBadRequest)
+		json.NewEncoder(w).Encode(map[string]interface{}{"errors": errors})
 		return
 	}
 
-	// Role validation
-	user.Role = strings.ToLower(strings.TrimSpace(user.Role))
-	if user.Role != "admin" && user.Role != "intern" {
-		http.Error(w, "Role must be 'admin' or 'intern'", http.StatusBadRequest)
-		return
-	}
+	// ---------------- DUPLICATE CHECK ----------------
 
-	// Check for duplicate phone number
 	var exists bool
-	err = db.QueryRow("SELECT EXISTS(SELECT 1 FROM users WHERE phone_number = $1)",
-		user.PhoneNumber).Scan(&exists)
+
+	// Email duplicate
+	err := db.QueryRow(
+		"SELECT EXISTS(SELECT 1 FROM interns WHERE email=$1)",
+		user.Email,
+	).Scan(&exists)
+
 	if err != nil {
-		http.Error(w, "Error checking phone number", http.StatusInternalServerError)
+		http.Error(w, "Database error: "+err.Error(), http.StatusInternalServerError)
 		return
 	}
 	if exists {
-		http.Error(w, "Phone number already registered", http.StatusConflict)
+		errors["email"] = "Email already registered"
+	}
+
+	// Phone duplicate
+	err = db.QueryRow(
+		"SELECT EXISTS(SELECT 1 FROM interns WHERE phone_number=$1)",
+		phone,
+	).Scan(&exists)
+
+	if err != nil {
+		http.Error(w, "Database error: "+err.Error(), http.StatusInternalServerError)
+		return
+	}
+	if exists {
+		errors["phone_number"] = "Phone number already registered"
+	}
+
+	if len(errors) > 0 {
+		w.WriteHeader(http.StatusConflict)
+		json.NewEncoder(w).Encode(map[string]interface{}{"errors": errors})
 		return
 	}
 
-	// Hash the password
+	// ---------------- GENERATE INTERN ID ----------------
+
+	internID, err := generateInternID()
+	if err != nil {
+		http.Error(w, "Failed to generate intern ID: "+err.Error(), http.StatusInternalServerError)
+		return
+	}
+
+	// ---------------- HASH PASSWORD ----------------
+
 	hashedPassword, err := bcrypt.GenerateFromPassword([]byte(user.Password), bcrypt.DefaultCost)
 	if err != nil {
-		http.Error(w, "Error hashing password", http.StatusInternalServerError)
+		http.Error(w, "Password hashing failed: "+err.Error(), http.StatusInternalServerError)
 		return
 	}
 
-	// Save to database including role
-	_, err = db.Exec("INSERT INTO users (first_name, last_name, email, school, program, phone_number, password_hash, role) VALUES ($1, $2, $3, $4, $5, $6, $7, $8)",
-		user.FirstName, user.LastName, user.Email, user.School, user.Program, user.PhoneNumber, string(hashedPassword), user.Role)
+	// ---------------- INSERT ----------------
+
+	_, err = db.Exec(`
+		INSERT INTO interns (
+			intern_id,
+			first_name,
+			last_name,
+			school,
+			program,
+			email,
+			password_hash,
+			phone_number
+		)
+		VALUES ($1,$2,$3,$4,$5,$6,$7,$8)
+	`,
+		internID,
+		user.FirstName,
+		user.LastName,
+		user.School,
+		user.Program,
+		user.Email,
+		string(hashedPassword),
+		phone,
+	)
+
 	if err != nil {
-		http.Error(w, "Error saving user", http.StatusInternalServerError)
+		http.Error(w, "Failed to save user: "+err.Error(), http.StatusInternalServerError)
 		return
 	}
 
-	fmt.Fprintf(w, "User registered successfully as %s", user.Role)
+	// ---------------- RESPONSE ----------------
+
+	json.NewEncoder(w).Encode(map[string]string{
+		"message":   "User registered successfully",
+		"intern_id": internID,
+	})
 }

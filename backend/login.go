@@ -30,21 +30,38 @@ func Login(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	// Input validation
+	// ======================
+	// VALIDATION
+	// ======================
+
 	if strings.TrimSpace(req.Email) == "" {
 		http.Error(w, "Email is required", http.StatusBadRequest)
 		return
 	}
+
+	if !strings.Contains(req.Email, "@") {
+		http.Error(w, "Invalid email format", http.StatusBadRequest)
+		return
+	}
+
 	if strings.TrimSpace(req.Password) == "" {
 		http.Error(w, "Password is required", http.StatusBadRequest)
 		return
 	}
 
-	// Find user by phone number
+	// ======================
+	// FETCH USER BY EMAIL
+	// ======================
+
 	var user User
 	var hashedPassword string
-	err = db.QueryRow("SELECT id, email, password FROM users WHERE email = $1",
-		req.Email).Scan(&user.ID, &user.Email, &hashedPassword)
+
+	err = db.QueryRow(`
+		SELECT id, first_name, password_hash 
+		FROM users 
+		WHERE email = $1
+	`, req.Email).Scan(&user.ID, &user.FirstName, &hashedPassword)
+
 	if err == sql.ErrNoRows {
 		http.Error(w, "User not found", http.StatusUnauthorized)
 		return
@@ -53,23 +70,29 @@ func Login(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	// Check password
+	// ======================
+	// CHECK PASSWORD
+	// ======================
+
 	err = bcrypt.CompareHashAndPassword([]byte(hashedPassword), []byte(req.Password))
 	if err != nil {
 		http.Error(w, "Invalid password", http.StatusUnauthorized)
 		return
 	}
 
-	// Generate JWT token
+	// ======================
+	// GENERATE JWT
+	// ======================
+
 	secret := os.Getenv("JWT_SECRET")
 	if secret == "" {
 		secret = "your-secret-key"
 	}
 
 	token := jwt.NewWithClaims(jwt.SigningMethodHS256, jwt.MapClaims{
-		"id":    user.ID,
-		"email": user.Email,
-		"exp":   time.Now().Add(time.Hour * 24).Unix(), // expires in 24 hours
+		"id":         user.ID,
+		"first_name": user.FirstName,
+		"exp":        time.Now().Add(time.Hour * 24).Unix(),
 	})
 
 	tokenString, err := token.SignedString([]byte(secret))
@@ -78,10 +101,14 @@ func Login(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	// ======================
+	// RESPONSE
+	// ======================
+
 	w.Header().Set("Content-Type", "application/json")
 	json.NewEncoder(w).Encode(map[string]string{
-		"message": "Login successful",
-		"email":   user.Email,
-		"token":   tokenString,
+		"message":    "Login successful",
+		"first_name": user.FirstName,
+		"token":      tokenString,
 	})
 }

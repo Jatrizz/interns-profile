@@ -14,7 +14,7 @@
 		Name          string `json:"name"`
 		School        string `json:"school"`
 		Program       string `json:"program"`
-		ContactNumber string `json:"contact_number"`
+		PhoneNumber   string `json:"phone_number"`
 	}
 
 	// GetInternHandler handles fetching a single intern
@@ -52,7 +52,7 @@
 			&intern.Name,
 			&intern.School,
 			&intern.Program,
-			&intern.ContactNumber,
+			&intern.PhoneNumber,
 		)
 
 		if err != nil {

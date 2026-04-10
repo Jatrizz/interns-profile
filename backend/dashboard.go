@@ -6,17 +6,14 @@ import (
 )
 
 type InternList struct {
-	ID            int    `json:"id"`
-	IDNumber      string `json:"id_number"`
-	Photo         string `json:"photo"`
-	FirstName     string `json:"first_name"`
-	LastName      string `json:"last_name"`
-	School        string `json:"school"`
-	Program       string `json:"program"`
-	Email         string `json:"email"`
-	ContactNumber string `json:"contact_number"`
-	Resume        string `json:"resume"`
-	CreatedAt     string `json:"created_at"`
+	ID        int    `json:"id"`
+	IDNumber  string `json:"id_number"`
+	Photo     string `json:"photo"`
+	FirstName string `json:"first_name"`
+	LastName  string `json:"last_name"`
+	School    string `json:"school"`
+	Program   string `json:"program"`
+	CreatedAt string `json:"created_at"`
 }
 
 type DashboardResponse struct {
@@ -56,7 +53,6 @@ func Dashboard(w http.ResponseWriter, r *http.Request) {
 	}
 
 	// Get total schools count
-	// Shows the Total Number of Schools in the Dashboard
 	var totalSchools int
 	err = db.QueryRow("SELECT COUNT(DISTINCT school) FROM interns").Scan(&totalSchools)
 	if err != nil {
