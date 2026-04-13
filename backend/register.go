@@ -23,14 +23,21 @@ type User struct {
 	PhoneNumber string `json:"phone_number"`
 }
 
+func jsonError(w http.ResponseWriter, message string, statusCode int) {
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(statusCode)
+	json.NewEncoder(w).Encode(map[string]string{
+		"error": message})
+}
+
 // 🔧 Generate Intern ID: YYYY-XXX
 func generateInternID() (string, error) {
 	year := time.Now().Year()
 
 	var lastNumber int
 	err := db.QueryRow(`
-		SELECT COALESCE(MAX(CAST(SPLIT_PART(intern_id, '-', 2) AS INT)), 0)
-		FROM interns
+		SELECT COALESCE(MAX(CAST(SPLIT_PART(id_number, '-', 2) AS INT)), 0)
+		FROM users
 		WHERE EXTRACT(YEAR FROM created_at) = $1
 	`, year).Scan(&lastNumber)
 
@@ -54,7 +61,7 @@ func registerHandler(w http.ResponseWriter, r *http.Request) {
 
 	var user User
 	if err := json.NewDecoder(r.Body).Decode(&user); err != nil {
-		http.Error(w, "Invalid request body: "+err.Error(), http.StatusBadRequest)
+		jsonError(w, "Invalid request body: "+err.Error(), http.StatusBadRequest)
 		return
 	}
 
@@ -112,12 +119,12 @@ func registerHandler(w http.ResponseWriter, r *http.Request) {
 
 	// Email duplicate
 	err := db.QueryRow(
-		"SELECT EXISTS(SELECT 1 FROM interns WHERE email=$1)",
+		"SELECT EXISTS(SELECT 1 FROM users WHERE email=$1)",
 		user.Email,
 	).Scan(&exists)
 
 	if err != nil {
-		http.Error(w, "Database error: "+err.Error(), http.StatusInternalServerError)
+		jsonError(w, "Database error: "+err.Error(), http.StatusInternalServerError)
 		return
 	}
 	if exists {
@@ -126,12 +133,12 @@ func registerHandler(w http.ResponseWriter, r *http.Request) {
 
 	// Phone duplicate
 	err = db.QueryRow(
-		"SELECT EXISTS(SELECT 1 FROM interns WHERE phone_number=$1)",
+		"SELECT EXISTS(SELECT 1 FROM users WHERE phone_number=$1)",
 		phone,
 	).Scan(&exists)
 
 	if err != nil {
-		http.Error(w, "Database error: "+err.Error(), http.StatusInternalServerError)
+		jsonError(w, "Database error: "+err.Error(), http.StatusInternalServerError)
 		return
 	}
 	if exists {
@@ -148,7 +155,7 @@ func registerHandler(w http.ResponseWriter, r *http.Request) {
 
 	internID, err := generateInternID()
 	if err != nil {
-		http.Error(w, "Failed to generate intern ID: "+err.Error(), http.StatusInternalServerError)
+		jsonError(w, "Failed to generate intern ID: "+err.Error(), http.StatusInternalServerError)
 		return
 	}
 
@@ -156,25 +163,25 @@ func registerHandler(w http.ResponseWriter, r *http.Request) {
 
 	hashedPassword, err := bcrypt.GenerateFromPassword([]byte(user.Password), bcrypt.DefaultCost)
 	if err != nil {
-		http.Error(w, "Password hashing failed: "+err.Error(), http.StatusInternalServerError)
+		jsonError(w, "Password hashing failed: "+err.Error(), http.StatusInternalServerError)
 		return
 	}
 
 	// ---------------- INSERT ----------------
 
 	_, err = db.Exec(`
-		INSERT INTO interns (
-			intern_id,
-			first_name,
-			last_name,
-			school,
-			program,
-			email,
-			password_hash,
-			phone_number
-		)
-		VALUES ($1,$2,$3,$4,$5,$6,$7,$8)
-	`,
+    INSERT INTO users (
+        id_number,
+        first_name,
+        last_name,
+        school,
+        program,
+        email,
+        password,
+        phone_number
+    )
+    VALUES ($1,$2,$3,$4,$5,$6,$7,$8)
+`,
 		internID,
 		user.FirstName,
 		user.LastName,
@@ -186,7 +193,7 @@ func registerHandler(w http.ResponseWriter, r *http.Request) {
 	)
 
 	if err != nil {
-		http.Error(w, "Failed to save user: "+err.Error(), http.StatusInternalServerError)
+		jsonError(w, "Failed to save user: "+err.Error(), http.StatusInternalServerError)
 		return
 	}
 

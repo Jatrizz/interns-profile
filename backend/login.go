@@ -19,14 +19,14 @@ type LoginRequest struct {
 
 func Login(w http.ResponseWriter, r *http.Request) {
 	if r.Method != http.MethodPost {
-		http.Error(w, "Invalid Request Method", http.StatusMethodNotAllowed)
+		jsonError(w, "Invalid Request Method", http.StatusMethodNotAllowed)
 		return
 	}
 
 	var req LoginRequest
 	err := json.NewDecoder(r.Body).Decode(&req)
 	if err != nil {
-		http.Error(w, "Invalid request body", http.StatusBadRequest)
+		jsonError(w, "Invalid request body", http.StatusBadRequest)
 		return
 	}
 
@@ -35,17 +35,17 @@ func Login(w http.ResponseWriter, r *http.Request) {
 	// ======================
 
 	if strings.TrimSpace(req.Email) == "" {
-		http.Error(w, "Email is required", http.StatusBadRequest)
+		jsonError(w, "Email is required", http.StatusBadRequest)
 		return
 	}
 
 	if !strings.Contains(req.Email, "@") {
-		http.Error(w, "Invalid email format", http.StatusBadRequest)
+		jsonError(w, "Invalid email format", http.StatusBadRequest)
 		return
 	}
 
 	if strings.TrimSpace(req.Password) == "" {
-		http.Error(w, "Password is required", http.StatusBadRequest)
+		jsonError(w, "Password is required", http.StatusBadRequest)
 		return
 	}
 
@@ -57,7 +57,7 @@ func Login(w http.ResponseWriter, r *http.Request) {
 	var hashedPassword string
 
 	err = db.QueryRow(`
-		SELECT id, first_name, password_hash 
+		SELECT id, first_name, password
 		FROM users 
 		WHERE email = $1
 	`, req.Email).Scan(&user.ID, &user.FirstName, &hashedPassword)
@@ -76,7 +76,7 @@ func Login(w http.ResponseWriter, r *http.Request) {
 
 	err = bcrypt.CompareHashAndPassword([]byte(hashedPassword), []byte(req.Password))
 	if err != nil {
-		http.Error(w, "Invalid password", http.StatusUnauthorized)
+		jsonError(w, "Invalid password", http.StatusUnauthorized)
 		return
 	}
 
@@ -97,7 +97,7 @@ func Login(w http.ResponseWriter, r *http.Request) {
 
 	tokenString, err := token.SignedString([]byte(secret))
 	if err != nil {
-		http.Error(w, "Error generating token", http.StatusInternalServerError)
+		jsonError(w, "Error generating token", http.StatusInternalServerError)
 		return
 	}
 

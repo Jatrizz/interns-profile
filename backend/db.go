@@ -14,8 +14,8 @@ func connectDB() error {
 	// Use the database values directly
 	dbHost := "localhost"
 	dbUser := "postgres"
-	dbPassword := "postgres"
-	dbName := "postgres"
+	dbPassword := "postgres123"
+	dbName := "internsprofile"
 	dbPort := "5432"
 
 	connStr := fmt.Sprintf(
