@@ -57,16 +57,16 @@ func Login(w http.ResponseWriter, r *http.Request) {
 	var hashedPassword string
 
 	err = db.QueryRow(`
-		SELECT id, first_name, password
+		SELECT id, first_name, password, role
 		FROM users 
 		WHERE email = $1
-	`, req.Email).Scan(&user.ID, &user.FirstName, &hashedPassword)
+	`, req.Email).Scan(&user.ID, &user.FirstName, &hashedPassword, &user.Role)
 
 	if err == sql.ErrNoRows {
-		http.Error(w, "User not found", http.StatusUnauthorized)
+		jsonError(w, "User not found", http.StatusUnauthorized)
 		return
 	} else if err != nil {
-		http.Error(w, "Error finding user", http.StatusInternalServerError)
+		jsonError(w, "Error finding user"+err.Error(), http.StatusInternalServerError)
 		return
 	}
 
@@ -92,6 +92,7 @@ func Login(w http.ResponseWriter, r *http.Request) {
 	token := jwt.NewWithClaims(jwt.SigningMethodHS256, jwt.MapClaims{
 		"id":         user.ID,
 		"first_name": user.FirstName,
+		"role":       user.Role,
 		"exp":        time.Now().Add(time.Hour * 24).Unix(),
 	})
 
@@ -110,5 +111,6 @@ func Login(w http.ResponseWriter, r *http.Request) {
 		"message":    "Login successful",
 		"first_name": user.FirstName,
 		"token":      tokenString,
+		"role":       user.Role,
 	})
 }

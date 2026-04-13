@@ -21,6 +21,7 @@ type User struct {
 	Email       string `json:"email"`
 	Password    string `json:"password"`
 	PhoneNumber string `json:"phone_number"`
+	Role        string `json:"role"`
 }
 
 func jsonError(w http.ResponseWriter, message string, statusCode int) {
