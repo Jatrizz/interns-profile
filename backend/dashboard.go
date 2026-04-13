@@ -17,7 +17,7 @@ type InternList struct {
 }
 
 type DashboardResponse struct {
-	Username     string `json:"username"`
+	FirstName    string `json:"first_name"`
 	TotalInterns int    `json:"total_interns"`
 	NewInterns   int    `json:"new_interns"`
 	TotalSchools int    `json:"total_schools"`
@@ -29,32 +29,32 @@ func Dashboard(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	// Get usename from query parameters (for welcome message in the dashboard)
-	username := r.URL.Query().Get("username")
+	// Get firstName from query parameters (for welcome message in the dashboard)
+	firstName := r.URL.Query().Get("first_name")
 
 	// Get total interns count
 	// Shows the Total Number of Interns in the Dashboard
 	var totalInterns int
-	err := db.QueryRow("SELECT COUNT(*) FROM interns").Scan(&totalInterns)
+	err := db.QueryRow("SELECT COUNT(*) FROM users").Scan(&totalInterns)
 	if err != nil {
-		http.Error(w, "Error getting total interns", http.StatusInternalServerError)
+		http.Error(w, "Error getting total users", http.StatusInternalServerError)
 		return
 	}
 
 	// Get new interns this month
 	// Shown as "No. of New Interns: 3" on dashboard
 	var newInterns int
-	err = db.QueryRow(`SELECT COUNT(*) FROM interns 
+	err = db.QueryRow(`SELECT COUNT(*) FROM users 
 		WHERE EXTRACT(MONTH FROM created_at) = EXTRACT(MONTH FROM CURRENT_DATE)
 		AND EXTRACT(YEAR FROM created_at) = EXTRACT(YEAR FROM CURRENT_DATE)`).Scan(&newInterns)
 	if err != nil {
-		http.Error(w, "Error getting new interns", http.StatusInternalServerError)
+		http.Error(w, "Error getting new users", http.StatusInternalServerError)
 		return
 	}
 
 	// Get total schools count
 	var totalSchools int
-	err = db.QueryRow("SELECT COUNT(DISTINCT school) FROM interns").Scan(&totalSchools)
+	err = db.QueryRow("SELECT COUNT(DISTINCT school) FROM users").Scan(&totalSchools)
 	if err != nil {
 		http.Error(w, "Error getting total schools", http.StatusInternalServerError)
 		return
@@ -62,7 +62,7 @@ func Dashboard(w http.ResponseWriter, r *http.Request) {
 
 	w.Header().Set("Content-Type", "application/json")
 	json.NewEncoder(w).Encode(DashboardResponse{
-		Username:     username,
+		FirstName:    firstName,
 		TotalInterns: totalInterns,
 		NewInterns:   newInterns,
 		TotalSchools: totalSchools,
