@@ -22,28 +22,39 @@ func GetStats(w http.ResponseWriter, r *http.Request) {
 
 	var stats StatsResponse
 
-	// Count total interns
-	err := db.QueryRow(`SELECT COUNT(*) FROM interns`).Scan(&stats.Interns)
+	// Count interns ONLY
+	err := db.QueryRow(`
+		SELECT COUNT(*) 
+		FROM users 
+		WHERE role = 'intern'
+	`).Scan(&stats.Interns)
 	if err != nil {
 		http.Error(w, "Error counting interns", http.StatusInternalServerError)
 		return
 	}
 
-	// Count unique schools
-	err = db.QueryRow(`SELECT COUNT(DISTINCT school) FROM interns`).Scan(&stats.Schools)
+	// Count unique schools (interns only)
+	err = db.QueryRow(`
+		SELECT COUNT(DISTINCT school) 
+		FROM users 
+		WHERE role = 'intern'
+	`).Scan(&stats.Schools)
 	if err != nil {
 		http.Error(w, "Error counting schools", http.StatusInternalServerError)
 		return
 	}
 
-	// Count unique programs
-	err = db.QueryRow(`SELECT COUNT(DISTINCT program) FROM interns`).Scan(&stats.Programs)
+	// Count unique programs (interns only)
+	err = db.QueryRow(`
+		SELECT COUNT(DISTINCT program) 
+		FROM users 
+		WHERE role = 'intern'
+	`).Scan(&stats.Programs)
 	if err != nil {
 		http.Error(w, "Error counting programs", http.StatusInternalServerError)
 		return
 	}
 
-	// Return JSON response
 	w.Header().Set("Content-Type", "application/json")
 	json.NewEncoder(w).Encode(stats)
 }

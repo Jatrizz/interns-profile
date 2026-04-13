@@ -44,7 +44,7 @@
 		// Query database
 		err = db.QueryRow(`
 			SELECT id, photo, name, school, program, contact_number
-			FROM interns
+			FROM intern
 			WHERE id = $1
 		`, id).Scan(
 			&intern.ID,
