@@ -35,7 +35,7 @@ func Dashboard(w http.ResponseWriter, r *http.Request) {
 	// Get total interns count
 	// Shows the Total Number of Interns in the Dashboard
 	var totalInterns int
-	err := db.QueryRow("SELECT COUNT(*) FROM users").Scan(&totalInterns)
+	err := db.QueryRow("SELECT COUNT(*) FROM users WHERE role = 'intern'").Scan(&totalInterns)
 	if err != nil {
 		http.Error(w, "Error getting total users", http.StatusInternalServerError)
 		return
@@ -45,7 +45,7 @@ func Dashboard(w http.ResponseWriter, r *http.Request) {
 	// Shown as "No. of New Interns: 3" on dashboard
 	var newInterns int
 	err = db.QueryRow(`SELECT COUNT(*) FROM users 
-		WHERE EXTRACT(MONTH FROM created_at) = EXTRACT(MONTH FROM CURRENT_DATE)
+		WHERE role = 'intern' AND EXTRACT(MONTH FROM created_at) = EXTRACT(MONTH FROM CURRENT_DATE)
 		AND EXTRACT(YEAR FROM created_at) = EXTRACT(YEAR FROM CURRENT_DATE)`).Scan(&newInterns)
 	if err != nil {
 		http.Error(w, "Error getting new users", http.StatusInternalServerError)
@@ -54,7 +54,7 @@ func Dashboard(w http.ResponseWriter, r *http.Request) {
 
 	// Get total schools count
 	var totalSchools int
-	err = db.QueryRow("SELECT COUNT(DISTINCT school) FROM users").Scan(&totalSchools)
+	err = db.QueryRow("SELECT COUNT(DISTINCT school) FROM users WHERE role = 'intern'").Scan(&totalSchools)
 	if err != nil {
 		http.Error(w, "Error getting total schools", http.StatusInternalServerError)
 		return
