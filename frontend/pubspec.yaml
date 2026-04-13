@@ -11,11 +11,10 @@ environment:
 dependencies:
   flutter:
     sdk: flutter
-<<<<<<< HEAD
+HEAD
 
-=======
   shared_preferences: ^2.5.5
->>>>>>> 0706018df6cdfaba28fb4351026c06722bdc42c7
+0706018df6cdfaba28fb4351026c06722bdc42c7
   http: ^1.1.0
   cupertino_icons: ^1.0.8
   shared_preferences: ^2.2.2   # ✅ MOVE HERE
@@ -25,10 +24,9 @@ dev_dependencies:
     sdk: flutter
 
   flutter_lints: ^6.0.0
-<<<<<<< HEAD
-=======
- 
->>>>>>> 0706018df6cdfaba28fb4351026c06722bdc42c7
+HEAD
+
+ 0706018df6cdfaba28fb4351026c06722bdc42c7
 
 flutter:
   fonts:

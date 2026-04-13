@@ -16,8 +16,7 @@ class _ContactsContactState extends State<ContactsContact> {
 
   bool isLoading = false;
 
-  // 👉 CHANGE THIS to your Go backend URL
-  final String apiUrl = "http://YOUR_GO_BACKEND_IP:8080/send-email";
+  final String apiUrl = "http://localhost:8080/send-email";
 
   Future<void> sendEmail() async {
     setState(() => isLoading = true);
