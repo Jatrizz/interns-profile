@@ -2,8 +2,8 @@ import 'dart:convert';
 import 'package:flutter/material.dart';
 import 'package:flutter/gestures.dart';
 import 'package:http/http.dart' as http;
-// import 'package:interfaces/pages/login_page.dart';
 import 'package:interfaces/pages/register_page.dart';
+import 'package:interfaces/pages/dashboard.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 class Login extends StatefulWidget {
@@ -75,30 +75,38 @@ class _LoginState extends State<Login> {
       if (response.statusCode == 200) {
         final data = jsonDecode(response.body);
         final token = data['token'];
+        final role = data['role'];
 
         if (_rememberMe) {
           final prefs = await SharedPreferences.getInstance();
           await prefs.setString('token', token);
         }
 
-        ScaffoldMessenger.of(
-          context,
-        ).showSnackBar(const SnackBar(content: Text('Login successful!')));
+        if (!mounted) return;
 
-        // Navigator.pushReplacement(
-        //   context,
-        //   MaterialPageRoute(builder: (context) => const LoginPage()),
-        // );
+        if (role == 'admin') {
+          Navigator.pushReplacement(
+            context,
+            PageRouteBuilder(
+              pageBuilder: (_, __, ___) =>
+                  DashboardOverviewPage(username: data['username'] ?? ''),
+              transitionDuration: Duration.zero,
+              reverseTransitionDuration: Duration.zero,
+            ),
+          );
+        } else {
+          ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(content: Text('Access denied: Not an admin')),
+          );
+        }
       } else {
         final body = jsonDecode(response.body);
-
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(content: Text(body['error'] ?? 'Login failed')),
         );
       }
     } catch (e) {
       if (!mounted) return;
-
       ScaffoldMessenger.of(
         context,
       ).showSnackBar(SnackBar(content: Text('Network error: $e')));
@@ -106,7 +114,7 @@ class _LoginState extends State<Login> {
       if (!mounted) return;
       setState(() => _isLoading = false);
     }
-  }
+  } // ← this closing brace was missing
 
   @override
   void dispose() {
