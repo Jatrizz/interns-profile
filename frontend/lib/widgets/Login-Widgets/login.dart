@@ -74,6 +74,7 @@ class _LoginState extends State<Login> {
 
       if (response.statusCode == 200) {
         final data = jsonDecode(response.body);
+        print('RESPONSE DATA: $data'); // Debugging line
         final token = data['token'];
         final role = data['role'];
 
