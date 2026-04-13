@@ -1,11 +1,14 @@
 import 'package:flutter/material.dart';
 import 'package:interfaces/pages/contact_page.dart';
 import 'package:interfaces/pages/home_page.dart';
+import 'package:interfaces/pages/login_page.dart';
 import '../../pages/about_page.dart';
+import '../../pages/register_page.dart';
 
 class NavBar extends StatelessWidget implements PreferredSizeWidget {
   const NavBar({super.key});
 
+  @override
   Size get preferredSize => const Size.fromHeight(95);
   @override
   Widget build(BuildContext context) {
@@ -43,7 +46,7 @@ class NavBar extends StatelessWidget implements PreferredSizeWidget {
                   PageRouteBuilder(
                     pageBuilder: (context, animation1, animation2) =>
                         AboutPage(),
-                    transitionDuration: Duration.zero, // remove animation
+                    transitionDuration: Duration.zero,
                     reverseTransitionDuration: Duration.zero,
                   ),
                 );
@@ -73,7 +76,17 @@ class NavBar extends StatelessWidget implements PreferredSizeWidget {
             ),
             Spacer(),
             TextButton(
-              onPressed: () {},
+              onPressed: () {
+                Navigator.push(
+                  context,
+                  PageRouteBuilder(
+                    pageBuilder: (context, animation1, animation2) =>
+                        LoginPage(),
+                    transitionDuration: Duration.zero,
+                    reverseTransitionDuration: Duration.zero,
+                  ),
+                );
+              },
               child: Text(
                 'Login',
                 style: TextStyle(color: Colors.white, fontSize: 12),
@@ -81,7 +94,17 @@ class NavBar extends StatelessWidget implements PreferredSizeWidget {
             ),
             SizedBox(width: 20),
             TextButton(
-              onPressed: () {},
+              onPressed: () {
+                Navigator.push(
+                  context,
+                  PageRouteBuilder(
+                    pageBuilder: (context, animation1, animation2) =>
+                        RegisterPage(),
+                    transitionDuration: Duration.zero,
+                    reverseTransitionDuration: Duration.zero,
+                  ),
+                );
+              },
               child: Text(
                 'Register',
                 style: TextStyle(color: Colors.white, fontSize: 12),

@@ -1,30 +1,68 @@
 import 'package:flutter/material.dart';
+import 'dart:convert';
+import 'package:http/http.dart' as http;
 
-class StatsSection extends StatelessWidget {
-  final int interns;
-  final int schools;
-  final int programs;
+class StatsSection extends StatefulWidget {
+  const StatsSection({super.key});
 
-  const StatsSection({
-    super.key,
-    required this.interns,
-    required this.schools,
-    required this.programs,
-  });
+  @override
+  _StatsSectionState createState() => _StatsSectionState();
+}
+
+class _StatsSectionState extends State<StatsSection> {
+  int interns = 0;
+  int schools = 0;
+  int programs = 0;
+  bool isLoading = true;
+
+  @override
+  void initState() {
+    super.initState();
+    fetchStats();
+  }
+
+  Future<void> fetchStats() async {
+    try {
+      final response = await http.get(
+        Uri.parse('http://localhost:8080/get-stats'),
+      );
+
+      if (response.statusCode == 200) {
+        final data = json.decode(response.body);
+        setState(() {
+          interns = data['interns'];
+          schools = data['schools'];
+          programs = data['programs'];
+          isLoading = false;
+        });
+      } else {
+        throw Exception('Failed to load stats');
+      }
+    } catch (e) {
+      print(e);
+      setState(() {
+        isLoading = false;
+      });
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
+    if (isLoading) {
+      return Center(child: CircularProgressIndicator());
+    }
+
     return Padding(
-      padding: EdgeInsets.only(right: 0, left: 0),
+      padding: EdgeInsets.symmetric(horizontal: 0),
       child: SizedBox(
         height: 350,
         width: 1100,
         child: Column(
           children: [
-            Text('Statistics', style: TextStyle(
-              fontSize: 30,
-              color: Colors.white,
-            )),
+            Text(
+              'Statistics',
+              style: TextStyle(fontSize: 30, color: Colors.white),
+            ),
             SizedBox(height: 5),
             Text(
               'Empowering organizations to manage their interns efficiently and effectively.',
@@ -43,7 +81,7 @@ class StatsSection extends StatelessWidget {
                   buildStat('$programs', 'Programs'),
                 ],
               ),
-            )
+            ),
           ],
         ),
       ),
@@ -65,10 +103,6 @@ class StatsSection extends StatelessWidget {
   }
 
   Widget divider() {
-    return Container(
-      height: 160,
-      width: 1.5,
-      color: Colors.white,
-    );
+    return Container(height: 160, width: 1.5, color: Colors.white);
   }
 }
