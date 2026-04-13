@@ -7,6 +7,7 @@ import (
 
 // Struct for chart data
 type SchoolStat struct {
+	Year   int    `json:"year"`
 	School string `json:"school"`
 	Count  int    `json:"count"`
 }
@@ -14,19 +15,23 @@ type SchoolStat struct {
 // Handler
 func SchoolStats(w http.ResponseWriter, r *http.Request) {
 	if r.Method != http.MethodGet {
-		http.Error(w, "Invalid Request Method", http.StatusMethodNotAllowed)
+		jsonError(w, "Invalid Request Method", http.StatusMethodNotAllowed)
 		return
 	}
 
 	// Query: count interns per school
 	rows, err := db.Query(`
-		SELECT school, COUNT(*) as count
-		FROM interns
-		GROUP BY school
-		ORDER BY count DESC
+		SELECT 
+			EXTRACT(YEAR FROM created_at)::int as year,
+			school, 
+			COUNT(*) as count
+		FROM users
+		WHERE role = 'intern'
+		GROUP BY year, school
+		ORDER BY year, school
 	`)
 	if err != nil {
-		http.Error(w, "Error fetching school stats", http.StatusInternalServerError)
+		jsonError(w, "Error fetching school stats", http.StatusInternalServerError)
 		return
 	}
 	defer rows.Close()
@@ -35,9 +40,9 @@ func SchoolStats(w http.ResponseWriter, r *http.Request) {
 
 	for rows.Next() {
 		var stat SchoolStat
-		err := rows.Scan(&stat.School, &stat.Count)
+		err := rows.Scan(&stat.Year, &stat.School, &stat.Count)
 		if err != nil {
-			http.Error(w, "Error reading data", http.StatusInternalServerError)
+			jsonError(w, "Error reading data", http.StatusInternalServerError)
 			return
 		}
 		stats = append(stats, stat)
