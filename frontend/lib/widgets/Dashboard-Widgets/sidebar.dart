@@ -1,9 +1,12 @@
+import 'dart:ffi';
+
 import 'package:flutter/material.dart';
 
 class Sidebar extends StatelessWidget {
   final bool isDarkMode;
+  final VoidCallback onLogout;
 
-  const Sidebar({super.key, required this.isDarkMode});
+  const Sidebar({super.key, required this.isDarkMode, required this.onLogout});
 
   @override
   Widget build(BuildContext context) {
@@ -35,7 +38,7 @@ class Sidebar extends StatelessWidget {
           _buildIcon(
               Icons.groups_outlined, false, 'Our Team', null, isDarkMode),
           const Spacer(),
-          _buildIcon(Icons.logout, false, 'Logout', null, isDarkMode),
+          _buildIcon(Icons.logout, false, 'Logout', onLogout, isDarkMode),
           const SizedBox(height: 20),
         ],
       ),

@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'dart:async';
 import 'dart:convert';
 import 'package:http/http.dart' as http;
+import 'package:interfaces/pages/login_page.dart';
 import '../widgets/Dashboard-Widgets/sidebar.dart';
 import '../widgets/Dashboard-Widgets/top_bar.dart';
 import '../widgets/Dashboard-Widgets/welcome_card.dart';
@@ -10,6 +11,7 @@ import '../widgets/Dashboard-Widgets/bar_chart.dart';
 import '../widgets/Dashboard-Widgets/search_bar.dart';
 import '../widgets/Dashboard-Widgets/recent_activity.dart';
 import '../widgets/Dashboard-Widgets/right_panel.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 
 class DashboardOverviewPage extends StatefulWidget {
   final String firstName;
@@ -142,13 +144,61 @@ class _DashboardOverviewPageState extends State<DashboardOverviewPage> {
     }
   }
 
+  Future<void> handleLogout() async {
+    final confirm = await showDialog<bool>(
+      context: context,
+      builder: (context) => AlertDialog(
+        backgroundColor: isDarkMode ? const Color(0xFF242424) : Colors.white,
+        title: Text(
+          'Logout',
+          style: TextStyle(
+            color: isDarkMode ? Colors.white : Colors.black,
+            fontWeight: FontWeight.bold,
+          ),
+        ),
+        content: Text(
+          'Are you sure you want to logout?',
+          style: TextStyle(
+            color: isDarkMode ? Colors.grey[400] : Colors.grey[600],
+          ),
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context, false),
+            child: const Text('Cancel', style: TextStyle(color: Colors.grey)),
+          ),
+          TextButton(
+            onPressed: () => Navigator.pop(context, true),
+            child: const Text('Logout', style: TextStyle(color: Colors.red)),
+          ),
+        ],
+      ),
+    );
+
+    if (confirm != true) return;
+
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.remove('authToken');
+
+    if (!mounted) return;
+
+    Navigator.pushReplacement(
+      context,
+      PageRouteBuilder(
+        pageBuilder: (_, __, ___) => const LoginPage(),
+        transitionDuration: Duration.zero,
+        reverseTransitionDuration: Duration.zero,
+      ),
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: isDarkMode ? const Color(0xFF1A1A1A) : Colors.white,
       body: Row(
         children: [
-          Sidebar(isDarkMode: isDarkMode),
+          Sidebar(isDarkMode: isDarkMode, onLogout: handleLogout),
           Expanded(
             child: Column(
               children: [
