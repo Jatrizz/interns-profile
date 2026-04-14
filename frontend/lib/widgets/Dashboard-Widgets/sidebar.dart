@@ -2,9 +2,8 @@ import 'package:flutter/material.dart';
 
 class Sidebar extends StatelessWidget {
   final bool isDarkMode;
-  final VoidCallback onTeamTap;
 
-  const Sidebar({super.key, required this.isDarkMode, required this.onTeamTap});
+  const Sidebar({super.key, required this.isDarkMode});
 
   @override
   Widget build(BuildContext context) {
@@ -34,12 +33,7 @@ class Sidebar extends StatelessWidget {
           _buildIcon(Icons.person_outline, false, 'Interns', null, isDarkMode),
           const SizedBox(height: 10),
           _buildIcon(
-            Icons.groups_outlined,
-            false,
-            'Our Team',
-            onTeamTap,
-            isDarkMode,
-          ),
+              Icons.groups_outlined, false, 'Our Team', null, isDarkMode),
           const Spacer(),
           _buildIcon(Icons.logout, false, 'Logout', null, isDarkMode),
           const SizedBox(height: 20),
