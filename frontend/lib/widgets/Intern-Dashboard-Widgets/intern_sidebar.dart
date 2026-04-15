@@ -1,10 +1,18 @@
 import 'package:flutter/material.dart';
 
-class Sidebar extends StatelessWidget {
+class InternSidebar extends StatelessWidget {
   final bool isDarkMode;
+  final int selectedIndex;
   final VoidCallback onLogout;
+  final ValueChanged<int> onItemSelected;
 
-  const Sidebar({super.key, required this.isDarkMode, required this.onLogout});
+  const InternSidebar({
+    super.key,
+    required this.isDarkMode,
+    required this.selectedIndex,
+    required this.onLogout,
+    required this.onItemSelected,
+  });
 
   @override
   Widget build(BuildContext context) {
@@ -29,12 +37,26 @@ class Sidebar extends StatelessWidget {
             ),
           ),
           const SizedBox(height: 15),
-          _buildIcon(Icons.grid_view, true, 'Dashboard', null, isDarkMode),
-          const SizedBox(height: 10),
-          _buildIcon(Icons.person_outline, false, 'Interns', null, isDarkMode),
+          _buildIcon(
+            icon: Icons.grid_view,
+            index: 0,
+            tooltip: 'Dashboard',
+            isDarkMode: isDarkMode,
+          ),
           const SizedBox(height: 10),
           _buildIcon(
-              Icons.access_time_outlined, false, 'Time Logs', null, isDarkMode),
+            icon: Icons.person_outline,
+            index: 1,
+            tooltip: 'My Profile',
+            isDarkMode: isDarkMode,
+          ),
+          const SizedBox(height: 10),
+          _buildIcon(
+            icon: Icons.access_time_outlined,
+            index: 1,
+            tooltip: 'Time Logs',
+            isDarkMode: isDarkMode,
+          ),
           const SizedBox(height: 10),
           Divider(
             color: isDarkMode ? Colors.grey[600] : Colors.grey[400],
@@ -43,27 +65,38 @@ class Sidebar extends StatelessWidget {
             endIndent: 10,
           ),
           const SizedBox(height: 10),
-          _buildIcon(Icons.groups_outlined, false, 'Developers Team', null,
-              isDarkMode),
+          _buildIcon(
+            icon: Icons.groups_outlined,
+            index: 2,
+            tooltip: 'Developers Team',
+            isDarkMode: isDarkMode,
+          ),
           const Spacer(),
-          _buildIcon(Icons.logout, false, 'Logout', onLogout, isDarkMode),
+          _buildIcon(
+            icon: Icons.logout,
+            index: -1,
+            tooltip: 'Logout',
+            isDarkMode: isDarkMode,
+            onTap: onLogout,
+          ),
           const SizedBox(height: 20),
         ],
       ),
     );
   }
 
-  Widget _buildIcon(
-    IconData icon,
-    bool isActive,
-    String tooltip,
+  Widget _buildIcon({
+    required IconData icon,
+    required int index,
+    required String tooltip,
+    required bool isDarkMode,
     VoidCallback? onTap,
-    bool isDarkMode,
-  ) {
+  }) {
+    final isActive = selectedIndex == index && index != -1;
     return Tooltip(
       message: tooltip,
       child: GestureDetector(
-        onTap: onTap,
+        onTap: onTap ?? () => onItemSelected(index),
         child: Container(
           padding: const EdgeInsets.all(10),
           decoration: BoxDecoration(

@@ -30,15 +30,15 @@ class _DashboardOverviewPageState extends State<DashboardOverviewPage> {
   List<Map<String, dynamic>> chartYearlyStats = [];
   String recentActivity = "";
   late Timer _timer;
-  String _currentTime = "";
+  String _currentTimeString = "";
   DateTime _currentDate = DateTime.now();
   DateTime _calendarDate = DateTime.now();
 
   @override
   void initState() {
     super.initState();
-    _updateTime();
-    _timer = Timer.periodic(const Duration(seconds: 1), (_) => _updateTime());
+    _tick();
+    _timer = Timer.periodic(const Duration(seconds: 1), (_) => _tick());
     fetchDashboardData();
     fetchAdmins();
     fetchChartStats();
@@ -50,12 +50,20 @@ class _DashboardOverviewPageState extends State<DashboardOverviewPage> {
     super.dispose();
   }
 
-  void _updateTime() {
+  // CLOCK TICK
+  void _tick() {
     final now = DateTime.now();
+
     setState(() {
-      _currentTime =
-          "${now.hour.toString().padLeft(2, '0')}:${now.minute.toString().padLeft(2, '0')}";
       _currentDate = now;
+
+      // TIME for welcome card
+      final h = now.hour;
+      final m = now.minute.toString().padLeft(2, '0');
+      final period = h >= 12 ? 'PM' : 'AM';
+      final hour12 = h % 12 == 0 ? 12 : h % 12;
+
+      _currentTimeString = '$hour12:$m $period';
     });
   }
 
@@ -222,7 +230,7 @@ class _DashboardOverviewPageState extends State<DashboardOverviewPage> {
                               WelcomeCard(
                                 isDarkMode: isDarkMode,
                                 firstName: widget.firstName,
-                                currentTime: _currentTime,
+                                currentTime: _currentTimeString,
                               ),
                               const SizedBox(height: 20),
                               StatsCards(

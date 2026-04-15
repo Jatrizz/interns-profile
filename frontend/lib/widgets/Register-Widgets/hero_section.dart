@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
 import 'package:flutter/gestures.dart';
 import 'package:flutter/services.dart';
+import 'package:interfaces/pages/intern_dashboard.dart';
 
 class HeroSection extends StatefulWidget {
   const HeroSection({super.key});
@@ -65,21 +66,17 @@ class _HeroSectionState extends State<HeroSection> {
 
   void _validateForm() {
     setState(() {
-      _errors['firstName'] = _firstNameController.text.isEmpty
-          ? 'First name is required'
-          : null;
+      _errors['firstName'] =
+          _firstNameController.text.isEmpty ? 'First name is required' : null;
 
-      _errors['lastName'] = _lastNameController.text.isEmpty
-          ? 'Last name is required'
-          : null;
+      _errors['lastName'] =
+          _lastNameController.text.isEmpty ? 'Last name is required' : null;
 
-      _errors['school'] = _schoolController.text.isEmpty
-          ? 'School is required'
-          : null;
+      _errors['school'] =
+          _schoolController.text.isEmpty ? 'School is required' : null;
 
-      _errors['program'] = _programController.text.isEmpty
-          ? 'Program is required'
-          : null;
+      _errors['program'] =
+          _programController.text.isEmpty ? 'Program is required' : null;
 
       if (_emailController.text.isEmpty) {
         _errors['email'] = 'Email is required';
@@ -139,24 +136,32 @@ class _HeroSectionState extends State<HeroSection> {
       );
 
       if (response.statusCode == 200) {
+        final data = jsonDecode(response.body);
+
         ScaffoldMessenger.of(context).showSnackBar(
           const SnackBar(content: Text('Account created successfully!')),
         );
-        _formKey.currentState?.reset();
-      } else {
-        final body = jsonDecode(response.body);
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text(
-              'Error: ${body['error'] ?? body['errors'].toString()}',
+
+        // ✅ Redirect to dashboard WITH dialog
+        Navigator.pushReplacement(
+          context,
+          MaterialPageRoute(
+            builder: (_) => InternDashboardPage(
+              firstName: _firstNameController.text,
             ),
           ),
         );
+      } else {
+        final errorData = jsonDecode(response.body);
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+              content: Text(errorData['message'] ?? 'Registration failed')),
+        );
       }
     } catch (e) {
-      ScaffoldMessenger.of(
-        context,
-      ).showSnackBar(SnackBar(content: Text('Network error: $e')));
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('An error occurred. Please try again.')),
+      );
     } finally {
       setState(() => _isSubmitting = false);
     }
@@ -173,7 +178,6 @@ class _HeroSectionState extends State<HeroSection> {
             child: Image.asset('assets/images/logo.png', fit: BoxFit.contain),
           ),
         ),
-
         Expanded(
           child: SingleChildScrollView(
             child: Form(
@@ -189,9 +193,7 @@ class _HeroSectionState extends State<HeroSection> {
                       fontWeight: FontWeight.w600,
                     ),
                   ),
-
                   const SizedBox(height: 15),
-
                   SizedBox(
                     width: 400,
                     child: Row(
@@ -216,36 +218,28 @@ class _HeroSectionState extends State<HeroSection> {
                       ],
                     ),
                   ),
-
                   const SizedBox(height: 10),
-
                   _buildFieldWithError(
                     icon: Icons.apartment_outlined,
                     controller: _schoolController,
                     label: 'School',
                     errorKey: 'school',
                   ),
-
                   const SizedBox(height: 10),
-
                   _buildFieldWithError(
                     icon: Icons.school_outlined,
                     controller: _programController,
                     label: 'Program',
                     errorKey: 'program',
                   ),
-
                   const SizedBox(height: 10),
-
                   _buildFieldWithError(
                     icon: Icons.email_outlined,
                     controller: _emailController,
                     label: 'Email',
                     errorKey: 'email',
                   ),
-
                   const SizedBox(height: 10),
-
                   _buildFieldWithError(
                     icon: Icons.phone_callback_outlined,
                     controller: _numberController,
@@ -253,9 +247,7 @@ class _HeroSectionState extends State<HeroSection> {
                     errorKey: 'phonenum',
                     inputFormatters: [FilteringTextInputFormatter.digitsOnly],
                   ),
-
                   const SizedBox(height: 10),
-
                   SizedBox(
                     width: 400,
                     child: Column(
@@ -313,9 +305,7 @@ class _HeroSectionState extends State<HeroSection> {
                             ),
                           ],
                         ),
-
                         const SizedBox(height: 8),
-
                         _buildCheck(
                           'At least 8 characters',
                           _passwordChecks['minLength']!,
@@ -335,9 +325,7 @@ class _HeroSectionState extends State<HeroSection> {
                       ],
                     ),
                   ),
-
                   const SizedBox(height: 10),
-
                   Container(
                     width: 400,
                     decoration: const BoxDecoration(
@@ -362,9 +350,7 @@ class _HeroSectionState extends State<HeroSection> {
                       ),
                     ),
                   ),
-
                   const SizedBox(height: 10),
-
                   SizedBox(
                     width: 400,
                     child: RichText(
@@ -446,7 +432,6 @@ class _HeroSectionState extends State<HeroSection> {
             ),
           ),
         ),
-
         if (_errors[errorKey] != null)
           Padding(
             padding: const EdgeInsets.only(left: 8, top: 3),

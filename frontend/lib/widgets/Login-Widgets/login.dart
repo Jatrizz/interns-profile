@@ -5,6 +5,7 @@ import 'package:http/http.dart' as http;
 import 'package:interfaces/pages/register_page.dart';
 import 'package:interfaces/pages/dashboard.dart';
 import 'package:shared_preferences/shared_preferences.dart';
+import 'package:interfaces/pages/intern_dashboard.dart';
 
 class Login extends StatefulWidget {
   const Login({super.key});
@@ -96,8 +97,16 @@ class _LoginState extends State<Login> {
             ),
           );
         } else if (role == 'intern') {
-          ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(content: Text('Intern login successful!')),
+          Navigator.pushReplacement(
+            context,
+            PageRouteBuilder(
+              pageBuilder: (_, __, ___) => InternDashboardPage(
+                firstName: data['first_name'] ?? '',
+                // isNewUser = false (default)
+              ),
+              transitionDuration: Duration.zero,
+              reverseTransitionDuration: Duration.zero,
+            ),
           );
         }
       } else {
