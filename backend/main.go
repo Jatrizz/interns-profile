@@ -7,19 +7,19 @@ import (
 	"github.com/gorilla/mux"
 )
 
+var RESEND_API_KEY = "re_8v4CdzAw_L7WwzHRyhp8CWWbyyRZkY6Yh"
+
 func main() {
-	// Connect to DB
+	// Connect DB
 	if err := connectDB(); err != nil {
-		log.Fatal("Failed to connect to database:", err)
+		log.Fatal("DB connection failed:", err)
 	}
 
-	// Initialize router
 	r := mux.NewRouter()
 
-	// Register ALL routes
+	// Routes
 	RegisterRoutes(r)
 
-	// Apply CORS middleware
 	handler := enableCORS(r)
 
 	log.Println("Server running on http://localhost:8080")
@@ -29,6 +29,7 @@ func main() {
 // CORS Middleware
 func enableCORS(next http.Handler) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+
 		w.Header().Set("Access-Control-Allow-Origin", "*")
 		w.Header().Set("Access-Control-Allow-Methods", "GET, POST, PUT, DELETE, OPTIONS")
 		w.Header().Set("Access-Control-Allow-Headers", "Content-Type, Authorization")
