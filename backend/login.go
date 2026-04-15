@@ -3,6 +3,7 @@ package main
 import (
 	"database/sql"
 	"encoding/json"
+	"log"
 	"net/http"
 	"os"
 	"strings"
@@ -15,6 +16,21 @@ import (
 type LoginRequest struct {
 	Email    string `json:"email"`
 	Password string `json:"password"`
+}
+
+func determineStatus(t time.Time) string {
+	cutoff := time.Date(
+		t.Year(),
+		t.Month(),
+		t.Day(),
+		8, 0, 0, 0,
+		t.Location(),
+	)
+
+	if t.After(cutoff) {
+		return "late"
+	}
+	return "present"
 }
 
 func Login(w http.ResponseWriter, r *http.Request) {
@@ -50,14 +66,14 @@ func Login(w http.ResponseWriter, r *http.Request) {
 	}
 
 	// ======================
-	// FETCH USER BY EMAIL
+	// FETCH USER
 	// ======================
 
 	var user User
 	var hashedPassword string
 
 	err = db.QueryRow(`
-		SELECT id, first_name, password, role
+		SELECT id, intern_id, first_name, password, role
 		FROM users 
 		WHERE email = $1
 	`, req.Email).Scan(&user.ID, &user.FirstName, &hashedPassword, &user.Role)
@@ -78,6 +94,30 @@ func Login(w http.ResponseWriter, r *http.Request) {
 	if err != nil {
 		jsonError(w, "Invalid password", http.StatusUnauthorized)
 		return
+	}
+
+	// ======================
+	// AUTO TIME-IN (UPDATED)
+	// ======================
+
+	if strings.ToLower(strings.TrimSpace(user.Role)) == "intern" {
+		now := time.Now()
+		status := determineStatus(now)
+
+		log.Println("Attempting time-in for intern_id:", user.ID)
+
+		res, err := db.Exec(`
+			INSERT INTO attendance (intern_id, date, time_in, status)
+			VALUES ($1, CURRENT_DATE, $2, $3)
+			ON CONFLICT (intern_id, date) DO NOTHING
+		`, user.ID, now, status)
+
+		if err != nil {
+			log.Println("ATTENDANCE ERROR:", err)
+		} else {
+			rows, _ := res.RowsAffected()
+			log.Println("Attendance rows inserted:", rows)
+		}
 	}
 
 	// ======================
