@@ -9,6 +9,7 @@ func RegisterRoutes(r *mux.Router) {
 	r.HandleFunc("/dashboard", Dashboard).Methods("GET")
 	r.HandleFunc("/get-stats", GetStats).Methods("GET")
 	r.HandleFunc("/school-stats", SchoolStats).Methods("GET")
+	r.HandleFunc("/attendance-stats", HandleAttendanceStats(db)).Methods("GET")
 
 	// Intern CRUD
 	r.HandleFunc("/add-intern", AddIntern).Methods("POST")
@@ -16,7 +17,7 @@ func RegisterRoutes(r *mux.Router) {
 	r.HandleFunc("/delete-intern", DeleteIntern).Methods("DELETE")
 	r.HandleFunc("/send-email-otp", SendEmailOTP).Methods("POST")
 	r.HandleFunc("/verify-email-otp", VerifyEmailOTP).Methods("POST")
-
+	
 	// Intern profile
 	r.HandleFunc("/intern", GetInternHandler).Methods("GET")
 
