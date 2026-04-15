@@ -14,6 +14,8 @@ func RegisterRoutes(r *mux.Router) {
 	r.HandleFunc("/add-intern", AddIntern).Methods("POST")
 	r.HandleFunc("/update-intern", UpdateIntern).Methods("PUT")
 	r.HandleFunc("/delete-intern", DeleteIntern).Methods("DELETE")
+	r.HandleFunc("/send-email-otp", SendEmailOTP).Methods("POST")
+	r.HandleFunc("/verify-email-otp", VerifyEmailOTP).Methods("POST")
 
 	// Intern profile
 	r.HandleFunc("/intern", GetInternHandler).Methods("GET")
