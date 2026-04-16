@@ -2,7 +2,7 @@ package main
 
 type User struct {
 	ID          int    `json:"id"`
-	InternID    string `json:"intern_id"`
+	IDNumber    string `json:"id_number"`
 	FirstName   string `json:"first_name"`
 	LastName    string `json:"last_name"`
 	School      string `json:"school"`

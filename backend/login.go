@@ -73,10 +73,10 @@ func Login(w http.ResponseWriter, r *http.Request) {
 	var hashedPassword string
 
 	err = db.QueryRow(`
-		SELECT id, intern_id, first_name, password, role
+		SELECT id, id_number, first_name, password, role
 		FROM users 
 		WHERE email = $1
-	`, req.Email).Scan(&user.ID, &user.FirstName, &hashedPassword, &user.Role)
+	`, req.Email).Scan(&user.ID, &user.IDNumber, &user.FirstName, &hashedPassword, &user.Role)
 
 	if err == sql.ErrNoRows {
 		jsonError(w, "User not found", http.StatusUnauthorized)
@@ -104,13 +104,13 @@ func Login(w http.ResponseWriter, r *http.Request) {
 		now := time.Now()
 		status := determineStatus(now)
 
-		log.Println("Attempting time-in for intern_id:", user.ID)
+		log.Println("Attempting time-in for id_number:", user.IDNumber)
 
 		res, err := db.Exec(`
-			INSERT INTO attendance (intern_id, date, time_in, status)
+			INSERT INTO attendance (id_number, date, time_in, status)
 			VALUES ($1, CURRENT_DATE, $2, $3)
-			ON CONFLICT (intern_id, date) DO NOTHING
-		`, user.ID, now, status)
+			ON CONFLICT (id_number, date) DO NOTHING
+		`, user.IDNumber, now, status)
 
 		if err != nil {
 			log.Println("ATTENDANCE ERROR:", err)
