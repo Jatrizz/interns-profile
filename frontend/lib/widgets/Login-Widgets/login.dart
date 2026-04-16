@@ -15,7 +15,7 @@ class Login extends StatefulWidget {
 }
 
 class _LoginState extends State<Login> {
-  bool _rememberMe = false;
+
   bool _showPassword = false;
   bool _isLoading = false;
 
@@ -79,10 +79,6 @@ class _LoginState extends State<Login> {
         final token = data['token'];
         final role = data['role'];
 
-        if (_rememberMe) {
-          final prefs = await SharedPreferences.getInstance();
-          await prefs.setString('token', token);
-        }
 
         if (!mounted) return;
 
@@ -255,21 +251,16 @@ class _LoginState extends State<Login> {
               const SizedBox(height: 10),
               SizedBox(
                 width: 400,
-                child: CheckboxListTile(
-                  value: _rememberMe,
-                  onChanged: (value) {
-                    setState(() {
-                      _rememberMe = value!;
-                    });
-                  },
-                  title: const Text(
-                    'Remember Me',
-                    style: TextStyle(color: Colors.white),
-                  ),
-                  controlAffinity: ListTileControlAffinity.leading,
-                  activeColor: Colors.blue,
-                  contentPadding: EdgeInsets.zero,
-                ),
+                child:Align(
+                  alignment: AlignmentGeometry.centerLeft,
+                  child: TextButton(
+                  style: ButtonStyle(
+                    overlayColor: WidgetStateProperty.all(Colors.transparent)
+                  ), onPressed: (){}, child: Text('Forgot Password', style: TextStyle(
+                  color: const Color.fromARGB(223, 255, 255, 255)
+                ),)),
+                )
+                
               ),
               const SizedBox(height: 10),
               Container(

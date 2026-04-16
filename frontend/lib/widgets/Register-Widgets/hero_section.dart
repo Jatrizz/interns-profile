@@ -141,8 +141,6 @@ class _HeroSectionState extends State<HeroSection> {
         ScaffoldMessenger.of(context).showSnackBar(
           const SnackBar(content: Text('Account created successfully!')),
         );
-
-        // ✅ Redirect to dashboard WITH dialog
         Navigator.pushReplacement(
           context,
           MaterialPageRoute(
@@ -256,7 +254,7 @@ class _HeroSectionState extends State<HeroSection> {
                           children: [
                             Expanded(
                               child: _buildFieldWithError(
-                                icon: Icons.password_outlined,
+                                icon: Icons.lock_outline,
                                 controller: _passwordController,
                                 label: 'Password',
                                 errorKey: 'password',
@@ -281,7 +279,7 @@ class _HeroSectionState extends State<HeroSection> {
                             const SizedBox(width: 10),
                             Expanded(
                               child: _buildFieldWithError(
-                                icon: Icons.password_outlined,
+                                icon: Icons.lock_outline,
                                 controller: _confirmpassController,
                                 label: 'Confirm Password',
                                 errorKey: 'confirmpass',
