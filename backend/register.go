@@ -3,6 +3,7 @@ package main
 import (
 	"encoding/json"
 	"fmt"
+	"log"
 	"math/rand"
 	"net/http"
 	"regexp"
@@ -187,8 +188,15 @@ func registerHandler(w http.ResponseWriter, r *http.Request) {
 		otp,
 	)
 	if err != nil {
-		fmt.Println("PENDING INSERT ERROR:", err.Error())
-		jsonError(w, "Failed to store registration", http.StatusInternalServerError)
+		log.Printf(
+			"[REGISTER] database insert failed | error=%v",
+			err,
+		)
+
+		jsonError(w,
+			"Unable to complete registration at the moment.",
+			http.StatusInternalServerError,
+		)
 		return
 	}
 
