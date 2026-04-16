@@ -152,5 +152,6 @@ func Login(w http.ResponseWriter, r *http.Request) {
 		"first_name": user.FirstName,
 		"token":      tokenString,
 		"role":       user.Role,
+		"user_id":    string(rune(user.ID)),
 	})
 }
