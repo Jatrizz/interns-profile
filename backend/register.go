@@ -1,8 +1,10 @@
 package main
 
 import (
+	"bytes"
 	"encoding/json"
 	"fmt"
+	"math/rand"
 	"net/http"
 	"regexp"
 	"strings"
@@ -11,197 +13,296 @@ import (
 	"golang.org/x/crypto/bcrypt"
 )
 
-// User struct
-type User struct {
-	ID          int    `json:"id"`
-	FirstName   string `json:"first_name"`
-	LastName    string `json:"last_name"`
-	School      string `json:"school"`
-	Program     string `json:"program"`
-	Email       string `json:"email"`
-	Password    string `json:"password"`
-	PhoneNumber string `json:"phone_number"`
-	Role        string `json:"role"`
-}
+const resendURL = "https://api.resend.com/emails"
 
-func jsonError(w http.ResponseWriter, message string, statusCode int) {
+// ================= HELPERS =================
+
+func jsonError(w http.ResponseWriter, msg string, code int) {
 	w.Header().Set("Content-Type", "application/json")
-	w.WriteHeader(statusCode)
-	json.NewEncoder(w).Encode(map[string]string{
-		"error": message})
+	w.WriteHeader(code)
+	json.NewEncoder(w).Encode(map[string]string{"error": msg})
 }
 
-// 🔧 Generate Intern ID: YYYY-XXX
+func jsonOK(w http.ResponseWriter, payload any) {
+	w.Header().Set("Content-Type", "application/json")
+	json.NewEncoder(w).Encode(payload)
+}
+
+// ================= GENERATE INTERN ID =================
+
 func generateInternID() (string, error) {
 	year := time.Now().Year()
-
 	var lastNumber int
 	err := db.QueryRow(`
 		SELECT COALESCE(MAX(CAST(SPLIT_PART(id_number, '-', 2) AS INT)), 0)
 		FROM users
 		WHERE EXTRACT(YEAR FROM created_at) = $1
 	`, year).Scan(&lastNumber)
-
 	if err != nil {
 		return "", err
 	}
-
-	newNumber := lastNumber + 1
-	internID := fmt.Sprintf("%d-%03d", year, newNumber)
-
-	return internID, nil
+	return fmt.Sprintf("%d-%03d", year, lastNumber+1), nil
 }
 
+// ================= SEND OTP EMAIL =================
+
+func sendOTPEmailResend(toEmail, otp string) error {
+	payload := map[string]interface{}{
+		"from":    "onboarding@resend.dev",
+		"to":      []string{toEmail},
+		"subject": "Your OTP Code",
+		"html":    fmt.Sprintf("<h2>Your OTP is: <strong>%s</strong></h2><p>Valid for 10 minutes. Do not share this code.</p>", otp),
+	}
+
+	body, err := json.Marshal(payload)
+	if err != nil {
+		return fmt.Errorf("failed to marshal payload: %w", err)
+	}
+
+	req, err := http.NewRequest("POST", resendURL, bytes.NewBuffer(body))
+	if err != nil {
+		return fmt.Errorf("failed to create request: %w", err)
+	}
+	req.Header.Set("Authorization", "Bearer "+RESEND_API_KEY)
+	req.Header.Set("Content-Type", "application/json")
+
+	client := &http.Client{Timeout: 10 * time.Second}
+	resp, err := client.Do(req)
+	if err != nil {
+		return fmt.Errorf("request failed: %w", err)
+	}
+	defer resp.Body.Close()
+
+	if resp.StatusCode >= 300 {
+		return fmt.Errorf("resend API returned status %d", resp.StatusCode)
+	}
+
+	return nil
+}
+
+// ================= STEP 1: REGISTER (validate + send OTP) =================
+// POST /register
+// User submits all fields. If valid, OTP is sent to email.
+
 func registerHandler(w http.ResponseWriter, r *http.Request) {
-	if r.Method == http.MethodOptions {
-		w.WriteHeader(http.StatusOK)
-		return
+	var user struct {
+		FirstName   string `json:"first_name"`
+		LastName    string `json:"last_name"`
+		School      string `json:"school"`
+		Program     string `json:"program"`
+		Email       string `json:"email"`
+		Password    string `json:"password"`
+		PhoneNumber string `json:"phone_number"`
 	}
 
-	w.Header().Set("Content-Type", "application/json")
-
-	var user User
 	if err := json.NewDecoder(r.Body).Decode(&user); err != nil {
-		jsonError(w, "Invalid request body: "+err.Error(), http.StatusBadRequest)
+		jsonError(w, "Invalid request body", http.StatusBadRequest)
 		return
 	}
 
-	errors := map[string]string{}
-
-	// ---------------- VALIDATION ----------------
-
-	if strings.TrimSpace(user.FirstName) == "" {
-		errors["first_name"] = "First name is required"
-	}
-	if strings.TrimSpace(user.LastName) == "" {
-		errors["last_name"] = "Last name is required"
-	}
-	if strings.TrimSpace(user.School) == "" {
-		errors["school"] = "School is required"
-	}
-	if strings.TrimSpace(user.Program) == "" {
-		errors["program"] = "Program is required"
-	}
-
-	if strings.TrimSpace(user.Email) == "" {
-		errors["email"] = "Email is required"
-	} else if !strings.Contains(user.Email, "@") {
-		errors["email"] = "Invalid email format"
-	}
-
-	if strings.TrimSpace(user.Password) == "" {
-		errors["password"] = "Password is required"
-	} else if len(user.Password) < 8 {
-		errors["password"] = "Password must be at least 8 characters"
-	}
-
-	// 📱 Phone validation
+	user.Email = strings.TrimSpace(strings.ToLower(user.Email))
 	phone := strings.TrimSpace(user.PhoneNumber)
 
-	if phone == "" {
-		errors["phone_number"] = "Phone number is required"
-	} else {
-		matched, _ := regexp.MatchString(`^09\d{9}$`, phone)
-		if !matched {
-			errors["phone_number"] = "Phone must start with 09 and be 11 digits"
-		}
+	// -------- VALIDATION --------
+
+	validationErrors := map[string]string{}
+
+	if strings.TrimSpace(user.FirstName) == "" {
+		validationErrors["first_name"] = "Required"
+	}
+	if strings.TrimSpace(user.LastName) == "" {
+		validationErrors["last_name"] = "Required"
+	}
+	if strings.TrimSpace(user.School) == "" {
+		validationErrors["school"] = "Required"
+	}
+	if strings.TrimSpace(user.Program) == "" {
+		validationErrors["program"] = "Required"
+	}
+	if !strings.Contains(user.Email, "@") || !strings.Contains(user.Email, ".") {
+		validationErrors["email"] = "Invalid email address"
+	}
+	if len(user.Password) < 8 {
+		validationErrors["password"] = "Minimum 8 characters"
+	}
+	matched, _ := regexp.MatchString(`^09\d{9}$`, phone)
+	if !matched {
+		validationErrors["phone_number"] = "Must be a valid PH number (e.g. 09XXXXXXXXX)"
 	}
 
-	// If validation failed
-	if len(errors) > 0 {
+	if len(validationErrors) > 0 {
+		w.Header().Set("Content-Type", "application/json")
 		w.WriteHeader(http.StatusBadRequest)
-		json.NewEncoder(w).Encode(map[string]interface{}{"errors": errors})
+		json.NewEncoder(w).Encode(validationErrors)
 		return
 	}
 
-	// ---------------- DUPLICATE CHECK ----------------
+	// -------- CHECK DUPLICATE EMAIL --------
 
 	var exists bool
-
-	// Email duplicate
-	err := db.QueryRow(
-		"SELECT EXISTS(SELECT 1 FROM users WHERE email=$1)",
-		user.Email,
-	).Scan(&exists)
-
-	if err != nil {
-		jsonError(w, "Database error: "+err.Error(), http.StatusInternalServerError)
+	if err := db.QueryRow(`SELECT EXISTS(SELECT 1 FROM users WHERE email=$1)`, user.Email).Scan(&exists); err != nil {
+		jsonError(w, "Database error", http.StatusInternalServerError)
 		return
 	}
 	if exists {
-		errors["email"] = "Email already registered"
-	}
-
-	// Phone duplicate
-	err = db.QueryRow(
-		"SELECT EXISTS(SELECT 1 FROM users WHERE phone_number=$1)",
-		phone,
-	).Scan(&exists)
-
-	if err != nil {
-		jsonError(w, "Database error: "+err.Error(), http.StatusInternalServerError)
-		return
-	}
-	if exists {
-		errors["phone_number"] = "Phone number already registered"
-	}
-
-	if len(errors) > 0 {
-		w.WriteHeader(http.StatusConflict)
-		json.NewEncoder(w).Encode(map[string]interface{}{"errors": errors})
+		jsonError(w, "Email already registered", http.StatusConflict)
 		return
 	}
 
-	// ---------------- GENERATE INTERN ID ----------------
-
-	internID, err := generateInternID()
-	if err != nil {
-		jsonError(w, "Failed to generate intern ID: "+err.Error(), http.StatusInternalServerError)
-		return
-	}
-
-	// ---------------- HASH PASSWORD ----------------
+	// -------- HASH PASSWORD --------
 
 	hashedPassword, err := bcrypt.GenerateFromPassword([]byte(user.Password), bcrypt.DefaultCost)
 	if err != nil {
-		jsonError(w, "Password hashing failed: "+err.Error(), http.StatusInternalServerError)
+		jsonError(w, "Failed to hash password", http.StatusInternalServerError)
 		return
 	}
 
-	// ---------------- INSERT ----------------
+	// -------- GENERATE OTP --------
+
+	rng := rand.New(rand.NewSource(time.Now().UnixNano()))
+	otp := fmt.Sprintf("%06d", rng.Intn(1000000))
+
+	// -------- STORE PENDING REGISTRATION --------
+	// Delete any previous pending attempt for this email first
+
+	_, _ = db.Exec(`DELETE FROM pending_registrations WHERE email = $1`, user.Email)
 
 	_, err = db.Exec(`
-    INSERT INTO users (
-        id_number,
-        first_name,
-        last_name,
-        school,
-        program,
-        email,
-        password,
-        phone_number
-    )
-    VALUES ($1,$2,$3,$4,$5,$6,$7,$8)
-`,
-		internID,
-		user.FirstName,
-		user.LastName,
-		user.School,
-		user.Program,
+		INSERT INTO pending_registrations (first_name, last_name, school, program, email, password, phone_number, otp, expires_at)
+		VALUES ($1, $2, $3, $4, $5, $6, $7, $8, NOW() + INTERVAL '10 minutes')
+	`,
+		strings.TrimSpace(user.FirstName),
+		strings.TrimSpace(user.LastName),
+		strings.TrimSpace(user.School),
+		strings.TrimSpace(user.Program),
 		user.Email,
 		string(hashedPassword),
 		phone,
+		otp,
 	)
-
 	if err != nil {
-		jsonError(w, "Failed to save user: "+err.Error(), http.StatusInternalServerError)
+		fmt.Println("PENDING INSERT ERROR:", err.Error())
+		jsonError(w, "Failed to store registration", http.StatusInternalServerError)
 		return
 	}
 
-	// ---------------- RESPONSE ----------------
+	// -------- SEND OTP --------
 
-	json.NewEncoder(w).Encode(map[string]string{
-		"message":   "User registered successfully",
+	if err := sendOTPEmailResend(user.Email, otp); err != nil {
+		jsonError(w, "Failed to send OTP email", http.StatusInternalServerError)
+		return
+	}
+
+	jsonOK(w, map[string]string{
+		"message": "OTP sent to " + user.Email + ". Please verify to complete registration.",
+	})
+}
+
+// ================= STEP 2: VERIFY OTP + CREATE ACCOUNT =================
+// POST /verify-otp
+// Body: { "email": "...", "otp": "123456" }
+
+func VerifyOTP(w http.ResponseWriter, r *http.Request) {
+	var req struct {
+		Email string `json:"email"`
+		OTP   string `json:"otp"`
+	}
+
+	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
+		jsonError(w, "Invalid request body", http.StatusBadRequest)
+		return
+	}
+
+	req.Email = strings.TrimSpace(strings.ToLower(req.Email))
+	req.OTP = strings.TrimSpace(req.OTP)
+
+	// -------- FETCH PENDING REGISTRATION --------
+
+	var pending struct {
+		FirstName   string
+		LastName    string
+		School      string
+		Program     string
+		Password    string
+		PhoneNumber string
+		OTP         string
+	}
+
+	err := db.QueryRow(`
+		SELECT first_name, last_name, school, program, password, phone_number, otp
+		FROM pending_registrations
+		WHERE email = $1
+		  AND expires_at > NOW()
+		ORDER BY id DESC
+		LIMIT 1
+	`, req.Email).Scan(
+		&pending.FirstName,
+		&pending.LastName,
+		&pending.School,
+		&pending.Program,
+		&pending.Password,
+		&pending.PhoneNumber,
+		&pending.OTP,
+	)
+	if err != nil {
+		jsonError(w, "Registration request not found or expired. Please register again.", http.StatusBadRequest)
+		return
+	}
+
+	// -------- VERIFY OTP --------
+
+	if req.OTP != pending.OTP {
+		jsonError(w, "Incorrect OTP", http.StatusBadRequest)
+		return
+	}
+
+	// -------- FINAL DUPLICATE CHECK --------
+
+	var exists bool
+	if err := db.QueryRow(`SELECT EXISTS(SELECT 1 FROM users WHERE email=$1)`, req.Email).Scan(&exists); err != nil {
+		jsonError(w, "Database error", http.StatusInternalServerError)
+		return
+	}
+	if exists {
+		jsonError(w, "Email already registered", http.StatusConflict)
+		return
+	}
+
+	// -------- GENERATE INTERN ID --------
+
+	internID, err := generateInternID()
+	if err != nil {
+		jsonError(w, "Failed to generate intern ID", http.StatusInternalServerError)
+		return
+	}
+
+	// -------- CREATE USER --------
+
+	_, err = db.Exec(`
+		INSERT INTO users (id_number, first_name, last_name, school, program, email, password, phone_number, role)
+		VALUES ($1, $2, $3, $4, $5, $6, $7, $8, 'intern')
+	`,
+		internID,
+		pending.FirstName,
+		pending.LastName,
+		pending.School,
+		pending.Program,
+		req.Email,
+		pending.Password,
+		pending.PhoneNumber,
+	)
+	if err != nil {
+		fmt.Println("INSERT ERROR:", err.Error())
+		jsonError(w, err.Error(), http.StatusInternalServerError)
+		return
+	}
+
+	// -------- CLEANUP --------
+
+	db.Exec(`DELETE FROM pending_registrations WHERE email = $1`, req.Email)
+
+	jsonOK(w, map[string]string{
+		"message":   "Account created successfully",
 		"intern_id": internID,
 	})
 }
