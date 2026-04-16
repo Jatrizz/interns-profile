@@ -18,10 +18,12 @@ import '../widgets/Intern-Dashboard-Widgets/intern_ojthours_dialog.dart';
 
 class InternDashboardPage extends StatefulWidget {
   final String firstName;
+  final int userId;
 
   const InternDashboardPage({
     super.key,
     required this.firstName,
+    required this.userId,
   });
 
   @override
@@ -148,7 +150,8 @@ class _InternDashboardPageState extends State<InternDashboardPage> {
   Future<void> _fetchTimeLogs() async {
     try {
       final res = await http.get(
-        Uri.parse('http://127.0.0.1:8080/intern/time-logs'),
+        Uri.parse(
+            'http://127.0.0.1:8080/intern/weekly-hours?user_id=${widget.userId}'),
       );
 
       if (res.statusCode == 200) {
@@ -177,7 +180,7 @@ class _InternDashboardPageState extends State<InternDashboardPage> {
   Future<void> _fetchCoInterns() async {
     try {
       final res = await http.get(
-        Uri.parse('http://127.0.0.1:8080/interns'),
+        Uri.parse('http://127.0.0.1:8080/interns-list'),
       );
 
       if (res.statusCode == 200) {

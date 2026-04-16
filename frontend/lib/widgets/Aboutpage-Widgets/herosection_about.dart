@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 
 class HerosectionAbout extends StatelessWidget {
+  const HerosectionAbout({super.key});
+
   @override
   Widget build(BuildContext context) {
     return Row(
