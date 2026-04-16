@@ -23,4 +23,12 @@ func RegisterRoutes(r *mux.Router) {
 	// Admin list
 	r.HandleFunc("/admins", GetAdminsHandler).Methods("GET")
 
+	//time logs
+	r.HandleFunc("/intern-time-in", InternTimeIn).Methods("POST")
+	r.HandleFunc("/intern-time-out", InternTimeOut).Methods("POST")
+	r.HandleFunc("/intern-calculate-hours-rendered", InternCalculateHoursRendered).Methods("GET")
+	r.HandleFunc("/interns-list", DashboardInternList).Methods("GET")
+	r.HandleFunc("/intern-weekly-hours", InternWeeklyHours).Methods("GET")
+	r.HandleFunc("/intern-required-hours", InternRequiredHours).Methods("POST")
+
 }
