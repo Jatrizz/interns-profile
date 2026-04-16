@@ -19,7 +19,7 @@ const String _base = 'http://127.0.0.1:8080';
 
 class InternDashboardPage extends StatefulWidget {
   final String firstName;
-  final int userId;
+  final String userId;
 
   const InternDashboardPage({
     super.key,
