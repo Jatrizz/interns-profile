@@ -18,7 +18,7 @@ func RegisterRoutes(r *mux.Router) {
 	r.HandleFunc("/verify-otp", VerifyOTP).Methods("POST")
 	
 	// Intern profile
-	r.HandleFunc("/intern", GetInternHandler).Methods("GET")
+	r.HandleFunc("/interns", GetInternHandler).Methods("GET")
 
 	// Admin list
 	r.HandleFunc("/admins", GetAdminsHandler).Methods("GET")
