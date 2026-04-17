@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 
-class TopBar extends StatelessWidget {
+class TopBar extends StatelessWidget implements PreferredSizeWidget {
   final bool isDarkMode;
   final String firstName;
   final VoidCallback onToggleDarkMode;
@@ -11,6 +11,9 @@ class TopBar extends StatelessWidget {
     required this.firstName,
     required this.onToggleDarkMode,
   });
+
+  @override
+  Size get preferredSize => const Size.fromHeight(60);
 
   @override
   Widget build(BuildContext context) {

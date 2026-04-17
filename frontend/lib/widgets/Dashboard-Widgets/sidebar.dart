@@ -1,10 +1,15 @@
 import 'package:flutter/material.dart';
+import 'package:interfaces/pages/interns_list.dart';
 
 class Sidebar extends StatelessWidget {
   final bool isDarkMode;
   final VoidCallback onLogout;
 
-  const Sidebar({super.key, required this.isDarkMode, required this.onLogout});
+  const Sidebar({
+    super.key,
+    required this.isDarkMode,
+    required this.onLogout,
+  });
 
   @override
   Widget build(BuildContext context) {
@@ -14,6 +19,7 @@ class Sidebar extends StatelessWidget {
       child: Column(
         children: [
           const SizedBox(height: 5),
+
           Image.asset(
             'assets/images/logo.png',
             width: 65,
@@ -25,28 +31,93 @@ class Sidebar extends StatelessWidget {
                 color: Color(0xFF00BFFF),
                 shape: BoxShape.circle,
               ),
-              child: const Icon(Icons.circle, color: Colors.white, size: 18),
+              child: const Icon(
+                Icons.circle,
+                color: Colors.white,
+                size: 18,
+              ),
             ),
           ),
+
           const SizedBox(height: 15),
-          _buildIcon(Icons.grid_view, true, 'Dashboard', null, isDarkMode),
-          const SizedBox(height: 10),
-          _buildIcon(Icons.person_outline, false, 'Interns', null, isDarkMode),
-          const SizedBox(height: 10),
+
           _buildIcon(
-              Icons.access_time_outlined, false, 'Time Logs', null, isDarkMode),
+            context,
+            Icons.grid_view,
+            false,
+            'Dashboard',
+            () {
+              
+            },
+            isDarkMode,
+          ),
+
           const SizedBox(height: 10),
+
+          _buildIcon(
+            context,
+            Icons.person_outline,
+            false,
+            'Interns',
+            () {
+              Navigator.push(
+                  context,
+                  PageRouteBuilder(
+                    pageBuilder: (context, animation1, animation2) =>
+                      InternsList(),
+                    transitionDuration: Duration.zero,
+                    reverseTransitionDuration: Duration.zero,
+                  ),
+                );
+            },
+            isDarkMode,
+          ),
+
+          const SizedBox(height: 10),
+
+          _buildIcon(
+            context,
+            Icons.access_time_outlined,
+            false,
+            'Time Logs',
+            () {
+            },
+            isDarkMode,
+          ),
+
+          const SizedBox(height: 10),
+
           Divider(
             color: isDarkMode ? Colors.grey[600] : Colors.grey[400],
             thickness: 1,
             indent: 10,
             endIndent: 10,
           ),
+
           const SizedBox(height: 10),
-          _buildIcon(Icons.groups_outlined, false, 'Developers Team', null,
-              isDarkMode),
+
+          _buildIcon(
+            context,
+            Icons.groups_outlined,
+            false,
+            'Developers Team',
+            () {
+              
+            },
+            isDarkMode,
+          ),
+
           const Spacer(),
-          _buildIcon(Icons.logout, false, 'Logout', onLogout, isDarkMode),
+
+          _buildIcon(
+            context,
+            Icons.logout,
+            false,
+            'Logout',
+            onLogout,
+            isDarkMode,
+          ),
+
           const SizedBox(height: 20),
         ],
       ),
@@ -54,6 +125,7 @@ class Sidebar extends StatelessWidget {
   }
 
   Widget _buildIcon(
+    BuildContext context,
     IconData icon,
     bool isActive,
     String tooltip,
@@ -62,20 +134,24 @@ class Sidebar extends StatelessWidget {
   ) {
     return Tooltip(
       message: tooltip,
-      child: GestureDetector(
-        onTap: onTap,
-        child: Container(
-          padding: const EdgeInsets.all(10),
-          decoration: BoxDecoration(
-            color: isActive
-                ? (isDarkMode ? Colors.grey[700] : Colors.grey[300])
-                : Colors.transparent,
-            borderRadius: BorderRadius.circular(8),
-          ),
-          child: Icon(
-            icon,
-            color: isDarkMode ? Colors.white : Colors.black54,
-            size: 22,
+      child: Material(
+        color: Colors.transparent,
+        child: InkWell(
+          onTap: onTap,
+          borderRadius: BorderRadius.circular(8),
+          child: Container(
+            padding: const EdgeInsets.all(10),
+            decoration: BoxDecoration(
+              color: isActive
+                  ? (isDarkMode ? Colors.grey[700] : Colors.grey[300])
+                  : Colors.transparent,
+              borderRadius: BorderRadius.circular(8),
+            ),
+            child: Icon(
+              icon,
+              color: isDarkMode ? Colors.white : Colors.black54,
+              size: 22,
+            ),
           ),
         ),
       ),
