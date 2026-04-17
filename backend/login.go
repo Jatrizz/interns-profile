@@ -6,6 +6,7 @@ import (
 	"log"
 	"net/http"
 	"os"
+	"strconv"
 	"strings"
 	"time"
 
@@ -40,8 +41,7 @@ func Login(w http.ResponseWriter, r *http.Request) {
 	}
 
 	var req LoginRequest
-	err := json.NewDecoder(r.Body).Decode(&req)
-	if err != nil {
+	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
 		jsonError(w, "Invalid request body", http.StatusBadRequest)
 		return
 	}
@@ -50,7 +50,9 @@ func Login(w http.ResponseWriter, r *http.Request) {
 	// VALIDATION
 	// ======================
 
-	if strings.TrimSpace(req.Email) == "" {
+	req.Email = strings.TrimSpace(strings.ToLower(req.Email))
+
+	if req.Email == "" {
 		jsonError(w, "Email is required", http.StatusBadRequest)
 		return
 	}
@@ -71,40 +73,48 @@ func Login(w http.ResponseWriter, r *http.Request) {
 
 	var user User
 	var hashedPassword string
+	var idNumber sql.NullString // ✅ FIX HERE
 
-	err = db.QueryRow(`
+	err := db.QueryRow(`
 		SELECT id, id_number, first_name, password, role
 		FROM users 
 		WHERE email = $1
-	`, req.Email).Scan(&user.ID, &user.IDNumber, &user.FirstName, &hashedPassword, &user.Role)
+	`, req.Email).Scan(&user.ID, &idNumber, &user.FirstName, &hashedPassword, &user.Role)
 
 	if err == sql.ErrNoRows {
 		jsonError(w, "User not found", http.StatusUnauthorized)
 		return
 	} else if err != nil {
-		jsonError(w, "Error finding user"+err.Error(), http.StatusInternalServerError)
+		log.Println("DB ERROR:", err)
+		jsonError(w, "Database error", http.StatusInternalServerError)
 		return
+	}
+
+	// ✅ Assign only if valid
+	if idNumber.Valid {
+		user.IDNumber = idNumber.String
+	} else {
+		user.IDNumber = ""
 	}
 
 	// ======================
 	// CHECK PASSWORD
 	// ======================
 
-	err = bcrypt.CompareHashAndPassword([]byte(hashedPassword), []byte(req.Password))
-	if err != nil {
+	if err := bcrypt.CompareHashAndPassword([]byte(hashedPassword), []byte(req.Password)); err != nil {
 		jsonError(w, "Invalid password", http.StatusUnauthorized)
 		return
 	}
 
 	// ======================
-	// AUTO TIME-IN (UPDATED)
+	// AUTO TIME-IN (ONLY INTERN)
 	// ======================
 
-	if strings.ToLower(strings.TrimSpace(user.Role)) == "intern" {
+	if strings.ToLower(user.Role) == "intern" && user.IDNumber != "" {
 		now := time.Now()
 		status := determineStatus(now)
 
-		log.Println("Attempting time-in for id_number:", user.IDNumber)
+		log.Println("Attempting time-in for:", user.IDNumber)
 
 		res, err := db.Exec(`
 			INSERT INTO attendance (id_number, date, time_in, status)
@@ -116,7 +126,7 @@ func Login(w http.ResponseWriter, r *http.Request) {
 			log.Println("ATTENDANCE ERROR:", err)
 		} else {
 			rows, _ := res.RowsAffected()
-			log.Println("Attendance rows inserted:", rows)
+			log.Println("Attendance inserted:", rows)
 		}
 	}
 
@@ -133,7 +143,7 @@ func Login(w http.ResponseWriter, r *http.Request) {
 		"id":         user.ID,
 		"first_name": user.FirstName,
 		"role":       user.Role,
-		"exp":        time.Now().Add(time.Hour * 24).Unix(),
+		"exp":        time.Now().Add(24 * time.Hour).Unix(),
 	})
 
 	tokenString, err := token.SignedString([]byte(secret))
@@ -152,6 +162,6 @@ func Login(w http.ResponseWriter, r *http.Request) {
 		"first_name": user.FirstName,
 		"token":      tokenString,
 		"role":       user.Role,
-		"user_id":    string(rune(user.ID)),
+		"user_id":    strconv.Itoa(user.ID), // ✅ FIXED (was wrong before)
 	})
 }
