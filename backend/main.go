@@ -7,8 +7,6 @@ import (
 	"github.com/gorilla/mux"
 )
 
-var RESEND_API_KEY = "re_8v4CdzAw_L7WwzHRyhp8CWWbyyRZkY6Yh"
-
 func main() {
 	// Connect DB
 	if err := connectDB(); err != nil {
