@@ -10,12 +10,15 @@ func RegisterRoutes(r *mux.Router) {
 	r.HandleFunc("/get-stats", GetStats).Methods("GET")
 	r.HandleFunc("/school-stats", SchoolStats).Methods("GET")
 	r.HandleFunc("/attendance-stats", HandleAttendanceStats(db)).Methods("GET")
+	r.HandleFunc("/forgot-password", ForgotPasswordHandler).Methods("POST")
+	r.HandleFunc("/reset-password", ResetPasswordHandler).Methods("POST")
 
 	// Intern CRUD
 	r.HandleFunc("/add-intern", AddIntern).Methods("POST")
 	r.HandleFunc("/update-intern", UpdateIntern).Methods("PUT")
 	r.HandleFunc("/delete-intern", DeleteIntern).Methods("DELETE")
 	r.HandleFunc("/verify-otp", VerifyOTP).Methods("POST")
+	r.HandleFunc("/contact", ContactHandler).Methods("POST")
 	
 	// Intern profile
 	r.HandleFunc("/interns", GetInternHandler).Methods("GET")
