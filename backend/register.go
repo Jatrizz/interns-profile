@@ -1,7 +1,6 @@
 package main
 
 import (
-	"bytes"
 	"encoding/json"
 	"fmt"
 	"math/rand"
@@ -9,11 +8,11 @@ import (
 	"regexp"
 	"strings"
 	"time"
+	"net/smtp"
+	"log/slog"
 
 	"golang.org/x/crypto/bcrypt"
 )
-
-const resendURL = "https://api.resend.com/emails"
 
 // ================= HELPERS =================
 
@@ -46,35 +45,42 @@ func generateInternID() (string, error) {
 
 // ================= SEND OTP EMAIL =================
 
-func sendOTPEmailResend(toEmail, otp string) error {
-	payload := map[string]interface{}{
-		"from":    "onboarding@resend.dev",
-		"to":      []string{toEmail},
-		"subject": "Your OTP Code",
-		"html":    fmt.Sprintf("<h2>Your OTP is: <strong>%s</strong></h2><p>Valid for 10 minutes. Do not share this code.</p>", otp),
-	}
+func sendOTPEmailSMTP(toEmail, otp string) error {
+	smtpHost := "smtp.gmail.com"
+	smtpPort := "587"
 
-	body, err := json.Marshal(payload)
+	// your email + app password (NOT normal password)
+	from := "internshiptestdomain@gmail.com"
+	password := "awsl qwqe vmyc sltd"
+
+	subject := "Subject: Your OTP Code\r\n"
+	body := fmt.Sprintf(`
+		<html>
+		<body>
+			<h2>Your OTP Code</h2>
+			<p><b>%s</b></p>
+			<p>Valid for 1 minute.</p>
+		</body>
+		</html>
+	`, otp)
+
+	message := []byte(subject +
+		"MIME-Version: 1.0\r\n" +
+		"Content-Type: text/html; charset=\"UTF-8\"\r\n\r\n" +
+		body)
+
+	auth := smtp.PlainAuth("", from, password, smtpHost)
+
+	err := smtp.SendMail(
+		smtpHost+":"+smtpPort,
+		auth,
+		from,
+		[]string{toEmail},
+		message,
+	)
+
 	if err != nil {
-		return fmt.Errorf("failed to marshal payload: %w", err)
-	}
-
-	req, err := http.NewRequest("POST", resendURL, bytes.NewBuffer(body))
-	if err != nil {
-		return fmt.Errorf("failed to create request: %w", err)
-	}
-	req.Header.Set("Authorization", "Bearer "+RESEND_API_KEY)
-	req.Header.Set("Content-Type", "application/json")
-
-	client := &http.Client{Timeout: 10 * time.Second}
-	resp, err := client.Do(req)
-	if err != nil {
-		return fmt.Errorf("request failed: %w", err)
-	}
-	defer resp.Body.Close()
-
-	if resp.StatusCode >= 300 {
-		return fmt.Errorf("resend API returned status %d", resp.StatusCode)
+		return fmt.Errorf("smtp send failed: %w", err)
 	}
 
 	return nil
@@ -169,7 +175,7 @@ func registerHandler(w http.ResponseWriter, r *http.Request) {
 
 	_, err = db.Exec(`
 		INSERT INTO pending_registrations (first_name, last_name, school, program, email, password, phone_number, otp, expires_at)
-		VALUES ($1, $2, $3, $4, $5, $6, $7, $8, NOW() + INTERVAL '10 minutes')
+		VALUES ($1, $2, $3, $4, $5, $6, $7, $8, NOW() + INTERVAL '1 minute')
 	`,
 		strings.TrimSpace(user.FirstName),
 		strings.TrimSpace(user.LastName),
@@ -188,7 +194,7 @@ func registerHandler(w http.ResponseWriter, r *http.Request) {
 
 	// -------- SEND OTP --------
 
-	if err := sendOTPEmailResend(user.Email, otp); err != nil {
+	if err := sendOTPEmailSMTP(user.Email, otp); err != nil {
 		jsonError(w, "Failed to send OTP email", http.StatusInternalServerError)
 		return
 	}
@@ -245,9 +251,15 @@ func VerifyOTP(w http.ResponseWriter, r *http.Request) {
 		&pending.OTP,
 	)
 	if err != nil {
-		jsonError(w, "Registration request not found or expired. Please register again.", http.StatusBadRequest)
-		return
-	}
+	slog.Warn("pending registration not found or expired",
+		"email", req.Email,
+		"error", err,
+		"handler", "VerifyOTP",
+	)
+
+	jsonError(w, "Registration request not found or expired. Please register again.", http.StatusBadRequest)
+	return
+}
 
 	// -------- VERIFY OTP --------
 
