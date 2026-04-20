@@ -9,7 +9,7 @@ class HeroSection extends StatefulWidget {
   const HeroSection({super.key});
 
   @override
-  _HeroSectionState createState() => _HeroSectionState();
+  State<HeroSection> createState() => _HeroSectionState();
 }
 
 class _HeroSectionState extends State<HeroSection> {
@@ -25,8 +25,8 @@ class _HeroSectionState extends State<HeroSection> {
   final _confirmpassController = TextEditingController();
 
   final Map<String, String?> _errors = {};
-  bool _isSubmitting = false;
 
+  bool _isSubmitting = false;
   bool _showPassword = false;
   bool _showConfirmPassword = false;
 
@@ -80,9 +80,8 @@ class _HeroSectionState extends State<HeroSection> {
 
       if (_emailController.text.isEmpty) {
         _errors['email'] = 'Email is required';
-      } else if (!RegExp(
-        r'^[^@]+@[^@]+\.[^@]+',
-      ).hasMatch(_emailController.text)) {
+      } else if (!RegExp(r'^[^@]+@[^@]+\.[^@]+')
+          .hasMatch(_emailController.text)) {
         _errors['email'] = 'Invalid email format';
       } else {
         _errors['email'] = null;
@@ -105,7 +104,7 @@ class _HeroSectionState extends State<HeroSection> {
       }
 
       if (_confirmpassController.text.isEmpty) {
-        _errors['confirmpass'] = 'Please confirm your password';
+        _errors['confirmpass'] = 'Please confirm password';
       } else if (_confirmpassController.text != _passwordController.text) {
         _errors['confirmpass'] = 'Passwords do not match';
       } else {
@@ -116,65 +115,142 @@ class _HeroSectionState extends State<HeroSection> {
 
   Future<void> _submitForm() async {
     _validateForm();
+
     if (_errors.values.any((e) => e != null)) return;
 
     setState(() => _isSubmitting = true);
 
     try {
       final response = await http.post(
-        Uri.parse('http://localhost:8080/register'),
+        Uri.parse('http://localhost:8080/send-otp'),
         headers: {'Content-Type': 'application/json'},
         body: jsonEncode({
-          'first_name': _firstNameController.text,
-          'last_name': _lastNameController.text,
-          'school': _schoolController.text,
-          'program': _programController.text,
-          'email': _emailController.text,
-          'phone_number': _numberController.text,
-          'password': _passwordController.text,
+          'email': _emailController.text.trim(),
         }),
       );
 
       if (response.statusCode == 200) {
-        final data = jsonDecode(response.body);
-
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('Account created successfully!')),
-        );
-        Navigator.pushReplacement(
-          context,
-          MaterialPageRoute(
-            builder: (_) => InternDashboardPage(
-              firstName: _firstNameController.text,
-              userId: data['user_id'] ?? '',
-            ),
-          ),
-        );
+        _showOtpDialog();
       } else {
-        final errorData = jsonDecode(response.body);
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-              content: Text(errorData['message'] ?? 'Registration failed')),
+          const SnackBar(content: Text("Failed to send OTP")),
         );
       }
     } catch (e) {
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('An error occurred. Please try again.')),
+        const SnackBar(content: Text("Server connection error")),
       );
     } finally {
       setState(() => _isSubmitting = false);
     }
   }
 
+  void _showOtpDialog() {
+    final otpController = TextEditingController();
+
+    showDialog(
+      context: context,
+      barrierDismissible: false,
+      builder: (_) {
+        return AlertDialog(
+          title: const Text("Email Verification"),
+          content: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Text(
+                "OTP sent to ${_emailController.text}",
+                textAlign: TextAlign.center,
+              ),
+              const SizedBox(height: 15),
+              TextField(
+                controller: otpController,
+                keyboardType: TextInputType.number,
+                decoration: const InputDecoration(
+                  border: OutlineInputBorder(),
+                  hintText: "Enter OTP",
+                ),
+              ),
+            ],
+          ),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.pop(context),
+              child: const Text("Cancel"),
+            ),
+            ElevatedButton(
+              onPressed: () async {
+                await _verifyOtp(otpController.text);
+              },
+              child: const Text("Verify"),
+            ),
+          ],
+        );
+      },
+    );
+  }
+
+  Future<void> _verifyOtp(String otp) async {
+    try {
+      final response = await http.post(
+        Uri.parse('http://localhost:8080/verify-otp'),
+        headers: {'Content-Type': 'application/json'},
+        body: jsonEncode({
+          'otp': otp,
+          'email': _emailController.text.trim(),
+          'first_name': _firstNameController.text.trim(),
+          'last_name': _lastNameController.text.trim(),
+          'school': _schoolController.text.trim(),
+          'program': _programController.text.trim(),
+          'phone_number': _numberController.text.trim(),
+          'password': _passwordController.text.trim(),
+        }),
+      );
+
+      if (response.statusCode == 200) {
+        final data = jsonDecode(response.body);
+
+        Navigator.pop(context);
+
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text("Registration Successful")),
+        );
+
+        Navigator.pushReplacement(
+          context,
+          MaterialPageRoute(
+            builder: (_) => InternDashboardPage(
+              firstName: _firstNameController.text,
+              userId: data['user_id'].toString(),
+            ),
+          ),
+        );
+      } else {
+        final error = jsonDecode(response.body);
+
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text(error['message'] ?? "Invalid OTP"),
+          ),
+        );
+      }
+    } catch (e) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text("Verification failed")),
+      );
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     return Row(
-      mainAxisAlignment: MainAxisAlignment.center,
       children: [
         Expanded(
           child: SizedBox(
             height: 700,
-            child: Image.asset('assets/images/logo.png', fit: BoxFit.contain),
+            child: Image.asset(
+              'assets/images/logo.png',
+              fit: BoxFit.contain,
+            ),
           ),
         ),
         Expanded(
@@ -182,154 +258,137 @@ class _HeroSectionState extends State<HeroSection> {
             child: Form(
               key: _formKey,
               child: Column(
-                mainAxisAlignment: MainAxisAlignment.start,
                 children: [
                   const Text(
-                    'Create your Account',
+                    "Create your Account",
                     style: TextStyle(
                       color: Colors.white,
                       fontSize: 40,
                       fontWeight: FontWeight.w600,
                     ),
                   ),
-                  const SizedBox(height: 15),
+                  const SizedBox(height: 20),
                   SizedBox(
                     width: 400,
                     child: Row(
                       children: [
                         Expanded(
-                          child: _buildFieldWithError(
-                            icon: Icons.person_2_outlined,
-                            controller: _firstNameController,
-                            label: 'First Name',
-                            errorKey: 'firstName',
+                          child: _buildField(
+                            _firstNameController,
+                            "First Name",
+                            "firstName",
+                            icon: Icons.person_outline,
                           ),
                         ),
                         const SizedBox(width: 10),
                         Expanded(
-                          child: _buildFieldWithError(
-                            icon: Icons.person_2_outlined,
-                            controller: _lastNameController,
-                            label: 'Last Name',
-                            errorKey: 'lastName',
+                          child: _buildField(
+                            _lastNameController,
+                            "Last Name",
+                            "lastName",
+                            icon: Icons.person_outline,
                           ),
                         ),
                       ],
                     ),
                   ),
                   const SizedBox(height: 10),
-                  _buildFieldWithError(
-                    icon: Icons.apartment_outlined,
-                    controller: _schoolController,
-                    label: 'School',
-                    errorKey: 'school',
-                  ),
+                  _buildField(_schoolController, "School", "school",
+                      icon: Icons.apartment),
                   const SizedBox(height: 10),
-                  _buildFieldWithError(
-                    icon: Icons.school_outlined,
-                    controller: _programController,
-                    label: 'Program',
-                    errorKey: 'program',
-                  ),
+                  _buildField(_programController, "Program", "program",
+                      icon: Icons.school),
                   const SizedBox(height: 10),
-                  _buildFieldWithError(
-                    icon: Icons.email_outlined,
-                    controller: _emailController,
-                    label: 'Email',
-                    errorKey: 'email',
-                  ),
+                  _buildField(_emailController, "Email", "email",
+                      icon: Icons.email_outlined),
                   const SizedBox(height: 10),
-                  _buildFieldWithError(
-                    icon: Icons.phone_callback_outlined,
-                    controller: _numberController,
-                    label: 'Phone Number',
-                    errorKey: 'phonenum',
+                  _buildField(
+                    _numberController,
+                    "Phone Number",
+                    "phonenum",
+                    icon: Icons.phone,
                     inputFormatters: [FilteringTextInputFormatter.digitsOnly],
                   ),
                   const SizedBox(height: 10),
                   SizedBox(
                     width: 400,
-                    child: Column(
+                    child: Row(
                       children: [
-                        Row(
-                          children: [
-                            Expanded(
-                              child: _buildFieldWithError(
-                                icon: Icons.lock_outline,
-                                controller: _passwordController,
-                                label: 'Password',
-                                errorKey: 'password',
-                                obscureText: !_showPassword,
-                                onChanged: _checkPassword,
-                                suffixIcon: IconButton(
-                                  icon: Icon(
-                                    _showPassword
-                                        ? Icons.visibility
-                                        : Icons.visibility_off,
-                                    color: Colors.white,
-                                    size: 18,
-                                  ),
-                                  onPressed: () {
-                                    setState(() {
-                                      _showPassword = !_showPassword;
-                                    });
-                                  },
-                                ),
+                        Expanded(
+                          child: _buildField(
+                            _passwordController,
+                            "Password",
+                            "password",
+                            icon: Icons.lock_outline,
+                            obscureText: !_showPassword,
+                            onChanged: _checkPassword,
+                            suffixIcon: IconButton(
+                              icon: Icon(
+                                _showPassword
+                                    ? Icons.visibility
+                                    : Icons.visibility_off,
+                                color: Colors.white,
                               ),
+                              onPressed: () {
+                                setState(() {
+                                  _showPassword = !_showPassword;
+                                });
+                              },
                             ),
-                            const SizedBox(width: 10),
-                            Expanded(
-                              child: _buildFieldWithError(
-                                icon: Icons.lock_outline,
-                                controller: _confirmpassController,
-                                label: 'Confirm Password',
-                                errorKey: 'confirmpass',
-                                obscureText: !_showConfirmPassword,
-                                suffixIcon: IconButton(
-                                  icon: Icon(
-                                    _showConfirmPassword
-                                        ? Icons.visibility
-                                        : Icons.visibility_off,
-                                    color: Colors.white,
-                                    size: 18,
-                                  ),
-                                  onPressed: () {
-                                    setState(() {
-                                      _showConfirmPassword =
-                                          !_showConfirmPassword;
-                                    });
-                                  },
-                                ),
+                          ),
+                        ),
+                        const SizedBox(width: 10),
+                        Expanded(
+                          child: _buildField(
+                            _confirmpassController,
+                            "Confirm Password",
+                            "confirmpass",
+                            icon: Icons.lock_outline,
+                            obscureText: !_showConfirmPassword,
+                            suffixIcon: IconButton(
+                              icon: Icon(
+                                _showConfirmPassword
+                                    ? Icons.visibility
+                                    : Icons.visibility_off,
+                                color: Colors.white,
                               ),
+                              onPressed: () {
+                                setState(() {
+                                  _showConfirmPassword = !_showConfirmPassword;
+                                });
+                              },
                             ),
-                          ],
-                        ),
-                        const SizedBox(height: 8),
-                        _buildCheck(
-                          'At least 8 characters',
-                          _passwordChecks['minLength']!,
-                        ),
-                        _buildCheck(
-                          'At least 1 uppercase letter',
-                          _passwordChecks['uppercase']!,
-                        ),
-                        _buildCheck(
-                          'At least 1 lowercase letter',
-                          _passwordChecks['lowercase']!,
-                        ),
-                        _buildCheck(
-                          'At least 1 number',
-                          _passwordChecks['number']!,
+                          ),
                         ),
                       ],
                     ),
                   ),
-                  const SizedBox(height: 10),
+                  const SizedBox(height: 8),
+                  _buildCheck(
+                    "At least 8 characters",
+                    _passwordChecks['minLength']!,
+                  ),
+                  _buildCheck(
+                    "At least 1 uppercase",
+                    _passwordChecks['uppercase']!,
+                  ),
+                  _buildCheck(
+                    "At least 1 lowercase",
+                    _passwordChecks['lowercase']!,
+                  ),
+                  _buildCheck(
+                    "At least 1 number",
+                    _passwordChecks['number']!,
+                  ),
+                  const SizedBox(height: 15),
                   Container(
                     width: 400,
                     decoration: const BoxDecoration(
                       gradient: LinearGradient(
-                        colors: [Colors.blue, Color.fromARGB(255, 2, 55, 230)],
+                        colors: [
+                          Colors.blue,
+                          Color.fromARGB(255, 2, 55, 230),
+                        ],
                       ),
                     ),
                     child: InkWell(
@@ -342,14 +401,14 @@ class _HeroSectionState extends State<HeroSection> {
                                   color: Colors.white,
                                 )
                               : const Text(
-                                  'Register',
+                                  "Register",
                                   style: TextStyle(color: Colors.white),
                                 ),
                         ),
                       ),
                     ),
                   ),
-                  const SizedBox(height: 10),
+                  const SizedBox(height: 15),
                   SizedBox(
                     width: 400,
                     child: RichText(
@@ -361,19 +420,19 @@ class _HeroSectionState extends State<HeroSection> {
                         ),
                         children: [
                           const TextSpan(
-                            text: 'By creating an account, you agree to our ',
+                            text: "By creating an account, you agree to our ",
                           ),
                           TextSpan(
-                            text: 'Terms and Conditions',
+                            text: "Terms and Conditions",
                             style: const TextStyle(
                               color: Colors.blue,
                               decoration: TextDecoration.underline,
                             ),
                             recognizer: TapGestureRecognizer()..onTap = () {},
                           ),
-                          const TextSpan(text: ' and '),
+                          const TextSpan(text: " and "),
                           TextSpan(
-                            text: 'Privacy Policy',
+                            text: "Privacy Policy",
                             style: const TextStyle(
                               color: Colors.blue,
                               decoration: TextDecoration.underline,
@@ -393,10 +452,10 @@ class _HeroSectionState extends State<HeroSection> {
     );
   }
 
-  Widget _buildFieldWithError({
-    required TextEditingController controller,
-    required String label,
-    required String errorKey,
+  Widget _buildField(
+    TextEditingController controller,
+    String label,
+    String errorKey, {
     IconData? icon,
     bool obscureText = false,
     Widget? suffixIcon,
@@ -408,12 +467,18 @@ class _HeroSectionState extends State<HeroSection> {
       children: [
         Container(
           width: 400,
+          padding: const EdgeInsets.symmetric(
+            horizontal: 16,
+            vertical: 3,
+          ),
           decoration: const BoxDecoration(
             gradient: LinearGradient(
-              colors: [Colors.black, Color.fromARGB(131, 158, 158, 158)],
+              colors: [
+                Colors.black,
+                Color.fromARGB(131, 158, 158, 158),
+              ],
             ),
           ),
-          padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 3),
           child: TextFormField(
             controller: controller,
             obscureText: obscureText,
@@ -421,45 +486,55 @@ class _HeroSectionState extends State<HeroSection> {
             inputFormatters: inputFormatters,
             style: const TextStyle(color: Colors.white),
             decoration: InputDecoration(
-              prefixIcon: icon != null ? Icon(icon, color: Colors.white) : null,
-              label: Text(
-                label,
-                style: const TextStyle(color: Colors.white, fontSize: 12),
-              ),
               border: InputBorder.none,
+              prefixIcon: icon != null ? Icon(icon, color: Colors.white) : null,
+              labelText: label,
+              labelStyle: const TextStyle(
+                color: Colors.white,
+                fontSize: 12,
+              ),
               suffixIcon: suffixIcon,
             ),
           ),
         ),
         if (_errors[errorKey] != null)
           Padding(
-            padding: const EdgeInsets.only(left: 8, top: 3),
+            padding: const EdgeInsets.only(
+              left: 8,
+              top: 4,
+            ),
             child: Text(
               _errors[errorKey]!,
-              style: const TextStyle(color: Colors.red, fontSize: 12),
+              style: const TextStyle(
+                color: Colors.red,
+                fontSize: 12,
+              ),
             ),
           ),
       ],
     );
   }
 
-  Widget _buildCheck(String text, bool isValid) {
-    return Row(
-      children: [
-        Icon(
-          isValid ? Icons.check_circle : Icons.circle_outlined,
-          color: isValid ? Colors.green : Colors.grey,
-          size: 16,
-        ),
-        const SizedBox(width: 6),
-        Text(
-          text,
-          style: TextStyle(
-            color: isValid ? Colors.green : Colors.grey,
-            fontSize: 12,
+  Widget _buildCheck(String text, bool valid) {
+    return SizedBox(
+      width: 400,
+      child: Row(
+        children: [
+          Icon(
+            valid ? Icons.check_circle : Icons.circle_outlined,
+            color: valid ? Colors.green : Colors.grey,
+            size: 16,
           ),
-        ),
-      ],
+          const SizedBox(width: 6),
+          Text(
+            text,
+            style: TextStyle(
+              color: valid ? Colors.green : Colors.grey,
+              fontSize: 12,
+            ),
+          ),
+        ],
+      ),
     );
   }
 }
