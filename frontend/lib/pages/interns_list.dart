@@ -132,12 +132,14 @@ class _InternsListState extends State<InternsList> {
           const SizedBox(height: 5),
           Text(
             intern['school'] ?? '',
-            style: const TextStyle(fontSize: 12),
+            style: TextStyle(
+                fontSize: 12, color: isDarkMode ? Colors.white : Colors.black),
           ),
           const SizedBox(height: 5),
           Text(
             intern['phone_number'] ?? '',
-            style: const TextStyle(fontSize: 12),
+            style: TextStyle(
+                fontSize: 12, color: isDarkMode ? Colors.white : Colors.black),
           ),
           const Spacer(),
           SizedBox(
@@ -205,11 +207,14 @@ class _InternsListState extends State<InternsList> {
                                 onChanged: searchIntern,
                                 decoration: InputDecoration(
                                   filled: true,
-                                  fillColor: isDarkMode
-                                      ? const Color(0xFF2B2B2B)
-                                      : Colors.white,
-                                  prefixIcon: const Icon(Icons.search),
+                                  fillColor:
+                                      isDarkMode ? Colors.black : Colors.white,
+                                  prefixIcon: Icon(Icons.search),
                                   hintText: "Search Intern...",
+                                  hintStyle: TextStyle(
+                                      color: isDarkMode
+                                          ? Colors.grey
+                                          : Colors.black),
                                   border: OutlineInputBorder(
                                     borderRadius: BorderRadius.circular(30),
                                     borderSide: BorderSide.none,
@@ -231,14 +236,26 @@ class _InternsListState extends State<InternsList> {
                               child: DropdownButtonHideUnderline(
                                 child: DropdownButton<String>(
                                   value: sortType,
-                                  items: const [
+                                  items: [
                                     DropdownMenuItem(
                                       value: "A-Z",
-                                      child: Text("Sort A-Z"),
+                                      child: Text(
+                                        "Sort A-Z",
+                                        style: TextStyle(
+                                            color: isDarkMode
+                                                ? Colors.white
+                                                : Colors.black),
+                                      ),
                                     ),
                                     DropdownMenuItem(
                                       value: "Z-A",
-                                      child: Text("Sort Z-A"),
+                                      child: Text(
+                                        "Sort Z-A",
+                                        style: TextStyle(
+                                            color: isDarkMode
+                                                ? Colors.white
+                                                : Colors.black),
+                                      ),
                                     ),
                                   ],
                                   onChanged: (value) {
