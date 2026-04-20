@@ -12,7 +12,6 @@ type UpdateUserRequest struct {
 	LastName    string `json:"last_name"`
 	School      string `json:"school"`
 	Program     string `json:"program"`
-	Email       string `json:"email"`
 	PhoneNumber string `json:"phone_number"`
 }
 
@@ -22,21 +21,20 @@ func UpdateIntern(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	// 1. Get ID from query
+	// 1. Get ID
 	idStr := r.URL.Query().Get("id")
 	if idStr == "" {
 		http.Error(w, "User ID is required", http.StatusBadRequest)
 		return
 	}
 
-	// 2. Convert ID to int
 	id, err := strconv.Atoi(idStr)
 	if err != nil {
 		http.Error(w, "Invalid user ID", http.StatusBadRequest)
 		return
 	}
 
-	// 3. Check if user exists AND is intern
+	// 2. Check if intern exists
 	var exists bool
 	err = db.QueryRow(`
 		SELECT EXISTS(
@@ -55,7 +53,7 @@ func UpdateIntern(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	// 4. Decode request body
+	// 3. Decode request
 	var user UpdateUserRequest
 	err = json.NewDecoder(r.Body).Decode(&user)
 	if err != nil {
@@ -63,7 +61,7 @@ func UpdateIntern(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	// 5. Validation
+	// 4. Validation
 	if strings.TrimSpace(user.FirstName) == "" {
 		http.Error(w, "First name is required", http.StatusBadRequest)
 		return
@@ -80,31 +78,25 @@ func UpdateIntern(w http.ResponseWriter, r *http.Request) {
 		http.Error(w, "Program is required", http.StatusBadRequest)
 		return
 	}
-	if strings.TrimSpace(user.Email) == "" {
-		http.Error(w, "Email is required", http.StatusBadRequest)
-		return
-	}
 	if strings.TrimSpace(user.PhoneNumber) == "" {
 		http.Error(w, "Phone number is required", http.StatusBadRequest)
 		return
 	}
 
-	// 6. Update user in DB
+	// 5. UPDATE WITHOUT EMAIL
 	_, err = db.Exec(`
 		UPDATE users 
 		SET first_name = $1,
 			last_name = $2,
 			school = $3,
 			program = $4,
-			email = $5,
-			phone_number = $6
-		WHERE id = $7
+			phone_number = $5
+		WHERE id = $6
 	`,
 		user.FirstName,
 		user.LastName,
 		user.School,
 		user.Program,
-		user.Email,
 		user.PhoneNumber,
 		id,
 	)
@@ -114,9 +106,8 @@ func UpdateIntern(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	// 7. Response
 	w.Header().Set("Content-Type", "application/json")
 	json.NewEncoder(w).Encode(map[string]string{
-		"message": "Intern updated successfully",
+		"message": "Intern updated successfully (email locked)",
 	})
 }
