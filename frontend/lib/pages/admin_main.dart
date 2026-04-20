@@ -5,6 +5,7 @@ import '../widgets/Dashboard-Widgets/sidebar.dart';
 import '../widgets/Dashboard-Widgets/top_bar.dart';
 import 'dashboard.dart';
 import 'time_logs.dart';
+import 'interns_list.dart';
 
 class AdminMainPage extends StatefulWidget {
   final String firstName;
@@ -75,8 +76,9 @@ class _AdminMainPageState extends State<AdminMainPage> {
           isDarkMode: isDarkMode,
         );
       case 1:
-        return const Center(
-            child: Text('Interns', style: TextStyle(color: Colors.white)));
+        return InternsList(
+          isDarkMode: isDarkMode,
+        );
       case 2:
         return TimeLogsPage(
           firstName: widget.firstName,
