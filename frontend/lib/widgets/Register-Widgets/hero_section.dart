@@ -3,8 +3,6 @@ import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
 import 'package:flutter/gestures.dart';
 import 'package:flutter/services.dart';
-import 'package:interfaces/pages/intern_dashboard.dart';
-import 'package:interfaces/pages/intern_main.dart';
 import 'package:interfaces/pages/login_page.dart';
 
 class HeroSection extends StatefulWidget {
@@ -38,6 +36,17 @@ class _HeroSectionState extends State<HeroSection> {
     'lowercase': false,
     'number': false,
   };
+
+  @override
+  void initState() {
+    super.initState();
+
+    _checkPassword(_passwordController.text);
+
+    _passwordController.addListener(() {
+      _checkPassword(_passwordController.text);
+    });
+  }
 
   @override
   void dispose() {
@@ -213,8 +222,6 @@ class _HeroSectionState extends State<HeroSection> {
       );
 
       if (response.statusCode == 200) {
-        final data = jsonDecode(response.body);
-
         Navigator.pop(context);
 
         ScaffoldMessenger.of(context).showSnackBar(
@@ -273,22 +280,14 @@ class _HeroSectionState extends State<HeroSection> {
                     child: Row(
                       children: [
                         Expanded(
-                          child: _buildField(
-                            _firstNameController,
-                            "First Name",
-                            "firstName",
-                            icon: Icons.person_outline,
-                          ),
-                        ),
+                            child: _buildField(
+                                _firstNameController, "First Name", "firstName",
+                                icon: Icons.person_outline)),
                         const SizedBox(width: 10),
                         Expanded(
-                          child: _buildField(
-                            _lastNameController,
-                            "Last Name",
-                            "lastName",
-                            icon: Icons.person_outline,
-                          ),
-                        ),
+                            child: _buildField(
+                                _lastNameController, "Last Name", "lastName",
+                                icon: Icons.person_outline)),
                       ],
                     ),
                   ),
@@ -321,7 +320,6 @@ class _HeroSectionState extends State<HeroSection> {
                             "password",
                             icon: Icons.lock_outline,
                             obscureText: !_showPassword,
-                            onChanged: _checkPassword,
                             suffixIcon: IconButton(
                               icon: Icon(
                                 _showPassword
@@ -363,15 +361,21 @@ class _HeroSectionState extends State<HeroSection> {
                       ],
                     ),
                   ),
+                  const SizedBox(height: 8),
+                  _buildCheck("At least 8 characters",
+                      _passwordChecks['minLength'] ?? false),
+                  _buildCheck("At least 1 uppercase",
+                      _passwordChecks['uppercase'] ?? false),
+                  _buildCheck("At least 1 lowercase",
+                      _passwordChecks['lowercase'] ?? false),
+                  _buildCheck(
+                      "At least 1 number", _passwordChecks['number'] ?? false),
                   const SizedBox(height: 15),
                   Container(
                     width: 400,
                     decoration: const BoxDecoration(
                       gradient: LinearGradient(
-                        colors: [
-                          Colors.blue,
-                          Color.fromARGB(255, 2, 55, 230),
-                        ],
+                        colors: [Colors.blue, Color.fromARGB(255, 2, 55, 230)],
                       ),
                     ),
                     child: InkWell(
@@ -381,48 +385,10 @@ class _HeroSectionState extends State<HeroSection> {
                         child: Center(
                           child: _isSubmitting
                               ? const CircularProgressIndicator(
-                                  color: Colors.white,
-                                )
-                              : const Text(
-                                  "Register",
-                                  style: TextStyle(color: Colors.white),
-                                ),
+                                  color: Colors.white)
+                              : const Text("Register",
+                                  style: TextStyle(color: Colors.white)),
                         ),
-                      ),
-                    ),
-                  ),
-                  const SizedBox(height: 15),
-                  SizedBox(
-                    width: 400,
-                    child: RichText(
-                      textAlign: TextAlign.center,
-                      text: TextSpan(
-                        style: const TextStyle(
-                          color: Colors.white,
-                          fontSize: 12,
-                        ),
-                        children: [
-                          const TextSpan(
-                            text: "By creating an account, you agree to our ",
-                          ),
-                          TextSpan(
-                            text: "Terms and Conditions",
-                            style: const TextStyle(
-                              color: Colors.blue,
-                              decoration: TextDecoration.underline,
-                            ),
-                            recognizer: TapGestureRecognizer()..onTap = () {},
-                          ),
-                          const TextSpan(text: " and "),
-                          TextSpan(
-                            text: "Privacy Policy",
-                            style: const TextStyle(
-                              color: Colors.blue,
-                              decoration: TextDecoration.underline,
-                            ),
-                            recognizer: TapGestureRecognizer()..onTap = () {},
-                          ),
-                        ],
                       ),
                     ),
                   ),
@@ -453,16 +419,15 @@ class _HeroSectionState extends State<HeroSection> {
           padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 3),
           decoration: const BoxDecoration(
             gradient: LinearGradient(
-              colors: [
-                Colors.black,
-                Color.fromARGB(131, 158, 158, 158),
-              ],
+              colors: [Colors.black, Color.fromARGB(131, 158, 158, 158)],
             ),
           ),
           child: TextFormField(
             controller: controller,
             obscureText: obscureText,
-            onChanged: onChanged,
+            onChanged: (v) {
+              onChanged?.call(v);
+            },
             inputFormatters: inputFormatters,
             style: const TextStyle(color: Colors.white),
             decoration: InputDecoration(
@@ -483,6 +448,29 @@ class _HeroSectionState extends State<HeroSection> {
             ),
           ),
       ],
+    );
+  }
+
+  Widget _buildCheck(String text, bool valid) {
+    return SizedBox(
+      width: 400,
+      child: Row(
+        children: [
+          Icon(
+            valid ? Icons.check_circle : Icons.circle_outlined,
+            color: valid ? Colors.green : Colors.grey,
+            size: 16,
+          ),
+          const SizedBox(width: 6),
+          Text(
+            text,
+            style: TextStyle(
+              color: valid ? Colors.green : Colors.grey,
+              fontSize: 12,
+            ),
+          ),
+        ],
+      ),
     );
   }
 }
