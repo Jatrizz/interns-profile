@@ -3,10 +3,7 @@ import 'dart:async';
 import 'dart:convert';
 import 'package:http/http.dart' as http;
 import 'package:shared_preferences/shared_preferences.dart';
-import 'package:interfaces/pages/login_page.dart';
 
-import '../widgets/Intern-Dashboard-Widgets/intern_sidebar.dart';
-import '../widgets/Intern-Dashboard-Widgets/intern_topbar.dart';
 import '../widgets/Intern-Dashboard-Widgets/intern_clock_in_banner.dart';
 import '../widgets/Intern-Dashboard-Widgets/intern_stats_cards.dart';
 import '../widgets/Intern-Dashboard-Widgets/intern_weekly_chart.dart';
@@ -20,11 +17,13 @@ const String _base = 'http://127.0.0.1:8080';
 class InternDashboardPage extends StatefulWidget {
   final String firstName;
   final String userId;
+  final bool isDarkMode;
 
   const InternDashboardPage({
     super.key,
     required this.firstName,
     required this.userId,
+    required this.isDarkMode,
   });
 
   @override
@@ -32,9 +31,6 @@ class InternDashboardPage extends StatefulWidget {
 }
 
 class _InternDashboardPageState extends State<InternDashboardPage> {
-  bool isDarkMode = true;
-  int selectedSidebarIndex = 0;
-
   late Timer _timer;
   DateTime _currentDate = DateTime.now();
   DateTime _calendarDate = DateTime.now();
@@ -77,7 +73,6 @@ class _InternDashboardPageState extends State<InternDashboardPage> {
     super.dispose();
   }
 
-  // CLOCK TICK
   void _tick() {
     final now = DateTime.now();
     setState(() {
@@ -95,7 +90,6 @@ class _InternDashboardPageState extends State<InternDashboardPage> {
     });
   }
 
-  // 1. FETCH DASHBOARD (required hours, total hours, today status, clock-in state)
   Future<void> _fetchDashboard() async {
     try {
       final res = await http.get(Uri.parse(
@@ -114,7 +108,6 @@ class _InternDashboardPageState extends State<InternDashboardPage> {
           if (isClockedIn &&
               data['clock_in_time'] != null &&
               data['clock_in_time'] != '') {
-            // parse "HH:mm:ss" into today's DateTime
             final parts = (data['clock_in_time'] as String).split(':');
             final now = DateTime.now();
             clockInTime = DateTime(
@@ -128,7 +121,6 @@ class _InternDashboardPageState extends State<InternDashboardPage> {
           }
         });
 
-        // If required hours not set yet, prompt
         if (requiredOjtHours == 0) {
           WidgetsBinding.instance
               .addPostFrameCallback((_) => _promptOjtHours());
@@ -139,7 +131,6 @@ class _InternDashboardPageState extends State<InternDashboardPage> {
     }
   }
 
-  // 2. FETCH WEEKLY HOURS (chart + recent logs)
   Future<void> _fetchWeeklyHours() async {
     try {
       final res = await http.get(Uri.parse(
@@ -166,7 +157,6 @@ class _InternDashboardPageState extends State<InternDashboardPage> {
             }
           }
 
-          // Use weekly data as recent logs display
           recentLogs = data.map<Map<String, String>>((e) {
             return {
               'date': e['day'].toString(),
@@ -182,11 +172,9 @@ class _InternDashboardPageState extends State<InternDashboardPage> {
     }
   }
 
-  // 3. FETCH CO-INTERNS LIST
   Future<void> _fetchCoInterns() async {
     try {
       final res = await http.get(Uri.parse('$_base/interns-list'));
-
       if (res.statusCode == 200) {
         setState(() => interns = jsonDecode(res.body));
       }
@@ -195,9 +183,9 @@ class _InternDashboardPageState extends State<InternDashboardPage> {
     }
   }
 
-  // 4. SET REQUIRED OJT HOURS (saves to backend + prefs)
   Future<void> _promptOjtHours() async {
-    final hours = await showOjtHoursDialog(context, isDarkMode: isDarkMode);
+    final hours =
+        await showOjtHoursDialog(context, isDarkMode: widget.isDarkMode);
 
     if (hours != null) {
       try {
@@ -219,7 +207,6 @@ class _InternDashboardPageState extends State<InternDashboardPage> {
     }
   }
 
-  // 5. CLOCK IN
   Future<void> _handleClockIn() async {
     try {
       final res = await http.post(
@@ -252,7 +239,6 @@ class _InternDashboardPageState extends State<InternDashboardPage> {
     }
   }
 
-  // 6. CLOCK OUT
   Future<void> _handleClockOut() async {
     try {
       final res = await http.post(
@@ -273,15 +259,13 @@ class _InternDashboardPageState extends State<InternDashboardPage> {
           totalHoursRendered = (data['total_rendered'] as num).toDouble();
           todayStatus = data['status'] ?? todayStatus;
         });
-        // Refresh weekly chart
         _fetchWeeklyHours();
 
         if (mounted) {
           ScaffoldMessenger.of(context).showSnackBar(
             SnackBar(
-              content: Text(
-                'Clocked out! Hours today: ${data['hours_rendered']}',
-              ),
+              content:
+                  Text('Clocked out! Hours today: ${data['hours_rendered']}'),
             ),
           );
         }
@@ -298,46 +282,11 @@ class _InternDashboardPageState extends State<InternDashboardPage> {
     }
   }
 
-  // CLOCK TOGGLE — decides in or out
   void _handleClockToggle() {
     if (isClockedIn) {
       _handleClockOut();
     } else {
       _handleClockIn();
-    }
-  }
-
-  // LOGOUT
-  Future<void> _handleLogout() async {
-    final confirm = await showDialog<bool>(
-      context: context,
-      builder: (context) => AlertDialog(
-        backgroundColor: isDarkMode ? const Color(0xFF242424) : Colors.white,
-        title: Text('Logout',
-            style: TextStyle(
-                color: isDarkMode ? Colors.white : Colors.black,
-                fontWeight: FontWeight.bold)),
-        content: Text('Are you sure you want to logout?',
-            style: TextStyle(
-                color: isDarkMode ? Colors.grey[400] : Colors.grey[600])),
-        actions: [
-          TextButton(
-              onPressed: () => Navigator.pop(context, false),
-              child:
-                  const Text('Cancel', style: TextStyle(color: Colors.grey))),
-          TextButton(
-              onPressed: () => Navigator.pop(context, true),
-              child: const Text('Logout', style: TextStyle(color: Colors.red))),
-        ],
-      ),
-    );
-
-    if (confirm == true) {
-      final prefs = await SharedPreferences.getInstance();
-      await prefs.clear();
-      if (!mounted) return;
-      Navigator.pushReplacement(
-          context, MaterialPageRoute(builder: (_) => const LoginPage()));
     }
   }
 
@@ -352,89 +301,62 @@ class _InternDashboardPageState extends State<InternDashboardPage> {
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      backgroundColor: isDarkMode ? const Color(0xFF1A1A1A) : Colors.white,
-      body: Row(
-        children: [
-          InternSidebar(
-            isDarkMode: isDarkMode,
-            selectedIndex: selectedSidebarIndex,
-            onLogout: _handleLogout,
-            onItemSelected: (i) => setState(() => selectedSidebarIndex = i),
-          ),
-          Expanded(
+    return Row(
+      children: [
+        Expanded(
+          child: SingleChildScrollView(
+            padding: const EdgeInsets.all(20),
             child: Column(
               children: [
-                InternTopBar(
-                  isDarkMode: isDarkMode,
-                  firstName: widget.firstName,
-                  onToggleDarkMode: () =>
-                      setState(() => isDarkMode = !isDarkMode),
+                ClockInBanner(
+                  isDarkMode: widget.isDarkMode,
+                  isClockedIn: isClockedIn,
+                  clockInTime: _clockInTimeFormatted,
+                  elapsedTime: elapsedTime,
+                  onClockToggle: _handleClockToggle,
                 ),
-                Expanded(
-                  child: Row(
-                    children: [
-                      Expanded(
-                        child: SingleChildScrollView(
-                          padding: const EdgeInsets.all(20),
-                          child: Column(
-                            children: [
-                              ClockInBanner(
-                                isDarkMode: isDarkMode,
-                                isClockedIn: isClockedIn,
-                                clockInTime: _clockInTimeFormatted,
-                                elapsedTime: elapsedTime,
-                                onClockToggle: _handleClockToggle,
-                              ),
-                              const SizedBox(height: 16),
-                              InternWelcomeCard(
-                                isDarkMode: isDarkMode,
-                                firstName: widget.firstName,
-                                currentTime: _currentTimeString,
-                              ),
-                              const SizedBox(height: 16),
-                              InternStatsCards(
-                                isDarkMode: isDarkMode,
-                                totalHoursRendered: totalHoursRendered,
-                                remainingHours: remainingHours,
-                                todayStatus: todayStatus,
-                              ),
-                              const SizedBox(height: 16),
-                              InternWeeklyChart(
-                                isDarkMode: isDarkMode,
-                                weeklyData: weeklyData,
-                              ),
-                              const SizedBox(height: 16),
-                              RecentTimeLogs(
-                                isDarkMode: isDarkMode,
-                                logs: recentLogs,
-                              ),
-                            ],
-                          ),
-                        ),
-                      ),
-                      InternRightPanel(
-                        isDarkMode: isDarkMode,
-                        interns: interns,
-                        currentDate: _currentDate,
-                        calendarDate: _calendarDate,
-                        onPreviousMonth: () => setState(() {
-                          _calendarDate = DateTime(
-                              _calendarDate.year, _calendarDate.month - 1);
-                        }),
-                        onNextMonth: () => setState(() {
-                          _calendarDate = DateTime(
-                              _calendarDate.year, _calendarDate.month + 1);
-                        }),
-                      ),
-                    ],
-                  ),
+                const SizedBox(height: 16),
+                InternWelcomeCard(
+                  isDarkMode: widget.isDarkMode,
+                  firstName: widget.firstName,
+                  currentTime: _currentTimeString,
+                ),
+                const SizedBox(height: 16),
+                InternStatsCards(
+                  isDarkMode: widget.isDarkMode,
+                  totalHoursRendered: totalHoursRendered,
+                  remainingHours: remainingHours,
+                  todayStatus: todayStatus,
+                ),
+                const SizedBox(height: 16),
+                InternWeeklyChart(
+                  isDarkMode: widget.isDarkMode,
+                  weeklyData: weeklyData,
+                ),
+                const SizedBox(height: 16),
+                RecentTimeLogs(
+                  isDarkMode: widget.isDarkMode,
+                  logs: recentLogs,
                 ),
               ],
             ),
           ),
-        ],
-      ),
+        ),
+        InternRightPanel(
+          isDarkMode: widget.isDarkMode,
+          interns: interns,
+          currentDate: _currentDate,
+          calendarDate: _calendarDate,
+          onPreviousMonth: () => setState(() {
+            _calendarDate =
+                DateTime(_calendarDate.year, _calendarDate.month - 1);
+          }),
+          onNextMonth: () => setState(() {
+            _calendarDate =
+                DateTime(_calendarDate.year, _calendarDate.month + 1);
+          }),
+        ),
+      ],
     );
   }
 }

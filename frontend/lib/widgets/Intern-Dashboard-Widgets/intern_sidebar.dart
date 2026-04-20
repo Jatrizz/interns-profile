@@ -5,6 +5,7 @@ class InternSidebar extends StatelessWidget {
   final int selectedIndex;
   final VoidCallback onLogout;
   final ValueChanged<int> onItemSelected;
+  final String firstName;
 
   const InternSidebar({
     super.key,
@@ -12,6 +13,7 @@ class InternSidebar extends StatelessWidget {
     required this.selectedIndex,
     required this.onLogout,
     required this.onItemSelected,
+    required this.firstName,
   });
 
   @override
@@ -53,9 +55,10 @@ class InternSidebar extends StatelessWidget {
           const SizedBox(height: 10),
           _buildIcon(
             icon: Icons.access_time_outlined,
-            index: 1,
+            index: 2,
             tooltip: 'Time Logs',
             isDarkMode: isDarkMode,
+            // removed Navigator.push — InternMainPage handles this now
           ),
           const SizedBox(height: 10),
           Divider(
@@ -67,7 +70,7 @@ class InternSidebar extends StatelessWidget {
           const SizedBox(height: 10),
           _buildIcon(
             icon: Icons.groups_outlined,
-            index: 2,
+            index: 3,
             tooltip: 'Developers Team',
             isDarkMode: isDarkMode,
           ),

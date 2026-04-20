@@ -120,6 +120,16 @@ class _InternsListState extends State<InternsList> {
               fontWeight: FontWeight.bold,
             ),
           ),
+          Container(
+            height: 2,
+            decoration:
+                BoxDecoration(color: isDarkMode ? Colors.grey : Colors.black),
+          ),
+          Text(
+            intern['id_number'],
+            textAlign: TextAlign.center,
+            style: TextStyle(fontSize: 12, color: Colors.grey),
+          ),
           const SizedBox(height: 8),
           Text(
             intern['program'] ?? '',
@@ -230,7 +240,7 @@ class _InternsListState extends State<InternsList> {
                                 horizontal: 15,
                               ),
                               decoration: BoxDecoration(
-                                color: isDarkMode ? Colors.white : Colors.black,
+                                color: isDarkMode ? Colors.black : Colors.white,
                                 borderRadius: BorderRadius.circular(30),
                               ),
                               child: DropdownButtonHideUnderline(

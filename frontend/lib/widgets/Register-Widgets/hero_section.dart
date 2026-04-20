@@ -4,6 +4,7 @@ import 'package:http/http.dart' as http;
 import 'package:flutter/gestures.dart';
 import 'package:flutter/services.dart';
 import 'package:interfaces/pages/intern_dashboard.dart';
+import 'package:interfaces/pages/intern_main.dart';
 
 class HeroSection extends StatefulWidget {
   const HeroSection({super.key});
@@ -135,6 +136,20 @@ class _HeroSectionState extends State<HeroSection> {
 
       if (response.statusCode == 200) {
         _showOtpDialog();
+        final data = jsonDecode(response.body);
+
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('Account created successfully!')),
+        );
+        Navigator.pushReplacement(
+          context,
+          MaterialPageRoute(
+            builder: (_) => InternMainPage(
+              firstName: _firstNameController.text,
+              userId: data['user_id'] ?? '',
+            ),
+          ),
+        );
       } else {
         final error = jsonDecode(response.body);
         ScaffoldMessenger.of(context).showSnackBar(
@@ -217,6 +232,7 @@ class _HeroSectionState extends State<HeroSection> {
             builder: (_) => InternDashboardPage(
               firstName: _firstNameController.text,
               userId: data['intern_id'].toString(),
+              isDarkMode: true,
             ),
           ),
         );
