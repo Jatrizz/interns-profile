@@ -21,7 +21,8 @@ func RegisterRoutes(r *mux.Router) {
 	r.HandleFunc("/contact", ContactHandler).Methods("POST")
 	
 	// Intern profile
-	r.HandleFunc("/interns", GetInternHandler).Methods("GET")
+	r.HandleFunc("/intern", GetInternHandler).Methods("GET")
+	r.HandleFunc("/interns", GetInternsHandler).Methods("GET")
 
 	// Admin list
 	r.HandleFunc("/admins", GetAdminsHandler).Methods("GET")
