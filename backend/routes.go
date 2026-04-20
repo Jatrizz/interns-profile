@@ -12,6 +12,7 @@ func RegisterRoutes(r *mux.Router) {
 	r.HandleFunc("/attendance-stats", HandleAttendanceStats(db)).Methods("GET")
 	r.HandleFunc("/forgot-password", ForgotPasswordHandler).Methods("POST")
 	r.HandleFunc("/reset-password", ResetPasswordHandler).Methods("POST")
+	r.HandleFunc("/verify-otp", VerifyOTPHandler).Methods("POST")
 
 	// Intern CRUD
 	r.HandleFunc("/add-intern", AddIntern).Methods("POST")
