@@ -14,15 +14,7 @@ import (
 	"golang.org/x/crypto/bcrypt"
 )
 
-// ================= CONFIG =================
-
-const smtpHost = "smtp.gmail.com"
-const smtpPort = "587"
-
-var smtpEmail = "internshiptestdomain@gmail.com"
-var smtpPassword = "awsl qwqe vmyc sltd"
-
-// ================= HELPERS =================
+// ================= OTP GENERATOR =================
 
 func generateOTP() (string, error) {
 	n, err := rand.Int(rand.Reader, big.NewInt(1000000))
@@ -31,6 +23,9 @@ func generateOTP() (string, error) {
 	}
 	return fmt.Sprintf("%06d", n.Int64()), nil
 }
+
+// ================= PASSWORD VALIDATION =================
+// at least 8 chars, must include uppercase, lowercase, number
 
 func isValidPassword(pw string) bool {
 	if len(pw) < 8 {
@@ -47,12 +42,13 @@ func isValidPassword(pw string) bool {
 			hasLower = true
 		case c >= '0' && c <= '9':
 			hasNumber = true
-		// ✅ allow everything else (special chars)
 		}
 	}
 
 	return hasUpper && hasLower && hasNumber
 }
+
+// ================= EMAIL SENDER =================
 
 func sendResetOTP(toEmail, otp string) error {
 	subject := "Subject: Password Reset OTP\r\n"
@@ -63,23 +59,27 @@ func sendResetOTP(toEmail, otp string) error {
 		<p>This code will expire in 5 minutes.</p>
 	`, otp)
 
-	message := []byte(subject +
-		"MIME-Version: 1.0\r\n" +
-		"Content-Type: text/html; charset=\"UTF-8\"\r\n\r\n" +
-		body)
+	headers := "MIME-Version: 1.0\r\n" +
+		"Content-Type: text/html; charset=\"UTF-8\"\r\n"
 
-	auth := smtp.PlainAuth("", smtpEmail, smtpPassword, smtpHost)
+	message := []byte(subject + headers + "\r\n" + body)
 
+	auth := smtp.PlainAuth("", Mail.Sender, Mail.Password, Mail.Host)
+
+	// ✅ FIX: send to user email, NOT Mail.Receiver
 	err := smtp.SendMail(
-		smtpHost+":"+smtpPort,
+		Mail.Host+":"+Mail.Port,
 		auth,
-		smtpEmail,
-		[]string{toEmail},
+		Mail.Sender,
+		[]string{toEmail}, // <-- THIS IS THE IMPORTANT FIX
 		message,
 	)
 
 	if err != nil {
-		slog.Error("smtp send failed", "to", toEmail, "error", err)
+		slog.Error("smtp send failed",
+			"to", toEmail,
+			"error", err,
+		)
 		return fmt.Errorf("smtp error")
 	}
 
@@ -95,7 +95,7 @@ func ForgotPasswordHandler(w http.ResponseWriter, r *http.Request) {
 	}
 
 	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
-		slog.Error("failed to decode request body", "error", err)
+		slog.Error("forgot.decode failed", "error", err)
 		jsonError(w, "Invalid request body", http.StatusBadRequest)
 		return
 	}
@@ -109,29 +109,31 @@ func ForgotPasswordHandler(w http.ResponseWriter, r *http.Request) {
 	).Scan(&exists)
 
 	if err != nil {
-		slog.Error("failed to query user existence", "email", req.Email, "error", err)
+		slog.Error("forgot.db check failed", "email", req.Email, "error", err)
 		jsonError(w, "Database error", http.StatusInternalServerError)
 		return
 	}
 
 	if !exists {
-		jsonOK(w, map[string]string{"message": "If that email is registered, an OTP has been sent."})
+		jsonOK(w, map[string]string{
+			"message": "If that email is registered, an OTP has been sent.",
+		})
 		return
 	}
 
 	otp, err := generateOTP()
 	if err != nil {
-		slog.Error("failed to generate OTP", "email", req.Email, "error", err)
+		slog.Error("forgot.otp generate failed", "error", err)
 		jsonError(w, "Failed to generate OTP", http.StatusInternalServerError)
 		return
 	}
 
-	_, err = db.Exec(
-		"DELETE FROM forgot_password_requests WHERE email=$1",
-		req.Email,
-	)
+	_, err = db.Exec(`
+		DELETE FROM forgot_password_requests WHERE email=$1
+	`, req.Email)
+
 	if err != nil {
-		slog.Error("failed to delete old OTP records", "email", req.Email, "error", err)
+		slog.Warn("forgot.cleanup old otp failed", "error", err)
 	}
 
 	_, err = db.Exec(`
@@ -140,18 +142,20 @@ func ForgotPasswordHandler(w http.ResponseWriter, r *http.Request) {
 	`, req.Email, otp)
 
 	if err != nil {
-		slog.Error("failed to store OTP", "email", req.Email, "error", err)
+		slog.Error("forgot.store otp failed", "error", err)
 		jsonError(w, "Failed to store OTP", http.StatusInternalServerError)
 		return
 	}
 
 	if err := sendResetOTP(req.Email, otp); err != nil {
-		slog.Error("failed to send OTP email", "email", req.Email, "error", err)
+		slog.Error("forgot.smtp failed", "error", err)
 		jsonError(w, "Failed to send OTP email", http.StatusInternalServerError)
 		return
 	}
 
-	jsonOK(w, map[string]string{"message": "An OTP has been sent to email."})
+	jsonOK(w, map[string]string{
+		"message": "OTP sent to email",
+	})
 }
 
 // ================= STEP 2: VERIFY OTP =================
@@ -163,10 +167,7 @@ func VerifyOTPHandler(w http.ResponseWriter, r *http.Request) {
 	}
 
 	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
-		slog.Error("otp.verify decode failed",
-			"error", err,
-			"handler", "VerifyOTPHandler",
-		)
+		slog.Error("otp.verify decode failed", "error", err)
 		jsonError(w, "Invalid request body", http.StatusBadRequest)
 		return
 	}
@@ -186,26 +187,17 @@ func VerifyOTPHandler(w http.ResponseWriter, r *http.Request) {
 	`, req.Email).Scan(&dbOTP, &used, &verified)
 
 	if err != nil {
-		slog.Warn("otp.verify record not found",
-			"email", req.Email,
-			"error", err,
-		)
+		slog.Warn("otp.verify not found", "email", req.Email)
 		jsonError(w, "OTP not found or expired", http.StatusBadRequest)
 		return
 	}
 
 	if used {
-		slog.Warn("otp.verify already used",
-			"email", req.Email,
-		)
 		jsonError(w, "OTP already used", http.StatusBadRequest)
 		return
 	}
 
 	if subtle.ConstantTimeCompare([]byte(req.OTP), []byte(dbOTP)) != 1 {
-		slog.Warn("otp.verify mismatch",
-			"email", req.Email,
-		)
 		jsonError(w, "Invalid OTP", http.StatusBadRequest)
 		return
 	}
@@ -217,17 +209,12 @@ func VerifyOTPHandler(w http.ResponseWriter, r *http.Request) {
 	`, req.Email, req.OTP)
 
 	if err != nil {
-		slog.Error("otp.verify update failed",
-			"email", req.Email,
-			"error", err,
-		)
+		slog.Error("otp.verify update failed", "error", err)
 		jsonError(w, "Failed to verify OTP", http.StatusInternalServerError)
 		return
 	}
 
-	slog.Info("otp.verify success",
-		"email", req.Email,
-	)
+	slog.Info("otp verified", "email", req.Email)
 
 	jsonOK(w, map[string]string{
 		"message": "OTP verified",
@@ -243,10 +230,6 @@ func ResetPasswordHandler(w http.ResponseWriter, r *http.Request) {
 	}
 
 	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
-		slog.Error("reset.decode failed",
-			"error", err,
-			"handler", "ResetPasswordHandler",
-		)
 		jsonError(w, "Invalid request body", http.StatusBadRequest)
 		return
 	}
@@ -254,9 +237,6 @@ func ResetPasswordHandler(w http.ResponseWriter, r *http.Request) {
 	req.Email = strings.TrimSpace(strings.ToLower(req.Email))
 
 	if !isValidPassword(req.Password) {
-		slog.Warn("reset.invalid password format",
-			"email", req.Email,
-		)
 		jsonError(w,
 			"Password must be 8+ chars with uppercase, lowercase, and number",
 			http.StatusBadRequest,
@@ -276,36 +256,22 @@ func ResetPasswordHandler(w http.ResponseWriter, r *http.Request) {
 	`, req.Email).Scan(&dbOTP, &used, &verified)
 
 	if err != nil {
-		slog.Warn("reset.otp session missing",
-			"email", req.Email,
-			"error", err,
-		)
-		jsonError(w, "Session expired. Request a new OTP.", http.StatusBadRequest)
+		jsonError(w, "Session expired", http.StatusBadRequest)
 		return
 	}
 
 	if !verified {
-		slog.Warn("reset.unverified attempt",
-			"email", req.Email,
-		)
 		jsonError(w, "OTP not verified", http.StatusBadRequest)
 		return
 	}
 
 	if used {
-		slog.Warn("reset.otp already used",
-			"email", req.Email,
-		)
 		jsonError(w, "OTP already used", http.StatusBadRequest)
 		return
 	}
 
 	hashed, err := bcrypt.GenerateFromPassword([]byte(req.Password), bcrypt.DefaultCost)
 	if err != nil {
-		slog.Error("reset.hash failed",
-			"email", req.Email,
-			"error", err,
-		)
 		jsonError(w, "Hashing failed", http.StatusInternalServerError)
 		return
 	}
@@ -317,30 +283,15 @@ func ResetPasswordHandler(w http.ResponseWriter, r *http.Request) {
 	)
 
 	if err != nil {
-		slog.Error("reset.password update failed",
-			"email", req.Email,
-			"error", err,
-		)
 		jsonError(w, "Failed to update password", http.StatusInternalServerError)
 		return
 	}
 
-	_, err = db.Exec(`
+	db.Exec(`
 		UPDATE forgot_password_requests
 		SET used=true
 		WHERE email=$1 AND otp=$2
 	`, req.Email, dbOTP)
-
-	if err != nil {
-		slog.Error("reset.mark used failed",
-			"email", req.Email,
-			"error", err,
-		)
-	}
-
-	slog.Info("reset.password success",
-		"email", req.Email,
-	)
 
 	jsonOK(w, map[string]string{
 		"message": "Password reset successful",
