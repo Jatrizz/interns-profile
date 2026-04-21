@@ -11,6 +11,7 @@ type InternDashboardResponse struct {
 	FirstName          string  `json:"first_name"`
 	TotalHoursRendered float64 `json:"total_hours_rendered"`
 	RemainingHours     float64 `json:"remaining_hours"`
+	RequiredOjtHours   float64 `json:"required_ojt_hours"`
 	TodaysStatus       string  `json:"todays_status"`
 	IsClockedIn        bool    `json:"is_clocked_in"`
 	ClockInTime        string  `json:"clock_in_time"`
@@ -80,6 +81,7 @@ func InternDashboard(w http.ResponseWriter, r *http.Request) {
 		FirstName:          firstName,
 		TotalHoursRendered: totalHours,
 		RemainingHours:     remainingHours,
+		RequiredOjtHours:   requiredHours,
 		TodaysStatus:       todaysStatus,
 		IsClockedIn:        isClockedIn,
 		ClockInTime:        clockInTime,
