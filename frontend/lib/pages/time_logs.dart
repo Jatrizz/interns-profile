@@ -285,7 +285,15 @@ class _TimeLogsPageState extends State<TimeLogsPage> {
                     TimeLogsSearchBar(
                       isDarkMode: widget.isDarkMode,
                       searchQuery: searchQuery,
+                      suggestions: filteredInternNames,
                       onChanged: (val) => setState(() => searchQuery = val),
+                      onSuggestionSelected: (name) {
+                        setState(() {
+                          selectedIntern = name;
+                          searchQuery = '';
+                        });
+                        fetchLogsForIntern(name);
+                      },
                     ),
                     const SizedBox(height: 12),
                     Text(
