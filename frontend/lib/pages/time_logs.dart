@@ -81,6 +81,7 @@ class _TimeLogsPageState extends State<TimeLogsPage> {
         final List<dynamic> data = jsonDecode(response.body);
         setState(() {
           internNames = data.map((e) => e.toString()).toList();
+          totalInterns = internNames.length;
           debugPrint('>>> internNames: $internNames');
           if (internNames.isNotEmpty) {
             selectedIntern = internNames.first;
