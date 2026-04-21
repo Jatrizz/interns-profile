@@ -40,5 +40,6 @@ func RegisterRoutes(r *mux.Router) {
 	r.HandleFunc("/interns-list", DashboardInternList).Methods("GET")
 	r.HandleFunc("/intern-weekly-hours", InternWeeklyHours).Methods("GET")
 	r.HandleFunc("/intern-required-hours", InternRequiredHours).Methods("POST")
+	r.HandleFunc("/interns/names", InternDropdown).Methods("GET")
 
 }
