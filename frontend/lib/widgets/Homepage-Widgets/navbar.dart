@@ -1,7 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:interfaces/pages/contact_page.dart';
 import 'package:interfaces/pages/home_page.dart';
-import 'package:interfaces/pages/interns_list.dart';
 import 'package:interfaces/pages/login_page.dart';
 import '../../pages/about_page.dart';
 import '../../pages/register_page.dart';

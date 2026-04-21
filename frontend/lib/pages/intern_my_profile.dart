@@ -4,7 +4,6 @@ import 'dart:io';
 import 'package:http/http.dart' as http;
 import 'package:image_picker/image_picker.dart';
 import '../widgets/Intern-My-Profile-Widgets/intern_profile_image_section.dart';
-import '../widgets/Intern-My-Profile-Widgets/intern_profile_form_fields.dart';
 import '../widgets/Intern-My-Profile-Widgets/intern_profile_resume_preview.dart';
 import '../widgets/Intern-My-Profile-Widgets/intern_profile_action_buttons.dart';
 
