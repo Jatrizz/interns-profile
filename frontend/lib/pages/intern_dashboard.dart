@@ -99,9 +99,10 @@ class _InternDashboardPageState extends State<InternDashboardPage> {
       if (res.statusCode == 200) {
         final data = jsonDecode(res.body);
         setState(() {
-          totalHoursRendered = (data['total_hours_rendered'] as num).toDouble();
-          requiredOjtHours =
-              totalHoursRendered + (data['remaining_hours'] as num).toDouble();
+          totalHoursRendered =
+              (data['total_hours_rendered'] as num? ?? 0).toDouble();
+          requiredOjtHours = totalHoursRendered +
+              (data['remaining_hours'] as num? ?? 0).toDouble();
           todayStatus = data['todays_status'] ?? 'absent';
           isClockedIn = data['is_clocked_in'] ?? false;
 
