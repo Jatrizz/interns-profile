@@ -19,13 +19,16 @@ func RegisterRoutes(r *mux.Router) {
 	r.HandleFunc("/delete-intern", DeleteIntern).Methods("DELETE")
 	r.HandleFunc("/verify-otp", VerifyOTP).Methods("POST")
 	r.HandleFunc("/contact", ContactHandler).Methods("POST")
-	
+
 	// Intern profile
 	r.HandleFunc("/intern", GetInternHandler).Methods("GET")
 	r.HandleFunc("/interns", GetInternsHandler).Methods("GET")
 
 	// Admin list
 	r.HandleFunc("/admins", GetAdminsHandler).Methods("GET")
+
+	//intern dashboard
+	r.HandleFunc("/intern-dashboard", InternDashboard).Methods("GET")
 
 	//time logs
 	r.HandleFunc("/intern-time-in", InternTimeIn).Methods("POST")

@@ -26,10 +26,14 @@ func InternRequiredHours(w http.ResponseWriter, r *http.Request) {
 	}
 
 	_, err := db.Exec(`
-        UPDATE intern_profiles
-        SET required_ojt_hours = $1
-        WHERE user_id = $2
-    `, req.RequiredHours, req.UserID)
+        INSERT INTO intern_profiles (user_id, school, required_ojt_hours)
+    SELECT $1, school, $2
+    FROM users
+    WHERE id = $1
+    ON CONFLICT (user_id)
+    DO UPDATE SET required_ojt_hours = $2
+`, req.UserID, req.RequiredHours)
+
 	if err != nil {
 		jsonError(w, "Failed to update required hours", http.StatusInternalServerError)
 		return
