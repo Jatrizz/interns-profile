@@ -1,6 +1,7 @@
 package main
 
 import (
+	"database/sql"
 	"encoding/json"
 	"net/http"
 	"strconv"
@@ -47,7 +48,9 @@ func InternDashboard(w http.ResponseWriter, r *http.Request) {
 	err = db.QueryRow(`
         SELECT required_ojt_hours FROM intern_profiles WHERE user_id = $1
     `, userID).Scan(&requiredHours)
-	if err != nil {
+	if err == sql.ErrNoRows {
+		requiredHours = 0 // ✅ new user, no profile yet — default to 0
+	} else if err != nil {
 		jsonError(w, "Error getting required hours", http.StatusInternalServerError)
 		return
 	}
