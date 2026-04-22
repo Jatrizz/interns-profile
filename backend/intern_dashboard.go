@@ -4,7 +4,6 @@ import (
 	"database/sql"
 	"encoding/json"
 	"net/http"
-	"strconv"
 )
 
 type InternDashboardResponse struct {
@@ -23,18 +22,17 @@ func InternDashboard(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	userIDStr := r.URL.Query().Get("user_id")
+	userID := r.URL.Query().Get("user_id")
 	firstName := r.URL.Query().Get("first_name")
 
-	userID, err := strconv.Atoi(userIDStr)
-	if err != nil {
-		jsonError(w, "Invalid user_id", http.StatusBadRequest)
+	if userID == "" {
+		jsonError(w, "user_id is required", http.StatusBadRequest)
 		return
 	}
 
 	// Total hours rendered
 	var totalHours float64
-	err = db.QueryRow(`
+	err := db.QueryRow(`
         SELECT COALESCE(SUM(hours_rendered), 0)
         FROM time_logs
         WHERE user_id = $1
@@ -50,7 +48,7 @@ func InternDashboard(w http.ResponseWriter, r *http.Request) {
         SELECT required_ojt_hours FROM intern_profiles WHERE user_id = $1
     `, userID).Scan(&requiredHours)
 	if err == sql.ErrNoRows {
-		requiredHours = 0 // ✅ new user, no profile yet — default to 0
+		requiredHours = 0
 	} else if err != nil {
 		jsonError(w, "Error getting required hours", http.StatusInternalServerError)
 		return
