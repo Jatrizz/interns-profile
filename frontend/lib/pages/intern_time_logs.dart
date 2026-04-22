@@ -49,7 +49,7 @@ class _InternTimeLogsPageState extends State<InternTimeLogsPage> {
     try {
       final response = await http.get(
         Uri.parse(
-            'http://127.0.0.1:8080/intern/timelogs?user_id=${widget.userId}'),
+            'http://127.0.0.1:8080/intern/timelogs/stats?user_id=${widget.userId}'),
       );
       if (response.statusCode == 200) {
         final data = jsonDecode(response.body);
@@ -69,7 +69,7 @@ class _InternTimeLogsPageState extends State<InternTimeLogsPage> {
     try {
       final response = await http.get(
         Uri.parse(
-            'http://127.0.0.1:8080/intern/timelogs/stats?user_id=${widget.userId}'),
+            'http://127.0.0.1:8080/intern/timelogs?user_id=${widget.userId}'),
       );
       if (response.statusCode == 200) {
         final List<dynamic> data = jsonDecode(response.body);
@@ -79,123 +79,9 @@ class _InternTimeLogsPageState extends State<InternTimeLogsPage> {
         });
       }
     } catch (e) {
-      print('Error fetching time logs: $e');
-      // Mock data fallback
+      debugPrint('>>> Error fetching time logs: $e');
       setState(() {
-        allLogs = [
-          {
-            'date': 'April 14',
-            'day': 'Tue',
-            'time_in': '8:00 AM',
-            'time_out': '–',
-            'total_hours': 'In Progress',
-            'status': 'Present',
-          },
-          {
-            'date': 'April 13',
-            'day': 'Mon',
-            'time_in': '8:00 AM',
-            'time_out': '5:00 PM',
-            'total_hours': '8h',
-            'status': 'Present',
-          },
-          {
-            'date': 'April 12',
-            'day': 'Sun',
-            'time_in': '–',
-            'time_out': '–',
-            'total_hours': '–',
-            'status': 'Weekend',
-          },
-          {
-            'date': 'April 11',
-            'day': 'Sat',
-            'time_in': '–',
-            'time_out': '–',
-            'total_hours': '–',
-            'status': 'Weekend',
-          },
-          {
-            'date': 'April 10',
-            'day': 'Fri',
-            'time_in': '8:12 AM',
-            'time_out': '5:00 PM',
-            'total_hours': '7h 48m',
-            'status': 'Late',
-          },
-          {
-            'date': 'April 9',
-            'day': 'Thu',
-            'time_in': '8:00 AM',
-            'time_out': '5:00 PM',
-            'total_hours': '8h',
-            'status': 'Present',
-          },
-          {
-            'date': 'April 8',
-            'day': 'Wed',
-            'time_in': '8:02 AM',
-            'time_out': '5:00 PM',
-            'total_hours': '7h 58m',
-            'status': 'Late',
-          },
-          {
-            'date': 'April 7',
-            'day': 'Tue',
-            'time_in': '7:45 AM',
-            'time_out': '5:00 PM',
-            'total_hours': '8h',
-            'status': 'Present',
-          },
-          {
-            'date': 'April 6',
-            'day': 'Mon',
-            'time_in': '–',
-            'time_out': '–',
-            'total_hours': '–',
-            'status': 'Absent',
-          },
-          {
-            'date': 'April 5',
-            'day': 'Sun',
-            'time_in': '–',
-            'time_out': '–',
-            'total_hours': '–',
-            'status': 'Weekend',
-          },
-          {
-            'date': 'April 4',
-            'day': 'Sat',
-            'time_in': '–',
-            'time_out': '–',
-            'total_hours': '–',
-            'status': 'Weekend',
-          },
-          {
-            'date': 'April 3',
-            'day': 'Fri',
-            'time_in': '8:00 AM',
-            'time_out': '1:00 PM',
-            'total_hours': '5h',
-            'status': 'Half Day',
-          },
-          {
-            'date': 'April 2',
-            'day': 'Thu',
-            'time_in': '8:00 AM',
-            'time_out': '5:00 PM',
-            'total_hours': '8h',
-            'status': 'Present',
-          },
-          {
-            'date': 'April 1',
-            'day': 'Wed',
-            'time_in': '8:00 AM',
-            'time_out': '5:00 PM',
-            'total_hours': '8h',
-            'status': 'Present',
-          },
-        ];
+        allLogs = [];
         applyFilters();
       });
     }
