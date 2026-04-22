@@ -133,7 +133,7 @@ class _InternMyProfilePageState extends State<InternMyProfilePage> {
     setState(() => _isSaving = true);
     try {
       final request = http.MultipartRequest(
-        'POST',
+        'PUT',
         Uri.parse('$_base/intern-profile/update'),
       );
 
