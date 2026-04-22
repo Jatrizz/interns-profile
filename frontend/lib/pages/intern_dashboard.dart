@@ -101,11 +101,13 @@ class _InternDashboardPageState extends State<InternDashboardPage> {
 
         final double requiredFromServer =
             (data['required_ojt_hours'] as num? ?? 0).toDouble();
+        final double totalFromServer =
+            (data['total_hours_rendered'] as num? ?? 0)
+                .toDouble(); // ← add this
 
         setState(() {
-          totalHoursRendered =
-              (data['total_hours_rendered'] as num? ?? 0).toDouble();
-          requiredOjtHours = requiredFromServer; // use directly, not derived
+          totalHoursRendered = totalFromServer;
+          requiredOjtHours = requiredFromServer;
           todayStatus = data['todays_status'] ?? 'absent';
           isClockedIn = data['is_clocked_in'] ?? false;
 
@@ -125,7 +127,8 @@ class _InternDashboardPageState extends State<InternDashboardPage> {
           }
         });
 
-        if (requiredFromServer == 0) {
+        // ← check both conditions using local variables
+        if (requiredFromServer == 0 && totalFromServer == 0) {
           WidgetsBinding.instance
               .addPostFrameCallback((_) => _promptOjtHours());
         }
