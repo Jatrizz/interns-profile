@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
 import 'package:flutter/services.dart';
 import 'package:interfaces/pages/login_page.dart';
+import 'package:flutter/gestures.dart';
 
 class HeroSection extends StatefulWidget {
   const HeroSection({super.key});
@@ -391,6 +392,45 @@ class _HeroSectionState extends State<HeroSection> {
                       ),
                     ),
                   ),
+                  SizedBox(
+                    height: 6,
+                  ),
+                  SizedBox(
+                    width: 400,
+                    child: RichText(
+                      textAlign: TextAlign.center,
+                      text: TextSpan(
+                        style: const TextStyle(
+                          color: Colors.white,
+                          fontSize: 12,
+                        ),
+                        children: [
+                          const TextSpan(
+                            text: 'By creating an account, you agree to our ',
+                          ),
+                          TextSpan(
+                            text: 'Terms and Conditions',
+                            style: const TextStyle(
+                              color: Colors.blue,
+                              decoration: TextDecoration.underline,
+                            ),
+                            recognizer: TapGestureRecognizer()..onTap = () {},
+                          ),
+                          const TextSpan(
+                            text: ' and ',
+                          ),
+                          TextSpan(
+                            text: 'Privacy Policy',
+                            style: const TextStyle(
+                              color: Colors.blue,
+                              decoration: TextDecoration.underline,
+                            ),
+                            recognizer: TapGestureRecognizer()..onTap = () {},
+                          ),
+                        ],
+                      ),
+                    ),
+                  ),
                 ],
               ),
             ),
@@ -415,7 +455,7 @@ class _HeroSectionState extends State<HeroSection> {
       children: [
         Container(
           width: 400,
-          padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 3),
+          padding: const EdgeInsets.symmetric(horizontal: 1, vertical: 3),
           decoration: const BoxDecoration(
             gradient: LinearGradient(
               colors: [Colors.black, Color.fromARGB(131, 158, 158, 158)],
@@ -424,6 +464,7 @@ class _HeroSectionState extends State<HeroSection> {
           child: TextFormField(
             controller: controller,
             obscureText: obscureText,
+            cursorColor: Colors.white,
             onChanged: (v) {
               onChanged?.call(v);
             },
@@ -431,6 +472,8 @@ class _HeroSectionState extends State<HeroSection> {
             style: const TextStyle(color: Colors.white),
             decoration: InputDecoration(
               border: InputBorder.none,
+              focusedBorder: OutlineInputBorder(
+                  borderSide: BorderSide(color: Colors.white)),
               prefixIcon: icon != null ? Icon(icon, color: Colors.white) : null,
               labelText: label,
               labelStyle: const TextStyle(color: Colors.white, fontSize: 12),

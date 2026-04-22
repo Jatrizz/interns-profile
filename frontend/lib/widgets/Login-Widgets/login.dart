@@ -271,9 +271,19 @@ class _LoginState extends State<Login> {
 
             return AlertDialog(
               backgroundColor: const Color.fromARGB(255, 32, 32, 32),
-              title: const Text(
-                "Forgot Password",
-                style: TextStyle(color: Colors.white),
+              title: Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                children: [
+                  const Text(
+                    "Forgot Password",
+                    style: TextStyle(color: Colors.white),
+                  ),
+                  IconButton(
+                    icon: const Icon(Icons.close, color: Colors.white),
+                    onPressed: () => Navigator.pop(context),
+                    splashRadius: 20,
+                  ),
+                ],
               ),
               content: SizedBox(
                 width: 420,
@@ -283,11 +293,23 @@ class _LoginState extends State<Login> {
                     children: [
                       if (step == 1) ...[
                         TextField(
+                          cursorColor: Colors.white,
                           controller: emailController,
                           style: const TextStyle(color: Colors.white),
-                          decoration: const InputDecoration(
+                          decoration: InputDecoration(
                             labelText: "Email",
-                            labelStyle: TextStyle(color: Colors.white),
+                            labelStyle: const TextStyle(color: Colors.white),
+                            enabledBorder: const OutlineInputBorder(
+                              borderSide: BorderSide(color: Colors.grey),
+                            ),
+                            focusedBorder: const OutlineInputBorder(
+                              borderSide:
+                                  BorderSide(color: Colors.white, width: 1),
+                            ),
+                            hoverColor: Colors.transparent,
+                            border: const OutlineInputBorder(
+                              borderSide: BorderSide(color: Colors.white),
+                            ),
                           ),
                         ),
                         const SizedBox(height: 12),
@@ -295,18 +317,42 @@ class _LoginState extends State<Login> {
                           children: [
                             Expanded(
                               child: TextField(
+                                cursorColor: Colors.white,
                                 controller: otpController,
                                 style: const TextStyle(color: Colors.white),
-                                decoration: const InputDecoration(
+                                decoration: InputDecoration(
                                   labelText: "OTP",
-                                  labelStyle: TextStyle(color: Colors.white),
+                                  labelStyle:
+                                      const TextStyle(color: Colors.white),
+                                  enabledBorder: const OutlineInputBorder(
+                                    borderSide: BorderSide(color: Colors.grey),
+                                  ),
+                                  focusedBorder: const OutlineInputBorder(
+                                    borderSide: BorderSide(
+                                        color: Colors.white, width: 1),
+                                  ),
+                                  hoverColor: Colors.transparent,
+                                  border: const OutlineInputBorder(
+                                    borderSide: BorderSide(color: Colors.white),
+                                  ),
                                 ),
                               ),
                             ),
                             const SizedBox(width: 8),
                             ElevatedButton(
+                              style: ElevatedButton.styleFrom(
+                                backgroundColor: Colors.green,
+                                padding: const EdgeInsets.symmetric(
+                                    vertical: 22, horizontal: 25),
+                                shape: RoundedRectangleBorder(
+                                  borderRadius: BorderRadius.circular(5),
+                                ),
+                              ),
                               onPressed: isSendingOTP ? null : sendOTP,
-                              child: const Text("Send"),
+                              child: const Text(
+                                "Send",
+                                style: TextStyle(color: Colors.white),
+                              ),
                             ),
                           ],
                         ),
@@ -314,8 +360,18 @@ class _LoginState extends State<Login> {
                         SizedBox(
                           width: double.infinity,
                           child: ElevatedButton(
+                            style: ElevatedButton.styleFrom(
+                              backgroundColor: Colors.green,
+                              shape: RoundedRectangleBorder(
+                                borderRadius: BorderRadius.circular(5),
+                              ),
+                              padding: const EdgeInsets.symmetric(vertical: 22),
+                            ),
                             onPressed: isVerifyingOTP ? null : verifyOTP,
-                            child: const Text("Verify"),
+                            child: const Text(
+                              "Verify",
+                              style: TextStyle(color: Colors.white),
+                            ),
                           ),
                         ),
                       ],
@@ -335,6 +391,9 @@ class _LoginState extends State<Login> {
                           obscureText: !showPass,
                           style: const TextStyle(color: Colors.white),
                           decoration: InputDecoration(
+                            focusedBorder: const OutlineInputBorder(
+                              borderSide: BorderSide(color: Colors.white),
+                            ),
                             labelText: "Retype New Password",
                             labelStyle: const TextStyle(color: Colors.white),
                             suffixIcon: IconButton(
@@ -365,12 +424,6 @@ class _LoginState extends State<Login> {
                   ),
                 ),
               ),
-              actions: [
-                TextButton(
-                  onPressed: () => Navigator.pop(context),
-                  child: const Text("Close"),
-                ),
-              ],
             );
           },
         );
@@ -397,7 +450,7 @@ class _LoginState extends State<Login> {
         ),
         Expanded(
           child: Column(
-            mainAxisAlignment: MainAxisAlignment.center,
+            crossAxisAlignment: CrossAxisAlignment.center,
             children: [
               const Text(
                 'Welcome to Internshit',
@@ -415,9 +468,14 @@ class _LoginState extends State<Login> {
                   ),
                 ),
                 child: TextFormField(
+                  cursorColor: Colors.white,
                   controller: _emailController,
                   style: const TextStyle(color: Colors.white),
                   decoration: const InputDecoration(
+                    focusedBorder: OutlineInputBorder(
+                        borderSide: BorderSide(
+                      color: Colors.white,
+                    )),
                     prefixIcon: Icon(Icons.email_outlined, color: Colors.white),
                     label: Text('Email', style: TextStyle(color: Colors.white)),
                     border: InputBorder.none,
@@ -444,10 +502,13 @@ class _LoginState extends State<Login> {
                   ),
                 ),
                 child: TextFormField(
+                  cursorColor: Colors.white,
                   controller: _passwordController,
                   obscureText: !_showPassword,
                   style: const TextStyle(color: Colors.white),
                   decoration: InputDecoration(
+                    focusedBorder: OutlineInputBorder(
+                        borderSide: BorderSide(color: Colors.white)),
                     prefixIcon: const Icon(Icons.password_outlined,
                         color: Colors.white),
                     label: const Text('Password',
@@ -481,8 +542,12 @@ class _LoginState extends State<Login> {
               const SizedBox(height: 10),
               TextButton(
                 onPressed: _showForgotPasswordDialog,
-                child: const Text("Forgot Password",
-                    style: TextStyle(color: Colors.white70)),
+                child: const Text(
+                  "Forgot Password",
+                  style: TextStyle(
+                    color: Colors.white70,
+                  ),
+                ),
               ),
               const SizedBox(height: 10),
               Container(
