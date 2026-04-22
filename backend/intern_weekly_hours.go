@@ -3,7 +3,6 @@ package main
 import (
 	"encoding/json"
 	"net/http"
-	"strconv"
 	"time"
 )
 
@@ -18,10 +17,9 @@ func InternWeeklyHours(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	userIDStr := r.URL.Query().Get("user_id")
-	userID, err := strconv.Atoi(userIDStr)
-	if err != nil {
-		jsonError(w, "Invalid user_id", http.StatusBadRequest)
+	userID := r.URL.Query().Get("user_id")
+	if userID == "" {
+		jsonError(w, "user_id is required", http.StatusBadRequest)
 		return
 	}
 
@@ -29,7 +27,7 @@ func InternWeeklyHours(w http.ResponseWriter, r *http.Request) {
 	now := time.Now()
 	weekday := int(now.Weekday())
 	if weekday == 0 {
-		weekday = 7 // Sunday becomes 7 so Monday offset works
+		weekday = 7
 	}
 	monday := now.AddDate(0, 0, -(weekday - 1))
 
