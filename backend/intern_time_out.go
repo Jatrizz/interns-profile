@@ -15,35 +15,33 @@ func InternTimeOut(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("Content-Type", "application/json")
 
 	var req struct {
-		UserID  int    `json:"user_id"`
+		UserID  string `json:"user_id"` // ← string
 		Remarks string `json:"remarks"`
 	}
 	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
 		jsonError(w, "Invalid request body", http.StatusBadRequest)
 		return
 	}
-	if req.UserID == 0 {
+	if req.UserID == "" { // ← empty string check
 		jsonError(w, "user_id is required", http.StatusBadRequest)
 		return
 	}
 
 	now := time.Now()
 
-	// Find the active session (timed in but no time_out yet) for today
+	// Find active time in for today
 	var logID int
 	var timeInStr string
 	var currentStatus string
-	var session string
 	err := db.QueryRow(`
-		SELECT id, time_in, status, session
-		FROM time_logs
-		WHERE user_id = $1
-		AND log_date = CURRENT_DATE
-		AND time_out IS NULL
-		AND status != 'no_timeout'
-		ORDER BY time_in DESC
-		LIMIT 1
-	`, req.UserID).Scan(&logID, &timeInStr, &currentStatus, &session)
+    SELECT id, time_in::text, status
+    FROM time_logs
+    WHERE user_id = $1
+    AND log_date = CURRENT_DATE
+    AND time_out IS NULL
+    ORDER BY time_in DESC
+    LIMIT 1
+`, req.UserID).Scan(&logID, &timeInStr, &currentStatus)
 	if err != nil {
 		jsonError(w, "No active time in found for today", http.StatusNotFound)
 		return
@@ -58,15 +56,12 @@ func InternTimeOut(w http.ResponseWriter, r *http.Request) {
 	timeIn := time.Date(now.Year(), now.Month(), now.Day(),
 		parsedTimeIn.Hour(), parsedTimeIn.Minute(), parsedTimeIn.Second(), 0, now.Location())
 
-	// Calculate hours rendered (clamped to session window automatically)
 	hoursRendered := calculateHoursRendered(timeIn, now)
 
-	// Determine final status
-	// half-day: only if morning session AND clocking out before 12PM
-	// For afternoon session, clocking out early doesn't change status to half-day
+	// half-day if clocking out before 1PM
 	finalStatus := currentStatus
-	morningEnd := time.Date(now.Year(), now.Month(), now.Day(), 12, 0, 0, 0, now.Location())
-	if session == "morning" && now.Before(morningEnd) {
+	halfDayCutoff := time.Date(now.Year(), now.Month(), now.Day(), 13, 0, 0, 0, now.Location())
+	if now.Before(halfDayCutoff) {
 		finalStatus = "half-day"
 	}
 
@@ -107,7 +102,6 @@ func InternTimeOut(w http.ResponseWriter, r *http.Request) {
 
 	json.NewEncoder(w).Encode(map[string]interface{}{
 		"message":         "Time out recorded successfully",
-		"session":         session,
 		"time_out":        now.Format("15:04:05"),
 		"hours_rendered":  hoursRendered,
 		"total_rendered":  totalRendered,

@@ -20,20 +20,33 @@ func InternRequiredHours(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	if req.UserID == "" {
+		jsonError(w, "user_id is required", http.StatusBadRequest)
+		return
+	}
+
 	if req.RequiredHours <= 0 {
 		jsonError(w, "Required hours must be greater than 0", http.StatusBadRequest)
 		return
 	}
 
-	_, err := db.Exec(`
-        INSERT INTO intern_profiles (user_id, school, required_ojt_hours)
-    SELECT $1, school, $2
-    FROM users
-    WHERE id = $1
-    ON CONFLICT (user_id)
-    DO UPDATE SET required_ojt_hours = $2
-`, req.UserID, req.RequiredHours)
+	// First get the school from users table
+	var school string
+	err := db.QueryRow(`
+		SELECT COALESCE(school, '') FROM users WHERE id = $1
+	`, req.UserID).Scan(&school)
+	if err != nil {
+		jsonError(w, "User not found", http.StatusNotFound)
+		return
+	}
 
+	// Then insert or update intern_profiles
+	_, err = db.Exec(`
+		INSERT INTO intern_profiles (user_id, school, required_ojt_hours)
+		VALUES ($1, $2, $3)
+		ON CONFLICT (user_id)
+		DO UPDATE SET required_ojt_hours = $3
+	`, req.UserID, school, req.RequiredHours)
 	if err != nil {
 		jsonError(w, "Failed to update required hours", http.StatusInternalServerError)
 		return

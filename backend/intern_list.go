@@ -6,9 +6,10 @@ import (
 )
 
 type InternStatus struct {
-	UserID   int    `json:"user_id"`
-	Username string `json:"username"`
-	Status   string `json:"status"` // "present", "late", "half-day", "absent"
+	UserID    int    `json:"user_id"`
+	FirstName string `json:"first_name"`
+	LastName  string `json:"last_name"`
+	Status    string `json:"status"`
 }
 
 func DashboardInternList(w http.ResponseWriter, r *http.Request) {
@@ -20,14 +21,15 @@ func DashboardInternList(w http.ResponseWriter, r *http.Request) {
 	rows, err := db.Query(`
         SELECT 
             u.id,
-            u.username,
+            u.first_name,
+            u.last_name,
             COALESCE(tl.status, 'absent') AS status
         FROM users u
         LEFT JOIN time_logs tl 
             ON tl.user_id = u.id 
             AND tl.log_date = CURRENT_DATE
         WHERE u.role = 'intern'
-        ORDER BY u.username ASC
+        ORDER BY u.first_name ASC
     `)
 	if err != nil {
 		jsonError(w, "Error fetching intern list", http.StatusInternalServerError)
@@ -38,10 +40,14 @@ func DashboardInternList(w http.ResponseWriter, r *http.Request) {
 	var interns []InternStatus
 	for rows.Next() {
 		var intern InternStatus
-		if err := rows.Scan(&intern.UserID, &intern.Username, &intern.Status); err != nil {
+		if err := rows.Scan(&intern.UserID, &intern.FirstName, &intern.LastName, &intern.Status); err != nil {
 			continue
 		}
 		interns = append(interns, intern)
+	}
+
+	if interns == nil {
+		interns = []InternStatus{}
 	}
 
 	w.Header().Set("Content-Type", "application/json")

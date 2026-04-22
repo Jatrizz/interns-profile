@@ -64,10 +64,10 @@ func InternDashboard(w http.ResponseWriter, r *http.Request) {
 	var isClockedIn bool
 	var clockInTime string
 	err = db.QueryRow(`
-        SELECT status, time_in, (time_out IS NULL) AS is_clocked_in
-        FROM time_logs
-        WHERE user_id = $1 AND log_date = CURRENT_DATE
-    `, userID).Scan(&todaysStatus, &clockInTime, &isClockedIn)
+    SELECT status, time_in::text, (time_out IS NULL) AS is_clocked_in
+    FROM time_logs
+    WHERE user_id = $1 AND log_date = CURRENT_DATE
+`, userID).Scan(&todaysStatus, &clockInTime, &isClockedIn)
 	if err != nil {
 		todaysStatus = "absent"
 		isClockedIn = false

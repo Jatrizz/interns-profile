@@ -21,7 +21,7 @@ func InternTimeLogs(w http.ResponseWriter, r *http.Request) {
 	}
 
 	rows, err := db.Query(`
-		SELECT log_date, time_in, time_out, hours_rendered, status, remarks
+		SELECT log_date, time_in::text, time_out::text, hours_rendered, status, remarks
 		FROM time_logs
 		WHERE user_id = $1
 		ORDER BY log_date DESC
