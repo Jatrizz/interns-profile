@@ -62,7 +62,7 @@ class _InternMyProfilePageState extends State<InternMyProfilePage> {
     setState(() => _isLoading = true);
     try {
       final res = await http.get(
-        Uri.parse('$_base/intern-profile?user_id=${widget.userId}'),
+        Uri.parse('$_base/intern?id=${widget.userId}'),
       );
       if (res.statusCode == 200) {
         final data = jsonDecode(res.body);
