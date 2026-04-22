@@ -118,16 +118,18 @@ func UploadPhotoHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	userID := r.FormValue("user_id")
+	// FIX 1: Flutter sends the user id as ?id= query parameter, not as a form field
+	userID := r.URL.Query().Get("id")
 	if userID == "" {
-		slog.Warn("missing user_id")
-		http.Error(w, `{"error":"user_id required"}`, http.StatusBadRequest)
+		slog.Warn("missing id")
+		http.Error(w, `{"error":"id required"}`, http.StatusBadRequest)
 		return
 	}
 
 	slog.Info("photo upload started", "user_id", userID)
 
-	photoURL, err := saveUploadedFile(r, "profile_image", map[string]bool{
+	// FIX 2: Flutter multipart field name is "photo", not "profile_image"
+	photoURL, err := saveUploadedFile(r, "photo", map[string]bool{
 		".jpg": true, ".jpeg": true, ".png": true,
 	}, "photo_")
 
@@ -142,6 +144,7 @@ func UploadPhotoHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	// FIX 3: DB column must match what GetInternHandler returns as "profile_image_url"
 	_, err = db.Exec(`UPDATE users SET photo=$1 WHERE id=$2`, photoURL, userID)
 	if err != nil {
 		slog.Error("db update failed (photo)",
@@ -155,8 +158,8 @@ func UploadPhotoHandler(w http.ResponseWriter, r *http.Request) {
 	slog.Info("photo saved to DB", "user_id", userID)
 
 	json.NewEncoder(w).Encode(map[string]string{
-		"message":   "photo uploaded",
-		"photo_url": photoURL,
+		"message":           "photo uploaded",
+		"profile_image_url": photoURL,
 	})
 }
 
@@ -171,14 +174,16 @@ func UploadResumeHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	userID := r.FormValue("user_id")
+	// FIX 4: Flutter sends the user id as ?id= query parameter, not as a form field
+	userID := r.URL.Query().Get("id")
 	if userID == "" {
-		http.Error(w, `{"error":"user_id required"}`, http.StatusBadRequest)
+		http.Error(w, `{"error":"id required"}`, http.StatusBadRequest)
 		return
 	}
 
 	slog.Info("resume upload started", "user_id", userID)
 
+	// Flutter multipart field name is "resume" — this already matches
 	resumeURL, err := saveUploadedFile(r, "resume", map[string]bool{
 		".pdf": true, ".doc": true, ".docx": true,
 		".jpg": true, ".jpeg": true, ".png": true,
@@ -195,6 +200,7 @@ func UploadResumeHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	// FIX 5: DB column must match what GetInternHandler returns as "resume_url"
 	_, err = db.Exec(`UPDATE users SET resume=$1 WHERE id=$2`, resumeURL, userID)
 	if err != nil {
 		slog.Error("db update failed (resume)",
@@ -208,7 +214,7 @@ func UploadResumeHandler(w http.ResponseWriter, r *http.Request) {
 	slog.Info("resume saved to DB", "user_id", userID)
 
 	json.NewEncoder(w).Encode(map[string]string{
-		"message":     "resume uploaded",
+		"message":    "resume uploaded",
 		"resume_url": resumeURL,
 	})
 }
