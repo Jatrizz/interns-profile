@@ -19,18 +19,22 @@ func DashboardInternList(w http.ResponseWriter, r *http.Request) {
 	}
 
 	rows, err := db.Query(`
-        SELECT 
-            u.id,
-            u.first_name,
-            u.last_name,
-            COALESCE(tl.status, 'absent') AS status
-        FROM users u
-        LEFT JOIN time_logs tl 
-            ON tl.user_id = u.id 
-            AND tl.log_date = CURRENT_DATE
-        WHERE u.role = 'intern'
-        ORDER BY u.first_name ASC
-    `)
+    SELECT 
+        u.id,
+        u.first_name,
+        u.last_name,
+        COALESCE(
+            (SELECT status FROM time_logs 
+             WHERE user_id = u.id 
+             AND log_date = CURRENT_DATE 
+             ORDER BY time_in DESC 
+             LIMIT 1),
+            'absent'
+        ) AS status
+    FROM users u
+    WHERE u.role = 'intern'
+    ORDER BY u.first_name ASC
+`)
 	if err != nil {
 		jsonError(w, "Error fetching intern list", http.StatusInternalServerError)
 		return
