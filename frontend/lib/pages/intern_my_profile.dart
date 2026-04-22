@@ -137,7 +137,7 @@ class _InternMyProfilePageState extends State<InternMyProfilePage> {
         Uri.parse('$_base/intern-profile/update'),
       );
 
-      request.fields['user_id'] = widget.userId;
+      request.fields['id_number'] = idNumber;
       request.fields['first_name'] = _firstNameController.text;
       request.fields['last_name'] = _lastNameController.text;
       request.fields['program'] = _programController.text;
