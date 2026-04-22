@@ -42,11 +42,8 @@ class _InternMyProfilePageState extends State<InternMyProfilePage> {
   bool _isLoading = false;
   bool _isSaving = false;
 
-  /// Controls whether the form fields are editable.
-  /// Starts as false — view-only by default.
   bool _isEditing = false;
 
-  // Snapshot of values at the moment editing begins — used to restore on cancel
   String _snapFirstName = '';
   String _snapLastName = '';
   String _snapProgram = '';
@@ -132,58 +129,74 @@ class _InternMyProfilePageState extends State<InternMyProfilePage> {
   Future<void> _saveChanges() async {
     setState(() => _isSaving = true);
     try {
-      final request = http.MultipartRequest(
-        'PUT',
-        Uri.parse('$_base/intern-profile/update'),
+      // 1. Update text fields — JSON body to PUT /update-intern?id=
+      final res = await http.put(
+        Uri.parse('$_base/update-intern?id=${widget.userId}'),
+        headers: {'Content-Type': 'application/json'},
+        body: jsonEncode({
+          'first_name': _firstNameController.text,
+          'last_name': _lastNameController.text,
+          'program': _programController.text,
+          'school': _schoolController.text,
+          'phone_number': _phoneController.text,
+        }),
       );
 
-      request.fields['id_number'] = idNumber;
-      request.fields['first_name'] = _firstNameController.text;
-      request.fields['last_name'] = _lastNameController.text;
-      request.fields['program'] = _programController.text;
-      request.fields['school'] = _schoolController.text;
-      request.fields['phone_number'] = _phoneController.text;
-
-      if (_profileImage != null) {
-        request.files.add(await http.MultipartFile.fromPath(
-          'profile_image',
-          _profileImage!.path,
-        ));
+      if (res.statusCode != 200) {
+        if (mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(content: Text('Failed to update profile: ${res.body}')),
+          );
+        }
+        return;
       }
 
+      // 2. Upload profile photo if changed
+      if (_profileImage != null) {
+        final photoReq = http.MultipartRequest(
+          'POST',
+          Uri.parse('$_base/upload-photo?id=${widget.userId}'),
+        );
+        photoReq.files.add(await http.MultipartFile.fromPath(
+          'photo',
+          _profileImage!.path,
+        ));
+        await photoReq.send();
+      }
+
+      // 3. Upload resume if changed
       if (_resumeFile != null) {
-        request.files.add(await http.MultipartFile.fromPath(
+        final resumeReq = http.MultipartRequest(
+          'POST',
+          Uri.parse('$_base/upload-resume?id=${widget.userId}'),
+        );
+        resumeReq.files.add(await http.MultipartFile.fromPath(
           'resume',
           _resumeFile!.path,
         ));
+        await resumeReq.send();
       }
 
-      final res = await request.send();
-      if (res.statusCode == 200) {
-        if (mounted) {
-          ScaffoldMessenger.of(context).showSnackBar(
-            const SnackBar(content: Text('Profile updated successfully!')),
-          );
-          // Return to view-only mode after a successful save
-          setState(() => _isEditing = false);
-        }
-        _fetchProfile();
-      } else {
-        if (mounted) {
-          ScaffoldMessenger.of(context).showSnackBar(
-            const SnackBar(content: Text('Failed to update profile.')),
-          );
-        }
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('Profile updated successfully!')),
+        );
+        // Just flip edit mode off — data is already correct in the controllers,
+        // no re-fetch needed so the screen never stutters.
+        setState(() => _isEditing = false);
       }
     } catch (e) {
       debugPrint('saveChanges error: $e');
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('An error occurred. Please try again.')),
+        );
+      }
     } finally {
       setState(() => _isSaving = false);
     }
   }
 
-  /// Cancels editing and restores the pre-edit snapshot — no network call,
-  /// no loading flicker.
   void _cancelEditing() {
     setState(() {
       _isEditing = false;
@@ -199,7 +212,6 @@ class _InternMyProfilePageState extends State<InternMyProfilePage> {
   }
 
   void _enterEditing() {
-    // Take a snapshot before any edits happen
     _snapFirstName = _firstNameController.text;
     _snapLastName = _lastNameController.text;
     _snapProgram = _programController.text;
@@ -222,7 +234,6 @@ class _InternMyProfilePageState extends State<InternMyProfilePage> {
       child: Row(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          // Left — full form
           Expanded(
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
@@ -277,7 +288,7 @@ class _InternMyProfilePageState extends State<InternMyProfilePage> {
                 ),
                 const SizedBox(height: 16),
 
-                // ── Profile image (editing controls hidden in view mode) ──
+                // ── Profile image ─────────────────────────────────────────
                 InternProfileImageSection(
                   isDarkMode: widget.isDarkMode,
                   profileImage: _profileImage,
@@ -330,7 +341,6 @@ class _InternMyProfilePageState extends State<InternMyProfilePage> {
                 const SizedBox(height: 6),
                 Row(
                   children: [
-                    // Email is always read-only (business rule)
                     Expanded(
                       child: _buildField(
                         controller: _emailController,
@@ -345,7 +355,6 @@ class _InternMyProfilePageState extends State<InternMyProfilePage> {
                 ),
                 const SizedBox(height: 32),
 
-                // ── Action buttons only visible when editing ──────────────
                 if (_isEditing)
                   InternProfileActionButtons(
                     isDarkMode: widget.isDarkMode,
@@ -358,7 +367,6 @@ class _InternMyProfilePageState extends State<InternMyProfilePage> {
           ),
           const SizedBox(width: 32),
 
-          // Right — resume preview
           InternProfileResumePreview(
             isDarkMode: widget.isDarkMode,
             resumeFile: _resumeFile,
