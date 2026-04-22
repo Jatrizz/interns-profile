@@ -381,6 +381,14 @@ class _LoginState extends State<Login> {
                           obscureText: !showPass,
                           style: const TextStyle(color: Colors.white),
                           decoration: const InputDecoration(
+                            prefixIcon: Icon(
+                              Icons.password_outlined,
+                              color: Colors.white,
+                            ),
+                            enabledBorder: OutlineInputBorder(
+                                borderSide: BorderSide(color: Colors.grey)),
+                            focusedBorder: OutlineInputBorder(
+                                borderSide: BorderSide(color: Colors.white)),
                             labelText: "New Password",
                             labelStyle: TextStyle(color: Colors.white),
                           ),
@@ -391,6 +399,12 @@ class _LoginState extends State<Login> {
                           obscureText: !showPass,
                           style: const TextStyle(color: Colors.white),
                           decoration: InputDecoration(
+                            prefixIcon: Icon(
+                              Icons.password_outlined,
+                              color: Colors.white,
+                            ),
+                            enabledBorder: OutlineInputBorder(
+                                borderSide: BorderSide(color: Colors.grey)),
                             focusedBorder: const OutlineInputBorder(
                               borderSide: BorderSide(color: Colors.white),
                             ),
@@ -415,8 +429,18 @@ class _LoginState extends State<Login> {
                         SizedBox(
                           width: double.infinity,
                           child: ElevatedButton(
+                            style: ElevatedButton.styleFrom(
+                                padding: EdgeInsetsDirectional.symmetric(
+                                    vertical: 20),
+                                backgroundColor: Colors.green,
+                                shape: RoundedRectangleBorder(
+                                    borderRadius:
+                                        BorderRadiusGeometry.circular(6))),
                             onPressed: isResetting ? null : resetPassword,
-                            child: const Text("Confirm"),
+                            child: const Text(
+                              "Confirm",
+                              style: TextStyle(color: Colors.white),
+                            ),
                           ),
                         ),
                       ],
