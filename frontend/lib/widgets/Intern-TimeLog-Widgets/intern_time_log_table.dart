@@ -11,20 +11,26 @@ class InternTimeLogTable extends StatelessWidget {
   });
 
   Color _statusColor(String status) {
-    switch (status) {
-      case 'Present':
+    switch (status.toLowerCase()) {
+      case 'on-time':
         return const Color(0xFF4CAF50);
-      case 'Late':
+      case 'late':
         return const Color(0xFFFFA726);
-      case 'Absent':
+      case 'absent':
         return const Color(0xFFEF5350);
-      case 'Half Day':
+      case 'half day':
         return const Color(0xFF42A5F5);
-      case 'Weekend':
+      case 'weekend':
         return const Color(0xFFAB47BC);
       default:
         return Colors.grey;
     }
+  }
+
+  String _capitalize(String text) {
+    if (text.isEmpty) return text;
+    if (text == 'half day') return 'Half Day';
+    return text[0].toUpperCase() + text.substring(1);
   }
 
   @override
@@ -97,7 +103,7 @@ class InternTimeLogTable extends StatelessWidget {
                           borderRadius: BorderRadius.circular(20),
                         ),
                         child: Text(
-                          log['status'] ?? '–',
+                          _capitalize(log['status'] ?? '–'),
                           style: const TextStyle(
                             color: Colors.white,
                             fontSize: 12,

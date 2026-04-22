@@ -40,7 +40,7 @@ class InternStatsCards extends StatelessWidget {
           child: _StatCard(
             isDarkMode: isDarkMode,
             label: "Today's Status",
-            value: todayStatus,
+            value: _capitalize(todayStatus),
             isLarge: true,
             statusColor: _statusColor(todayStatus),
           ),
@@ -52,14 +52,22 @@ class InternStatsCards extends StatelessWidget {
   Color _statusColor(String status) {
     switch (status.toLowerCase()) {
       case 'on-time':
-        return Colors.white;
+        return const Color(0xFF4CAF50);
       case 'late':
-        return Colors.orangeAccent;
+        return const Color(0xFFFFA726);
+      case 'half day':
+        return const Color(0xFFAB47BC);
       case 'absent':
-        return Colors.redAccent;
+        return const Color(0xFF42A5F5);
       default:
         return Colors.white70;
     }
+  }
+
+  String _capitalize(String text) {
+    if (text.isEmpty) return text;
+    if (text == 'half-day') return 'Half Day';
+    return text[0].toUpperCase() + text.substring(1);
   }
 }
 
@@ -87,10 +95,11 @@ class _StatCard extends StatelessWidget {
         borderRadius: BorderRadius.circular(12),
       ),
       child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
+        crossAxisAlignment: CrossAxisAlignment.center,
         children: [
           Text(
             label,
+            textAlign: TextAlign.center,
             style: TextStyle(
               color: isDarkMode ? Colors.grey[400] : Colors.grey[600],
               fontSize: 13,
@@ -99,6 +108,7 @@ class _StatCard extends StatelessWidget {
           const SizedBox(height: 10),
           Text(
             value,
+            textAlign: TextAlign.center,
             style: TextStyle(
               color:
                   statusColor ?? (isDarkMode ? Colors.white : Colors.black87),
