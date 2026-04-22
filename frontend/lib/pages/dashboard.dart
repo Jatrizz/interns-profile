@@ -85,9 +85,10 @@ class _DashboardOverviewPageState extends State<DashboardOverviewPage> {
   Future<void> fetchInterns() async {
     try {
       final response = await http.get(
-        Uri.parse('http://127.0.0.1:8080/interns'),
+        Uri.parse('http://127.0.0.1:8080/interns-list'),
       );
       if (response.statusCode == 200) {
+        debugPrint('>>> interns-list body: ${response.body}');
         setState(() {
           interns = jsonDecode(response.body);
         });

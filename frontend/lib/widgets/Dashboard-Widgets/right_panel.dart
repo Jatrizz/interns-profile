@@ -38,7 +38,10 @@ class RightPanel extends StatelessWidget {
           ),
           const SizedBox(height: 20),
           Expanded(
-            child: DahsboardInternList(isDarkMode: isDarkMode, admins: interns),
+            child: SingleChildScrollView(
+              child:
+                  DahsboardInternList(isDarkMode: isDarkMode, admins: interns),
+            ),
           ),
         ],
       ),
