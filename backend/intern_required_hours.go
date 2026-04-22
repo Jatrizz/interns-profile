@@ -12,7 +12,7 @@ func InternRequiredHours(w http.ResponseWriter, r *http.Request) {
 	}
 
 	var req struct {
-		UserID        int     `json:"user_id"`
+		UserID        string  `json:"user_id"`
 		RequiredHours float64 `json:"required_hours"`
 	}
 	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
