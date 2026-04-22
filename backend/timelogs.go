@@ -68,12 +68,18 @@ func GetTimeLogsForIntern(w http.ResponseWriter, r *http.Request) {
 
 		timeInStr := "–"
 		if timeIn.Valid && timeIn.String != "" {
-			timeInStr = timeIn.String
+			t, err := time.Parse("15:04:05", timeIn.String)
+			if err == nil {
+				timeInStr = t.Format("3:04 PM") // formats as "10:57 AM"
+			}
 		}
 
 		timeOutStr := "–"
 		if timeOut.Valid && timeOut.String != "" {
-			timeOutStr = timeOut.String
+			t, err := time.Parse("15:04:05", timeOut.String)
+			if err == nil {
+				timeOutStr = t.Format("3:04 PM") // formats as "5:00 PM"
+			}
 		}
 
 		hoursStr := "–"
