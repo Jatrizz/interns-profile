@@ -23,8 +23,8 @@ func GetTimeLogsForIntern(w http.ResponseWriter, r *http.Request) {
 	rows, err := db.Query(`
         SELECT 
             tl.log_date,
-            tl.time_in,
-            tl.time_out,
+            tl.time_in::text,
+            tl.time_out::text,
             tl.hours_rendered,
             tl.status,
             tl.remarks
