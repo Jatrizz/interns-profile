@@ -91,28 +91,24 @@ class _InternDashboardPageState extends State<InternDashboardPage> {
   }
 
   Future<void> _fetchDashboard() async {
-    debugPrint('>>> _fetchDashboard called'); // ← step 1
     try {
       final res = await http.get(Uri.parse(
         '$_base/intern-dashboard?user_id=${widget.userId}&first_name=${widget.firstName}',
       ));
 
-      debugPrint('>>> status: ${res.statusCode}'); // ← step 2
-      debugPrint('>>> body: ${res.body}'); // ← step 3
-
       if (res.statusCode == 200) {
         final data = jsonDecode(res.body);
+
         final double requiredFromServer =
             (data['required_ojt_hours'] as num? ?? 0).toDouble();
-
-        debugPrint('>>> requiredFromServer: $requiredFromServer'); // ← step 4
 
         setState(() {
           totalHoursRendered =
               (data['total_hours_rendered'] as num? ?? 0).toDouble();
-          requiredOjtHours = requiredFromServer;
+          requiredOjtHours = requiredFromServer; // use directly, not derived
           todayStatus = data['todays_status'] ?? 'absent';
           isClockedIn = data['is_clocked_in'] ?? false;
+
           if (isClockedIn &&
               data['clock_in_time'] != null &&
               data['clock_in_time'] != '') {
@@ -129,19 +125,13 @@ class _InternDashboardPageState extends State<InternDashboardPage> {
           }
         });
 
-        debugPrint(
-            '>>> requiredFromServer == 0? ${requiredFromServer == 0}'); // ← step 5
-
         if (requiredFromServer == 0) {
-          debugPrint('>>> posting frame callback'); // ← step 6
-          WidgetsBinding.instance.addPostFrameCallback((_) {
-            debugPrint('>>> calling _promptOjtHours'); // ← step 7
-            _promptOjtHours();
-          });
+          WidgetsBinding.instance
+              .addPostFrameCallback((_) => _promptOjtHours());
         }
       }
     } catch (e) {
-      debugPrint('>>> fetchDashboard error: $e'); // ← step 8
+      debugPrint('fetchDashboard error: $e');
     }
   }
 
