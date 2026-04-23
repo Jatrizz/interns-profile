@@ -49,4 +49,6 @@ func RegisterRoutes(r *mux.Router) {
 	r.HandleFunc("/intern/timelogs", InternTimeLogs).Methods("GET")
 	r.HandleFunc("/intern/timelogs/stats", InternTimeLogStats).Methods("GET")
 	r.HandleFunc("/timelogs/overview", TimeLogsOverview).Methods("GET")
+	r.HandleFunc("/timelogs/today", TimeLogsToday).Methods("GET")
+
 }
