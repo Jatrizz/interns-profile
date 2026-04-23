@@ -29,15 +29,16 @@ class InternProfileImageSection extends StatelessWidget {
           children: [
             // Profile Image
             CircleAvatar(
+              key: ValueKey(profileImageUrl ?? ''),
               radius: 70,
               backgroundColor: isDarkMode
                   ? const Color(0xFF3A3A3A)
                   : const Color(0xFFDDDDDD),
               backgroundImage: profileImage != null
-                  ? FileImage(profileImage!) as ImageProvider
-                  : (profileImageUrl != null && profileImageUrl!.isNotEmpty
-                      ? NetworkImage(profileImageUrl!)
-                      : null),
+                ? FileImage(profileImage!) as ImageProvider
+                : (profileImageUrl != null && profileImageUrl!.isNotEmpty
+                    ? NetworkImage(profileImageUrl!)
+                    : null),
               child: (profileImage == null &&
                       (profileImageUrl == null || profileImageUrl!.isEmpty))
                   ? Icon(

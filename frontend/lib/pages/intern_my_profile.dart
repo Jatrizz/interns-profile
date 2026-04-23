@@ -86,11 +86,17 @@ class _InternMyProfilePageState extends State<InternMyProfilePage> {
           _emailController.text = data['email'] ?? '';
           _phoneController.text = data['phone_number'] ?? '';
           idNumber = data['id_number'] ?? '';
-          final rawPhoto = data['profile_image_url'] ?? '';
-          _profileImageUrl = rawPhoto.isNotEmpty && !rawPhoto.startsWith('http')
-              ? '$_base$rawPhoto'
-              : rawPhoto.isNotEmpty ? rawPhoto : null;
-          final rawResume = data['resume_url'] ?? '';
+          final rawPhoto = data['photo'] ?? '';
+          if (rawPhoto.isNotEmpty) {
+              final fullUrl = rawPhoto.startsWith('http') ? rawPhoto : '$_base$rawPhoto';
+              NetworkImage(fullUrl).evict();
+              imageCache.clear();
+              imageCache.clearLiveImages();
+              _profileImageUrl = fullUrl;
+          } else {
+              _profileImageUrl = null;
+          }
+          final rawResume = data['resume'] ?? '';
           _resumeUrl = rawResume.isNotEmpty && !rawResume.startsWith('http')
               ? '$_base$rawResume'
     : rawResume.isNotEmpty ? rawResume : null;
@@ -175,10 +181,15 @@ class _InternMyProfilePageState extends State<InternMyProfilePage> {
           final json = jsonDecode(body) as Map<String, dynamic>;
           final newUrl = json['profile_image_url'] as String?;
           if (newUrl != null && mounted) {
-            setState(() {
-              _profileImageUrl = '$_base$newUrl';
-              _profileImage = null; // clear local file — use server URL from now on
-            });
+              final fullUrl = '$_base$newUrl';
+              // Clear Flutter's image cache so the new photo loads fresh
+              NetworkImage(fullUrl).evict();
+              imageCache.clear();
+              imageCache.clearLiveImages();
+              setState(() {
+                  _profileImageUrl = fullUrl;
+                  _profileImage = null;
+              });
           }
         }
       }
