@@ -62,7 +62,7 @@ func InternTimeOut(w http.ResponseWriter, r *http.Request) {
 	finalStatus := currentStatus
 	halfDayCutoff := time.Date(now.Year(), now.Month(), now.Day(), 13, 0, 0, 0, now.Location())
 	if now.Before(halfDayCutoff) {
-		finalStatus = "half-day"
+		finalStatus = "half day"
 	}
 
 	_, err = db.Exec(`
