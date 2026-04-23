@@ -26,6 +26,8 @@ func RegisterRoutes(r *mux.Router) {
 	r.HandleFunc("/contact", ContactHandler).Methods("POST")
 	r.HandleFunc("/upload-photo", UploadPhotoHandler).Methods("POST")
 	r.HandleFunc("/upload-resume", UploadResumeHandler).Methods("POST")
+	r.HandleFunc("/remove-photo", RemovePhotoHandler).Methods("DELETE")
+	r.HandleFunc("/remove-resume", RemoveResumeHandler).Methods("DELETE")
 
 	// Intern profile
 	r.HandleFunc("/intern", GetInternHandler).Methods("GET")

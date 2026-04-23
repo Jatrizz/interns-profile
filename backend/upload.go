@@ -17,7 +17,6 @@ const uploadDir = "uploads"
 // ================= INIT UPLOAD DIRECTORY =================
 
 func initUploadDir() {
-	// Get absolute path of working directory
 	basePath, err := os.Getwd()
 	if err != nil {
 		slog.Error("failed to get working directory", "error", err)
@@ -103,7 +102,6 @@ func saveUploadedFile(r *http.Request, fieldName string, allowedExts map[string]
 		"bytes", size,
 	)
 
-	// IMPORTANT: return URL path (not filesystem path)
 	return "/" + uploadDir + "/" + fileName, nil
 }
 
@@ -118,7 +116,6 @@ func UploadPhotoHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	// FIX 1: Flutter sends the user id as ?id= query parameter, not as a form field
 	userID := r.URL.Query().Get("id")
 	if userID == "" {
 		slog.Warn("missing id")
@@ -128,7 +125,6 @@ func UploadPhotoHandler(w http.ResponseWriter, r *http.Request) {
 
 	slog.Info("photo upload started", "user_id", userID)
 
-	// FIX 2: Flutter multipart field name is "photo", not "profile_image"
 	photoURL, err := saveUploadedFile(r, "photo", map[string]bool{
 		".jpg": true, ".jpeg": true, ".png": true,
 	}, "photo_")
@@ -144,13 +140,9 @@ func UploadPhotoHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	// FIX 3: DB column must match what GetInternHandler returns as "profile_image_url"
 	_, err = db.Exec(`UPDATE users SET photo=$1 WHERE id=$2`, photoURL, userID)
 	if err != nil {
-		slog.Error("db update failed (photo)",
-			"user_id", userID,
-			"error", err,
-		)
+		slog.Error("db update failed (photo)", "user_id", userID, "error", err)
 		http.Error(w, `{"error":"database error"}`, http.StatusInternalServerError)
 		return
 	}
@@ -160,6 +152,56 @@ func UploadPhotoHandler(w http.ResponseWriter, r *http.Request) {
 	json.NewEncoder(w).Encode(map[string]string{
 		"message":           "photo uploaded",
 		"profile_image_url": photoURL,
+	})
+}
+
+// ================= PHOTO REMOVE =================
+
+func RemovePhotoHandler(w http.ResponseWriter, r *http.Request) {
+	w.Header().Set("Content-Type", "application/json")
+
+	userID := r.URL.Query().Get("id")
+	if userID == "" {
+		http.Error(w, `{"error":"id required"}`, http.StatusBadRequest)
+		return
+	}
+
+	slog.Info("photo remove started", "user_id", userID)
+
+	// 1. Get current photo path from DB
+	var photoPath string
+	err := db.QueryRow(`SELECT COALESCE(photo, '') FROM users WHERE id=$1`, userID).Scan(&photoPath)
+	if err != nil {
+		slog.Error("db query failed (get photo)", "user_id", userID, "error", err)
+		http.Error(w, `{"error":"database error"}`, http.StatusInternalServerError)
+		return
+	}
+
+	// 2. Delete file from disk if it exists
+	if photoPath != "" {
+		basePath, _ := os.Getwd()
+		// photoPath is like "/uploads/photo_xxx.jpg" — strip leading slash
+		filePath := filepath.Join(basePath, strings.TrimPrefix(photoPath, "/"))
+		if err := os.Remove(filePath); err != nil {
+			// Log but don't fail — file may already be missing
+			slog.Warn("could not delete photo file", "path", filePath, "error", err)
+		} else {
+			slog.Info("photo file deleted from disk", "path", filePath)
+		}
+	}
+
+	// 3. Clear photo in DB
+	_, err = db.Exec(`UPDATE users SET photo=NULL WHERE id=$1`, userID)
+	if err != nil {
+		slog.Error("db update failed (remove photo)", "user_id", userID, "error", err)
+		http.Error(w, `{"error":"database error"}`, http.StatusInternalServerError)
+		return
+	}
+
+	slog.Info("photo removed", "user_id", userID)
+
+	json.NewEncoder(w).Encode(map[string]string{
+		"message": "photo removed",
 	})
 }
 
@@ -174,7 +216,6 @@ func UploadResumeHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	// FIX 4: Flutter sends the user id as ?id= query parameter, not as a form field
 	userID := r.URL.Query().Get("id")
 	if userID == "" {
 		http.Error(w, `{"error":"id required"}`, http.StatusBadRequest)
@@ -183,7 +224,6 @@ func UploadResumeHandler(w http.ResponseWriter, r *http.Request) {
 
 	slog.Info("resume upload started", "user_id", userID)
 
-	// Flutter multipart field name is "resume" — this already matches
 	resumeURL, err := saveUploadedFile(r, "resume", map[string]bool{
 		".pdf": true, ".doc": true, ".docx": true,
 		".jpg": true, ".jpeg": true, ".png": true,
@@ -200,13 +240,9 @@ func UploadResumeHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	// FIX 5: DB column must match what GetInternHandler returns as "resume_url"
 	_, err = db.Exec(`UPDATE users SET resume=$1 WHERE id=$2`, resumeURL, userID)
 	if err != nil {
-		slog.Error("db update failed (resume)",
-			"user_id", userID,
-			"error", err,
-		)
+		slog.Error("db update failed (resume)", "user_id", userID, "error", err)
 		http.Error(w, `{"error":"database error"}`, http.StatusInternalServerError)
 		return
 	}
@@ -216,6 +252,54 @@ func UploadResumeHandler(w http.ResponseWriter, r *http.Request) {
 	json.NewEncoder(w).Encode(map[string]string{
 		"message":    "resume uploaded",
 		"resume_url": resumeURL,
+	})
+}
+
+// ================= RESUME REMOVE =================
+
+func RemoveResumeHandler(w http.ResponseWriter, r *http.Request) {
+	w.Header().Set("Content-Type", "application/json")
+
+	userID := r.URL.Query().Get("id")
+	if userID == "" {
+		http.Error(w, `{"error":"id required"}`, http.StatusBadRequest)
+		return
+	}
+
+	slog.Info("resume remove started", "user_id", userID)
+
+	// 1. Get current resume path from DB
+	var resumePath string
+	err := db.QueryRow(`SELECT COALESCE(resume, '') FROM users WHERE id=$1`, userID).Scan(&resumePath)
+	if err != nil {
+		slog.Error("db query failed (get resume)", "user_id", userID, "error", err)
+		http.Error(w, `{"error":"database error"}`, http.StatusInternalServerError)
+		return
+	}
+
+	// 2. Delete file from disk if it exists
+	if resumePath != "" {
+		basePath, _ := os.Getwd()
+		filePath := filepath.Join(basePath, strings.TrimPrefix(resumePath, "/"))
+		if err := os.Remove(filePath); err != nil {
+			slog.Warn("could not delete resume file", "path", filePath, "error", err)
+		} else {
+			slog.Info("resume file deleted from disk", "path", filePath)
+		}
+	}
+
+	// 3. Clear resume in DB
+	_, err = db.Exec(`UPDATE users SET resume=NULL WHERE id=$1`, userID)
+	if err != nil {
+		slog.Error("db update failed (remove resume)", "user_id", userID, "error", err)
+		http.Error(w, `{"error":"database error"}`, http.StatusInternalServerError)
+		return
+	}
+
+	slog.Info("resume removed", "user_id", userID)
+
+	json.NewEncoder(w).Encode(map[string]string{
+		"message": "resume removed",
 	})
 }
 
