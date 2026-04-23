@@ -16,7 +16,7 @@ class _ContactsContactState extends State<ContactsContact> {
 
   bool isLoading = false;
 
-  final String apiUrl = "http://localhost:8080/send-email";
+  final String apiUrl = "http://127.0.0.1:8080/contact";
 
   Future<void> sendEmail() async {
     setState(() => isLoading = true);
