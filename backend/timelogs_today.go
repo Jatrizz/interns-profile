@@ -18,15 +18,17 @@ func TimeLogsToday(w http.ResponseWriter, r *http.Request) {
 		SELECT 
 			u.first_name,
 			u.last_name,
-			tl.log_date,
+			COALESCE(tl.log_date, CURRENT_DATE) AS log_date,
 			tl.time_in::text,
 			tl.time_out::text,
 			tl.hours_rendered,
-			tl.status,
+			COALESCE(tl.status, 'absent') AS status,
 			tl.remarks
-		FROM time_logs tl
-		JOIN users u ON u.id = tl.user_id
-		WHERE tl.log_date = CURRENT_DATE
+		FROM users u
+		LEFT JOIN time_logs tl 
+			ON tl.user_id = u.id 
+			AND tl.log_date = CURRENT_DATE
+		WHERE u.role = 'intern'
 		ORDER BY u.first_name ASC
 	`)
 	if err != nil {
@@ -94,6 +96,7 @@ func TimeLogsToday(w http.ResponseWriter, r *http.Request) {
 		if status.Valid {
 			statusStr = status.String
 		}
+
 		remarksStr := ""
 		if remarks.Valid {
 			remarksStr = remarks.String
