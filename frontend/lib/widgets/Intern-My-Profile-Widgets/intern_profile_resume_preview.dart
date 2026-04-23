@@ -1,9 +1,9 @@
 import 'package:flutter/material.dart';
-import 'dart:io';
+import 'package:file_picker/file_picker.dart';
 
 class InternProfileResumePreview extends StatelessWidget {
   final bool isDarkMode;
-  final File? resumeFile;
+  final PlatformFile? resumeFile; // web-safe: PlatformFile with bytes
   final String? resumeUrl;
 
   const InternProfileResumePreview({
@@ -12,6 +12,9 @@ class InternProfileResumePreview extends StatelessWidget {
     required this.resumeFile,
     required this.resumeUrl,
   });
+
+  bool get _hasResume =>
+      resumeFile != null || (resumeUrl != null && resumeUrl!.isNotEmpty);
 
   @override
   Widget build(BuildContext context) {
@@ -33,12 +36,13 @@ class InternProfileResumePreview extends StatelessWidget {
         borderRadius: BorderRadius.circular(16),
         child: Stack(
           children: [
-            // Resume image content
-            if (resumeFile != null)
+            // Resume content
+            if (resumeFile != null && resumeFile!.bytes != null)
               Positioned.fill(
-                child: Image.file(
-                  resumeFile!,
+                child: Image.memory(
+                  resumeFile!.bytes!,
                   fit: BoxFit.cover,
+                  errorBuilder: (_, __, ___) => _emptyResume(),
                 ),
               )
             else if (resumeUrl != null && resumeUrl!.isNotEmpty)
@@ -52,26 +56,27 @@ class InternProfileResumePreview extends StatelessWidget {
             else
               _emptyResume(),
 
-            // Expand icon top right
-            Positioned(
-              top: 10,
-              right: 10,
-              child: GestureDetector(
-                onTap: () => _showFullResume(context),
-                child: Container(
-                  padding: const EdgeInsets.all(6),
-                  decoration: BoxDecoration(
-                    color: Colors.white.withOpacity(0.8),
-                    borderRadius: BorderRadius.circular(6),
-                  ),
-                  child: const Icon(
-                    Icons.open_in_full,
-                    size: 18,
-                    color: Colors.black,
+            // Expand icon — only when there's something to show
+            if (_hasResume)
+              Positioned(
+                top: 10,
+                right: 10,
+                child: GestureDetector(
+                  onTap: () => _showFullResume(context),
+                  child: Container(
+                    padding: const EdgeInsets.all(6),
+                    decoration: BoxDecoration(
+                      color: Colors.white.withOpacity(0.8),
+                      borderRadius: BorderRadius.circular(6),
+                    ),
+                    child: const Icon(
+                      Icons.open_in_full,
+                      size: 18,
+                      color: Colors.black,
+                    ),
                   ),
                 ),
               ),
-            ),
           ],
         ),
       ),
@@ -95,7 +100,7 @@ class InternProfileResumePreview extends StatelessWidget {
   }
 
   void _showFullResume(BuildContext context) {
-    if (resumeFile == null && (resumeUrl == null || resumeUrl!.isEmpty)) return;
+    if (!_hasResume) return;
 
     showDialog(
       context: context,
@@ -103,8 +108,8 @@ class InternProfileResumePreview extends StatelessWidget {
         backgroundColor: Colors.transparent,
         child: ClipRRect(
           borderRadius: BorderRadius.circular(16),
-          child: resumeFile != null
-              ? Image.file(resumeFile!)
+          child: resumeFile != null && resumeFile!.bytes != null
+              ? Image.memory(resumeFile!.bytes!)
               : Image.network(resumeUrl!),
         ),
       ),

@@ -3,9 +3,10 @@ import 'package:image_picker/image_picker.dart';
 
 class InternProfileImageSection extends StatelessWidget {
   final bool isDarkMode;
-  final XFile? pickedImageFile; // web-safe: XFile instead of dart:io File
+  final XFile? pickedImageFile;
   final String? profileImageUrl;
   final String idNumber;
+  final bool isEditing;
   final VoidCallback onChangeImage;
   final VoidCallback onRemoveImage;
 
@@ -15,19 +16,23 @@ class InternProfileImageSection extends StatelessWidget {
     required this.pickedImageFile,
     required this.profileImageUrl,
     required this.idNumber,
+    required this.isEditing,
     required this.onChangeImage,
     required this.onRemoveImage,
   });
 
   @override
   Widget build(BuildContext context) {
+    // View-only text color matches your _buildLabel() style
+    final viewOnlyColor =
+        isDarkMode ? const Color(0xFF9E9E9E) : const Color(0xFF757575);
+
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         Row(
           crossAxisAlignment: CrossAxisAlignment.center,
           children: [
-            // Profile Image — web-safe preview
             _buildAvatar(),
             const SizedBox(width: 32),
             Column(
@@ -36,13 +41,21 @@ class InternProfileImageSection extends StatelessWidget {
                 Row(
                   children: [
                     ElevatedButton(
-                      onPressed: onChangeImage,
+                      // null disables the button entirely (no splash, no click)
+                      onPressed: isEditing ? onChangeImage : null,
                       style: ElevatedButton.styleFrom(
                         backgroundColor: isDarkMode
                             ? const Color(0xFF3A3A3A)
                             : const Color(0xFFE0E0E0),
+                        // When disabled, use the same muted color as view-only fields
+                        disabledBackgroundColor: isDarkMode
+                            ? const Color(0xFF3A3A3A)
+                            : const Color(0xFFE0E0E0),
                         foregroundColor:
-                            isDarkMode ? Colors.white : Colors.black,
+                            isEditing ? (isDarkMode ? Colors.white : Colors.black) : viewOnlyColor,
+                        disabledForegroundColor: viewOnlyColor,
+                        elevation: isEditing ? 2 : 0,
+                        shadowColor: Colors.transparent,
                         shape: RoundedRectangleBorder(
                           borderRadius: BorderRadius.circular(20),
                         ),
@@ -53,13 +66,19 @@ class InternProfileImageSection extends StatelessWidget {
                     ),
                     const SizedBox(width: 12),
                     ElevatedButton(
-                      onPressed: onRemoveImage,
+                      onPressed: isEditing ? onRemoveImage : null,
                       style: ElevatedButton.styleFrom(
                         backgroundColor: isDarkMode
                             ? const Color(0xFF3A3A3A)
                             : const Color(0xFFE0E0E0),
+                        disabledBackgroundColor: isDarkMode
+                            ? const Color(0xFF3A3A3A)
+                            : const Color(0xFFE0E0E0),
                         foregroundColor:
-                            isDarkMode ? Colors.white : Colors.black,
+                            isEditing ? (isDarkMode ? Colors.white : Colors.black) : viewOnlyColor,
+                        disabledForegroundColor: viewOnlyColor,
+                        elevation: isEditing ? 2 : 0,
+                        shadowColor: Colors.transparent,
                         shape: RoundedRectangleBorder(
                           borderRadius: BorderRadius.circular(20),
                         ),
@@ -74,7 +93,9 @@ class InternProfileImageSection extends StatelessWidget {
                 Text(
                   'Support JPEG and PNG formats under 2mb.',
                   style: TextStyle(
-                    color: isDarkMode ? Colors.grey[500] : Colors.grey[600],
+                    color: isEditing
+                        ? (isDarkMode ? Colors.grey[500] : Colors.grey[600])
+                        : viewOnlyColor,
                     fontSize: 12,
                   ),
                 ),
@@ -100,7 +121,6 @@ class InternProfileImageSection extends StatelessWidget {
   }
 
   Widget _buildAvatar() {
-    // If user just picked a new image, show it as a preview using FutureBuilder
     if (pickedImageFile != null) {
       return FutureBuilder<ImageProvider>(
         future: _loadPickedImage(),
@@ -120,7 +140,6 @@ class InternProfileImageSection extends StatelessWidget {
       );
     }
 
-    // Otherwise show the server URL or placeholder
     return CircleAvatar(
       key: ValueKey(profileImageUrl ?? ''),
       radius: 70,
@@ -139,7 +158,6 @@ class InternProfileImageSection extends StatelessWidget {
     );
   }
 
-  // Web-safe: read XFile as bytes and convert to MemoryImage
   Future<ImageProvider> _loadPickedImage() async {
     final bytes = await pickedImageFile!.readAsBytes();
     return MemoryImage(bytes);

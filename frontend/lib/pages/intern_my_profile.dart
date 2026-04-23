@@ -35,17 +35,18 @@ class _InternMyProfilePageState extends State<InternMyProfilePage> {
 
   String idNumber = '';
 
-  // Web: use XFile instead of dart:io File
   XFile? _pickedImageFile;
   String? _profileImageUrl;
 
-  // Web: use PlatformFile with bytes instead of dart:io File
   PlatformFile? _pickedResumeFile;
   String? _resumeUrl;
 
   bool _isLoading = false;
   bool _isSaving = false;
   bool _isEditing = false;
+
+  bool _removePhotoRequested = false;
+  bool _removeResumeRequested = false;
 
   // Snapshots for cancel
   String _snapFirstName = '';
@@ -57,6 +58,8 @@ class _InternMyProfilePageState extends State<InternMyProfilePage> {
   String? _snapProfileImageUrl;
   PlatformFile? _snapPickedResumeFile;
   String? _snapResumeUrl;
+  bool _snapRemovePhotoRequested = false;
+  bool _snapRemoveResumeRequested = false;
 
   @override
   void initState() {
@@ -122,8 +125,6 @@ class _InternMyProfilePageState extends State<InternMyProfilePage> {
     }
   }
 
-  bool _removePhotoRequested = false;
-
   void _removeProfileImage() {
     setState(() {
       _pickedImageFile = null;
@@ -135,12 +136,20 @@ class _InternMyProfilePageState extends State<InternMyProfilePage> {
   Future<void> _pickResume() async {
     final result = await FilePicker.platform.pickFiles(
       type: FileType.custom,
-      allowedExtensions: ['pdf', 'doc', 'docx'],
-      withData: true, // required for web — loads bytes into memory
+      allowedExtensions: ['jpg', 'jpeg', 'png'],
+      withData: true,
     );
     if (result != null && result.files.isNotEmpty) {
       setState(() => _pickedResumeFile = result.files.first);
     }
+  }
+
+  void _removeResume() {
+    setState(() {
+      _pickedResumeFile = null;
+      _resumeUrl = null;
+      _removeResumeRequested = true;
+    });
   }
 
   Future<void> _saveChanges() async {
@@ -159,21 +168,6 @@ class _InternMyProfilePageState extends State<InternMyProfilePage> {
         }),
       );
 
-      // 2. Remove photo if user clicked Remove Image
-      if (_profileImageUrl == null && _pickedImageFile == null) {
-        await http.delete(
-          Uri.parse('$_base/remove-photo?id=${widget.userId}'),
-        );
-      }
-
-      // 2. Remove photo from server if requested
-      if (_removePhotoRequested) {
-        await http.delete(
-          Uri.parse('$_base/remove-photo?id=${widget.userId}'),
-        );
-        _removePhotoRequested = false;
-      }
-
       if (res.statusCode != 200) {
         if (mounted) {
           ScaffoldMessenger.of(context).showSnackBar(
@@ -183,7 +177,16 @@ class _InternMyProfilePageState extends State<InternMyProfilePage> {
         return;
       }
 
-      // 2. Upload photo using bytes (web-safe)
+      // 2. Remove photo if explicitly requested OR replacing with a new one
+      if (_removePhotoRequested ||
+          (_pickedImageFile != null && _profileImageUrl != null)) {
+        await http.delete(
+          Uri.parse('$_base/remove-photo?id=${widget.userId}'),
+        );
+        _removePhotoRequested = false;
+      }
+
+      // 3. Upload new photo
       if (_pickedImageFile != null) {
         final bytes = await _pickedImageFile!.readAsBytes();
         final photoReq = http.MultipartRequest(
@@ -213,7 +216,16 @@ class _InternMyProfilePageState extends State<InternMyProfilePage> {
         }
       }
 
-      // 3. Upload resume using bytes (web-safe)
+      // 4. Remove resume if explicitly requested OR replacing with a new one
+      if (_removeResumeRequested ||
+          (_pickedResumeFile != null && _resumeUrl != null)) {
+        await http.delete(
+          Uri.parse('$_base/remove-resume?id=${widget.userId}'),
+        );
+        _removeResumeRequested = false;
+      }
+
+      // 5. Upload new resume
       if (_pickedResumeFile != null && _pickedResumeFile!.bytes != null) {
         final resumeReq = http.MultipartRequest(
           'POST',
@@ -256,9 +268,25 @@ class _InternMyProfilePageState extends State<InternMyProfilePage> {
     }
   }
 
+  void _enterEditing() {
+    _snapRemovePhotoRequested = _removePhotoRequested;
+    _snapRemoveResumeRequested = _removeResumeRequested;
+    _snapFirstName = _firstNameController.text;
+    _snapLastName = _lastNameController.text;
+    _snapProgram = _programController.text;
+    _snapSchool = _schoolController.text;
+    _snapPhone = _phoneController.text;
+    _snapPickedImageFile = _pickedImageFile;
+    _snapProfileImageUrl = _profileImageUrl;
+    _snapPickedResumeFile = _pickedResumeFile;
+    _snapResumeUrl = _resumeUrl;
+    setState(() => _isEditing = true);
+  }
+
   void _cancelEditing() {
     setState(() {
-      _removePhotoRequested = false;
+      _removePhotoRequested = _snapRemovePhotoRequested;
+      _removeResumeRequested = _snapRemoveResumeRequested;
       _isEditing = false;
       _firstNameController.text = _snapFirstName;
       _lastNameController.text = _snapLastName;
@@ -270,22 +298,6 @@ class _InternMyProfilePageState extends State<InternMyProfilePage> {
       _pickedResumeFile = _snapPickedResumeFile;
       _resumeUrl = _snapResumeUrl;
     });
-  }
-
-  bool _snapRemovePhotoRequested = false;
-
-  void _enterEditing() {
-    _snapRemovePhotoRequested = _removePhotoRequested;
-    _snapFirstName = _firstNameController.text;
-    _snapLastName = _lastNameController.text;
-    _snapProgram = _programController.text;
-    _snapSchool = _schoolController.text;
-    _snapPhone = _phoneController.text;
-    _snapPickedImageFile = _pickedImageFile;
-    _snapProfileImageUrl = _profileImageUrl;
-    _snapPickedResumeFile = _pickedResumeFile;
-    _snapResumeUrl = _resumeUrl;
-    setState(() => _isEditing = true);
   }
 
   @override
@@ -303,7 +315,7 @@ class _InternMyProfilePageState extends State<InternMyProfilePage> {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                // ── Title + Edit/Cancel button row ───────────────────────
+                // ── Title + Edit/Cancel button row ──────────────────────
                 Row(
                   mainAxisAlignment: MainAxisAlignment.spaceBetween,
                   children: [
@@ -353,18 +365,19 @@ class _InternMyProfilePageState extends State<InternMyProfilePage> {
                 ),
                 const SizedBox(height: 16),
 
-                // ── Profile image ─────────────────────────────────────────
+                // ── Profile image ────────────────────────────────────────
                 InternProfileImageSection(
                   isDarkMode: widget.isDarkMode,
                   pickedImageFile: _pickedImageFile,
                   profileImageUrl: _profileImageUrl,
                   idNumber: idNumber,
-                  onChangeImage: _isEditing ? _pickProfileImage : () {},
-                  onRemoveImage: _isEditing ? _removeProfileImage : () {},
+                  isEditing: _isEditing,
+                  onChangeImage: _pickProfileImage,
+                  onRemoveImage: _removeProfileImage,
                 ),
                 const SizedBox(height: 24),
 
-                // ── First Name + Last Name ────────────────────────────────
+                // ── First Name + Last Name ───────────────────────────────
                 Row(
                   children: [
                     Expanded(child: _buildLabel('First Name')),
@@ -424,17 +437,20 @@ class _InternMyProfilePageState extends State<InternMyProfilePage> {
                   InternProfileActionButtons(
                     isDarkMode: widget.isDarkMode,
                     isSaving: _isSaving,
+                    hasResume: _resumeUrl != null || _pickedResumeFile != null,
                     onSave: _saveChanges,
                     onUploadResume: _pickResume,
+                    onRemoveResume: _removeResume,
                   ),
               ],
             ),
           ),
           const SizedBox(width: 32),
 
+          // ── Resume preview ─────────────────────────────────────────────
           InternProfileResumePreview(
             isDarkMode: widget.isDarkMode,
-            resumeFile: null,
+            resumeFile: _pickedResumeFile,
             resumeUrl: _resumeUrl,
           ),
         ],

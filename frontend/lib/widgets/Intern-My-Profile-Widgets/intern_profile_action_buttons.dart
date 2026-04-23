@@ -3,15 +3,19 @@ import 'package:flutter/material.dart';
 class InternProfileActionButtons extends StatelessWidget {
   final bool isDarkMode;
   final bool isSaving;
+  final bool hasResume;
   final VoidCallback onSave;
   final VoidCallback onUploadResume;
+  final VoidCallback onRemoveResume;
 
   const InternProfileActionButtons({
     super.key,
     required this.isDarkMode,
     required this.isSaving,
+    required this.hasResume,
     required this.onSave,
     required this.onUploadResume,
+    required this.onRemoveResume,
   });
 
   @override
@@ -45,6 +49,7 @@ class InternProfileActionButtons extends StatelessWidget {
                 ),
         ),
         const SizedBox(width: 12),
+
         // Upload Resume
         ElevatedButton(
           onPressed: onUploadResume,
@@ -62,6 +67,30 @@ class InternProfileActionButtons extends StatelessWidget {
             style: TextStyle(fontWeight: FontWeight.w600),
           ),
         ),
+
+        // Remove Resume — only shown if there's an existing resume
+        if (hasResume) ...[
+          const SizedBox(width: 12),
+          ElevatedButton(
+            onPressed: onRemoveResume,
+            style: ElevatedButton.styleFrom(
+              backgroundColor: isDarkMode
+                  ? const Color(0xFF4E2020)
+                  : const Color(0xFFFFEBEE),
+              foregroundColor:
+                  isDarkMode ? const Color(0xFFEF9A9A) : const Color(0xFFC62828),
+              padding:
+                  const EdgeInsets.symmetric(horizontal: 28, vertical: 14),
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(10),
+              ),
+            ),
+            child: const Text(
+              'Remove Resume',
+              style: TextStyle(fontWeight: FontWeight.w600),
+            ),
+          ),
+        ],
       ],
     );
   }
