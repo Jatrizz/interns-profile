@@ -1,7 +1,9 @@
 package main
 
-import "github.com/gorilla/mux"
-
+import (
+	"github.com/gorilla/mux"
+	"net/http"
+)
 func RegisterRoutes(r *mux.Router) {
 	// Register, Login, Dashboard, Stats(intern, school, program)
 	r.HandleFunc("/register", registerHandler).Methods("POST")
@@ -24,6 +26,7 @@ func RegisterRoutes(r *mux.Router) {
 	r.HandleFunc("/contact", ContactHandler).Methods("POST")
 	r.HandleFunc("/upload-photo", UploadPhotoHandler).Methods("POST")
 	r.HandleFunc("/upload-resume", UploadResumeHandler).Methods("POST")
+	r.PathPrefix("/uploads/").Handler(http.StripPrefix("/uploads/", http.FileServer(http.Dir("./uploads/"))))
 
 	// Intern profile
 	r.HandleFunc("/intern", GetInternHandler).Methods("GET")
