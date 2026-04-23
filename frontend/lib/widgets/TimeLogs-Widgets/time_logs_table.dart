@@ -3,11 +3,13 @@ import 'package:flutter/material.dart';
 class TimeLogsTable extends StatelessWidget {
   final bool isDarkMode;
   final List<Map<String, dynamic>> logs;
+  final bool showName;
 
   const TimeLogsTable({
     super.key,
     required this.isDarkMode,
     required this.logs,
+    required this.showName,
   });
 
   Color _statusColor(String status) {
@@ -62,6 +64,7 @@ class TimeLogsTable extends StatelessWidget {
             ),
             child: Row(
               children: [
+                if (showName) _headerCell('NAME', flex: 3, color: headerColor),
                 _headerCell('DATE', flex: 2, color: headerColor),
                 _headerCell('DAY', flex: 1, color: headerColor),
                 _headerCell('TIME IN', flex: 2, color: headerColor),
@@ -101,6 +104,8 @@ class TimeLogsTable extends StatelessWidget {
                 ),
                 child: Row(
                   children: [
+                    if (showName)
+                      _dataCell(log['name'] ?? '–', flex: 3, color: textColor),
                     _dataCell(log['date'] ?? '–', flex: 2, color: textColor),
                     _dataCell(log['day'] ?? '–', flex: 1, color: textColor),
                     _dataCell(log['time_in'] ?? '–', flex: 2, color: textColor),
