@@ -23,9 +23,12 @@ class InternProfileImageSection extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    // View-only text color matches your _buildLabel() style
     final viewOnlyColor =
         isDarkMode ? const Color(0xFF9E9E9E) : const Color(0xFF757575);
+
+    // Support text color is always the same regardless of editing state
+    final supportTextColor =
+        isDarkMode ? Colors.grey[500]! : Colors.grey[600]!;
 
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
@@ -41,18 +44,17 @@ class InternProfileImageSection extends StatelessWidget {
                 Row(
                   children: [
                     ElevatedButton(
-                      // null disables the button entirely (no splash, no click)
                       onPressed: isEditing ? onChangeImage : null,
                       style: ElevatedButton.styleFrom(
                         backgroundColor: isDarkMode
                             ? const Color(0xFF3A3A3A)
                             : const Color(0xFFE0E0E0),
-                        // When disabled, use the same muted color as view-only fields
                         disabledBackgroundColor: isDarkMode
                             ? const Color(0xFF3A3A3A)
                             : const Color(0xFFE0E0E0),
-                        foregroundColor:
-                            isEditing ? (isDarkMode ? Colors.white : Colors.black) : viewOnlyColor,
+                        foregroundColor: isEditing
+                            ? (isDarkMode ? Colors.white : Colors.black)
+                            : viewOnlyColor,
                         disabledForegroundColor: viewOnlyColor,
                         elevation: isEditing ? 2 : 0,
                         shadowColor: Colors.transparent,
@@ -74,8 +76,9 @@ class InternProfileImageSection extends StatelessWidget {
                         disabledBackgroundColor: isDarkMode
                             ? const Color(0xFF3A3A3A)
                             : const Color(0xFFE0E0E0),
-                        foregroundColor:
-                            isEditing ? (isDarkMode ? Colors.white : Colors.black) : viewOnlyColor,
+                        foregroundColor: isEditing
+                            ? (isDarkMode ? Colors.white : Colors.black)
+                            : viewOnlyColor,
                         disabledForegroundColor: viewOnlyColor,
                         elevation: isEditing ? 2 : 0,
                         shadowColor: Colors.transparent,
@@ -90,12 +93,11 @@ class InternProfileImageSection extends StatelessWidget {
                   ],
                 ),
                 const SizedBox(height: 8),
+                // Always the same color — no isEditing dependency
                 Text(
                   'Support JPEG and PNG formats under 2mb.',
                   style: TextStyle(
-                    color: isEditing
-                        ? (isDarkMode ? Colors.grey[500] : Colors.grey[600])
-                        : viewOnlyColor,
+                    color: supportTextColor,
                     fontSize: 12,
                   ),
                 ),
@@ -104,6 +106,7 @@ class InternProfileImageSection extends StatelessWidget {
           ],
         ),
         const SizedBox(height: 16),
+        // ID NO and Divider are completely independent of isEditing
         Text(
           'ID NO: $idNumber',
           style: TextStyle(

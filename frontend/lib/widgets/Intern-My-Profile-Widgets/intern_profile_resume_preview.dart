@@ -3,7 +3,7 @@ import 'package:file_picker/file_picker.dart';
 
 class InternProfileResumePreview extends StatelessWidget {
   final bool isDarkMode;
-  final PlatformFile? resumeFile; // web-safe: PlatformFile with bytes
+  final PlatformFile? resumeFile;
   final String? resumeUrl;
 
   const InternProfileResumePreview({
@@ -20,7 +20,8 @@ class InternProfileResumePreview extends StatelessWidget {
   Widget build(BuildContext context) {
     return Container(
       width: 380,
-      height: 560,
+      // Let height be driven by parent instead of fixed 560
+      constraints: const BoxConstraints(minHeight: 400, maxHeight: 620),
       decoration: BoxDecoration(
         color: Colors.white,
         borderRadius: BorderRadius.circular(16),

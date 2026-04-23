@@ -300,161 +300,192 @@ class _InternMyProfilePageState extends State<InternMyProfilePage> {
     });
   }
 
+  Widget _buildEditCancelButton() {
+    if (_isEditing) {
+      return OutlinedButton.icon(
+        onPressed: _cancelEditing,
+        icon: const Icon(Icons.close, size: 16),
+        label: const Text('Cancel'),
+        style: OutlinedButton.styleFrom(
+          foregroundColor:
+              widget.isDarkMode ? Colors.white70 : Colors.black54,
+          side: BorderSide(
+            color: widget.isDarkMode ? Colors.white30 : Colors.black26,
+          ),
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(8),
+          ),
+        ),
+      );
+    }
+    return FilledButton.icon(
+      onPressed: _enterEditing,
+      icon: const Icon(Icons.edit, size: 16),
+      label: const Text('Edit Profile'),
+      style: FilledButton.styleFrom(
+        backgroundColor: widget.isDarkMode
+            ? const Color(0xFF4A90D9)
+            : const Color(0xFF1A73E8),
+        foregroundColor: Colors.white,
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(8),
+        ),
+      ),
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     if (_isLoading) {
       return const Center(child: CircularProgressIndicator());
     }
 
-    return SingleChildScrollView(
-      padding: const EdgeInsets.all(24),
-      child: Row(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                // ── Title + Edit/Cancel button row ──────────────────────
-                Row(
-                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                  children: [
-                    Text(
-                      'My Profile',
-                      style: TextStyle(
-                        color: widget.isDarkMode ? Colors.white : Colors.black,
-                        fontSize: 22,
-                        fontWeight: FontWeight.w700,
-                        letterSpacing: -0.3,
-                      ),
-                    ),
-                    _isEditing
-                        ? OutlinedButton.icon(
-                            onPressed: _cancelEditing,
-                            icon: const Icon(Icons.close, size: 16),
-                            label: const Text('Cancel'),
-                            style: OutlinedButton.styleFrom(
-                              foregroundColor: widget.isDarkMode
-                                  ? Colors.white70
-                                  : Colors.black54,
-                              side: BorderSide(
-                                color: widget.isDarkMode
-                                    ? Colors.white30
-                                    : Colors.black26,
-                              ),
-                              shape: RoundedRectangleBorder(
-                                borderRadius: BorderRadius.circular(8),
-                              ),
-                            ),
-                          )
-                        : FilledButton.icon(
-                            onPressed: _enterEditing,
-                            icon: const Icon(Icons.edit, size: 16),
-                            label: const Text('Edit Profile'),
-                            style: FilledButton.styleFrom(
-                              backgroundColor: widget.isDarkMode
-                                  ? const Color(0xFF4A90D9)
-                                  : const Color(0xFF1A73E8),
-                              foregroundColor: Colors.white,
-                              shape: RoundedRectangleBorder(
-                                borderRadius: BorderRadius.circular(8),
-                              ),
-                            ),
+    return LayoutBuilder(
+      builder: (context, constraints) {
+        final availableHeight = constraints.maxHeight;
+
+        return SingleChildScrollView(
+          padding: const EdgeInsets.all(24),
+          child: ConstrainedBox(
+            constraints: BoxConstraints(minHeight: availableHeight - 48),
+            child: IntrinsicHeight(
+              child: Row(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  // ── Left column: form ────────────────────────────────
+                  Expanded(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        // ── Title (standalone, no button here) ──────────
+                        Text(
+                          'My Profile',
+                          style: TextStyle(
+                            color: widget.isDarkMode
+                                ? Colors.white
+                                : Colors.black,
+                            fontSize: 22,
+                            fontWeight: FontWeight.w700,
+                            letterSpacing: -0.3,
                           ),
-                  ],
-                ),
-                const SizedBox(height: 16),
+                        ),
+                        const SizedBox(height: 16),
 
-                // ── Profile image ────────────────────────────────────────
-                InternProfileImageSection(
-                  isDarkMode: widget.isDarkMode,
-                  pickedImageFile: _pickedImageFile,
-                  profileImageUrl: _profileImageUrl,
-                  idNumber: idNumber,
-                  isEditing: _isEditing,
-                  onChangeImage: _pickProfileImage,
-                  onRemoveImage: _removeProfileImage,
-                ),
-                const SizedBox(height: 24),
+                        // ── Image section + Edit button side by side ─────
+                        // Button sits to the right, top-aligned with the
+                        // image section (same level as Change/Remove Image).
+                        Row(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Expanded(
+                              child: InternProfileImageSection(
+                                isDarkMode: widget.isDarkMode,
+                                pickedImageFile: _pickedImageFile,
+                                profileImageUrl: _profileImageUrl,
+                                idNumber: idNumber,
+                                isEditing: _isEditing,
+                                onChangeImage: _pickProfileImage,
+                                onRemoveImage: _removeProfileImage,
+                              ),
+                            ),
+                            const SizedBox(width: 16),
+                            _buildEditCancelButton(),
+                          ],
+                        ),
+                        const SizedBox(height: 24),
 
-                // ── First Name + Last Name ───────────────────────────────
-                Row(
-                  children: [
-                    Expanded(child: _buildLabel('First Name')),
-                    const SizedBox(width: 16),
-                    Expanded(child: _buildLabel('Last Name')),
-                  ],
-                ),
-                const SizedBox(height: 6),
-                Row(
-                  children: [
-                    Expanded(
-                      child: _buildField(controller: _firstNameController),
+                        // ── First Name + Last Name ───────────────────────
+                        Row(
+                          children: [
+                            Expanded(child: _buildLabel('First Name')),
+                            const SizedBox(width: 16),
+                            Expanded(child: _buildLabel('Last Name')),
+                          ],
+                        ),
+                        const SizedBox(height: 6),
+                        Row(
+                          children: [
+                            Expanded(
+                              child: _buildField(
+                                  controller: _firstNameController),
+                            ),
+                            const SizedBox(width: 16),
+                            Expanded(
+                              child: _buildField(
+                                  controller: _lastNameController),
+                            ),
+                          ],
+                        ),
+                        const SizedBox(height: 16),
+
+                        _buildLabel('Program'),
+                        const SizedBox(height: 6),
+                        _buildField(controller: _programController),
+                        const SizedBox(height: 16),
+
+                        _buildLabel('School'),
+                        const SizedBox(height: 6),
+                        _buildField(controller: _schoolController),
+                        const SizedBox(height: 16),
+
+                        Row(
+                          children: [
+                            Expanded(child: _buildLabel('Email')),
+                            const SizedBox(width: 16),
+                            Expanded(child: _buildLabel('Phone Number')),
+                          ],
+                        ),
+                        const SizedBox(height: 6),
+                        Row(
+                          children: [
+                            Expanded(
+                              child: _buildField(
+                                controller: _emailController,
+                                alwaysReadOnly: true,
+                              ),
+                            ),
+                            const SizedBox(width: 16),
+                            Expanded(
+                              child:
+                                  _buildField(controller: _phoneController),
+                            ),
+                          ],
+                        ),
+                        const SizedBox(height: 32),
+
+                        if (_isEditing)
+                          InternProfileActionButtons(
+                            isDarkMode: widget.isDarkMode,
+                            isSaving: _isSaving,
+                            hasResume: _resumeUrl != null ||
+                                _pickedResumeFile != null,
+                            onSave: _saveChanges,
+                            onUploadResume: _pickResume,
+                            onRemoveResume: _removeResume,
+                          ),
+                      ],
                     ),
-                    const SizedBox(width: 16),
-                    Expanded(
-                      child: _buildField(controller: _lastNameController),
-                    ),
-                  ],
-                ),
-                const SizedBox(height: 16),
+                  ),
+                  const SizedBox(width: 32),
 
-                _buildLabel('Program'),
-                const SizedBox(height: 6),
-                _buildField(controller: _programController),
-                const SizedBox(height: 16),
-
-                _buildLabel('School'),
-                const SizedBox(height: 6),
-                _buildField(controller: _schoolController),
-                const SizedBox(height: 16),
-
-                Row(
-                  children: [
-                    Expanded(child: _buildLabel('Email')),
-                    const SizedBox(width: 16),
-                    Expanded(child: _buildLabel('Phone Number')),
-                  ],
-                ),
-                const SizedBox(height: 6),
-                Row(
-                  children: [
-                    Expanded(
-                      child: _buildField(
-                        controller: _emailController,
-                        alwaysReadOnly: true,
+                  // ── Right column: resume centered vertically ──────────
+                  Align(
+                    alignment: Alignment.center,
+                    child: Padding(
+                      padding: const EdgeInsets.symmetric(vertical: 24),
+                      child: InternProfileResumePreview(
+                        isDarkMode: widget.isDarkMode,
+                        resumeFile: _pickedResumeFile,
+                        resumeUrl: _resumeUrl,
                       ),
                     ),
-                    const SizedBox(width: 16),
-                    Expanded(
-                      child: _buildField(controller: _phoneController),
-                    ),
-                  ],
-                ),
-                const SizedBox(height: 32),
-
-                if (_isEditing)
-                  InternProfileActionButtons(
-                    isDarkMode: widget.isDarkMode,
-                    isSaving: _isSaving,
-                    hasResume: _resumeUrl != null || _pickedResumeFile != null,
-                    onSave: _saveChanges,
-                    onUploadResume: _pickResume,
-                    onRemoveResume: _removeResume,
                   ),
-              ],
+                ],
+              ),
             ),
           ),
-          const SizedBox(width: 32),
-
-          // ── Resume preview ─────────────────────────────────────────────
-          InternProfileResumePreview(
-            isDarkMode: widget.isDarkMode,
-            resumeFile: _pickedResumeFile,
-            resumeUrl: _resumeUrl,
-          ),
-        ],
-      ),
+        );
+      },
     );
   }
 
