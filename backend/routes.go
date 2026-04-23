@@ -26,7 +26,6 @@ func RegisterRoutes(r *mux.Router) {
 	r.HandleFunc("/contact", ContactHandler).Methods("POST")
 	r.HandleFunc("/upload-photo", UploadPhotoHandler).Methods("POST")
 	r.HandleFunc("/upload-resume", UploadResumeHandler).Methods("POST")
-	r.PathPrefix("/uploads/").Handler(http.StripPrefix("/uploads/", http.FileServer(http.Dir("./uploads/"))))
 
 	// Intern profile
 	r.HandleFunc("/intern", GetInternHandler).Methods("GET")
@@ -51,4 +50,6 @@ func RegisterRoutes(r *mux.Router) {
 	r.HandleFunc("/intern/timelogs/stats", InternTimeLogStats).Methods("GET")
 	r.HandleFunc("/timelogs/overview", TimeLogsOverview).Methods("GET")
 
+	// uploads
+	r.PathPrefix("/uploads/").Handler(http.StripPrefix("/uploads/", http.FileServer(http.Dir("./uploads/"))))
 }
