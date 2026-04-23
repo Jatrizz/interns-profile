@@ -38,7 +38,9 @@ class InternRightPanel extends StatelessWidget {
           ),
           const SizedBox(height: 20),
           Expanded(
-            child: InternList(isDarkMode: isDarkMode, interns: interns),
+            child: SingleChildScrollView(
+              child: InternList(isDarkMode: isDarkMode, interns: interns),
+            ),
           ),
         ],
       ),

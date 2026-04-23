@@ -8,7 +8,7 @@ class InternTimeLogLegend extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final legends = [
-      {'label': 'Present', 'color': const Color(0xFF4CAF50)},
+      {'label': 'On Time', 'color': const Color(0xFF4CAF50)},
       {'label': 'Late', 'color': const Color(0xFFFFA726)},
       {'label': 'Absent', 'color': const Color(0xFFEF5350)},
       {'label': 'Half Day', 'color': const Color(0xFF42A5F5)},

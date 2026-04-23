@@ -7,6 +7,21 @@ class InternList extends StatelessWidget {
   const InternList(
       {super.key, required this.isDarkMode, required this.interns});
 
+  Color _statusColor(String status) {
+    switch (status.toLowerCase()) {
+      case 'on-time':
+        return const Color(0xFF4CAF50);
+      case 'late':
+        return const Color(0xFFFFA726);
+      case 'absent':
+        return const Color(0xFFEF5350);
+      case 'half day':
+        return const Color(0xFF42A5F5);
+      default:
+        return Colors.grey;
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     return Column(
@@ -47,17 +62,33 @@ class InternList extends StatelessWidget {
                     height: 1,
                   ),
                   itemBuilder: (context, index) {
+                    final intern = interns[index];
+                    final status = intern['status'] ?? 'absent';
                     return Padding(
                       padding: const EdgeInsets.symmetric(
                         horizontal: 15,
                         vertical: 12,
                       ),
-                      child: Text(
-                        "${index + 1}. ${interns[index]['first_name']} ${interns[index]['last_name']}",
-                        style: TextStyle(
-                          color: isDarkMode ? Colors.white : Colors.black,
-                          fontSize: 13,
-                        ),
+                      child: Row(
+                        children: [
+                          Expanded(
+                            child: Text(
+                              "${index + 1}. ${intern['first_name']} ${intern['last_name']}",
+                              style: TextStyle(
+                                color: isDarkMode ? Colors.white : Colors.black,
+                                fontSize: 13,
+                              ),
+                            ),
+                          ),
+                          Container(
+                            width: 10,
+                            height: 10,
+                            decoration: BoxDecoration(
+                              color: _statusColor(status),
+                              shape: BoxShape.circle,
+                            ),
+                          ),
+                        ],
                       ),
                     );
                   },
