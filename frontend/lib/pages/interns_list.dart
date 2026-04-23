@@ -17,16 +17,26 @@ class _InternsListState extends State<InternsList> {
   String sortType = "A-Z";
   final searchController = TextEditingController();
 
+  static const String _baseUrl = "http://localhost:8080";
+
   @override
   void initState() {
     super.initState();
     fetchInterns();
   }
 
+  ImageProvider? _photoProvider(dynamic intern) {
+    final photo = intern['photo']?.toString() ?? '';
+    if (photo.isEmpty) return null;
+    if (photo.startsWith('http')) return NetworkImage(photo);
+    final cleaned = photo.startsWith('/') ? photo.substring(1) : photo;
+    return NetworkImage('$_baseUrl/$cleaned');
+  }
+
   Future<void> fetchInterns() async {
     try {
       final response =
-          await http.get(Uri.parse("http://localhost:8080/interns"));
+          await http.get(Uri.parse("$_baseUrl/interns"));
 
       if (response.statusCode == 200) {
         final data = jsonDecode(response.body);
@@ -47,7 +57,7 @@ class _InternsListState extends State<InternsList> {
   Future<void> deleteIntern(String idNumber) async {
     try {
       final uri = Uri.parse(
-        "http://localhost:8080/delete-intern?id=$idNumber",
+        "$_baseUrl/delete-intern?id=$idNumber",
       );
 
       final response = await http.delete(uri);
@@ -55,7 +65,6 @@ class _InternsListState extends State<InternsList> {
       if (response.statusCode == 200) {
         final data = jsonDecode(response.body);
 
-        // refresh list
         await fetchInterns();
 
         ScaffoldMessenger.of(context).showSnackBar(
@@ -122,7 +131,6 @@ class _InternsListState extends State<InternsList> {
       filteredInterns = interns.where((intern) {
         final fullName =
             "${intern['first_name']} ${intern['last_name']}".toLowerCase();
-
         return fullName.contains(value.toLowerCase());
       }).toList();
 
@@ -136,7 +144,6 @@ class _InternsListState extends State<InternsList> {
     filteredInterns.sort((a, b) {
       String nameA = "${a['first_name']} ${a['last_name']}".toLowerCase();
       String nameB = "${b['first_name']} ${b['last_name']}".toLowerCase();
-
       return type == "A-Z" ? nameA.compareTo(nameB) : nameB.compareTo(nameA);
     });
 
@@ -144,6 +151,8 @@ class _InternsListState extends State<InternsList> {
   }
 
   Widget buildCard(dynamic intern) {
+    final photo = _photoProvider(intern);
+
     return Container(
       padding: const EdgeInsets.all(15),
       decoration: BoxDecoration(
@@ -181,8 +190,9 @@ class _InternsListState extends State<InternsList> {
                       Text(
                         "Delete",
                         style: TextStyle(
-                          color:
-                              widget.isDarkMode ? Colors.white : Colors.black54,
+                          color: widget.isDarkMode
+                              ? Colors.white
+                              : Colors.black54,
                         ),
                       ),
                     ],
@@ -191,9 +201,13 @@ class _InternsListState extends State<InternsList> {
               ],
             ),
           ),
-          const CircleAvatar(
+          CircleAvatar(
             radius: 35,
-            child: Icon(Icons.person, size: 35),
+            backgroundColor: Colors.grey[300],
+            backgroundImage: photo,
+            child: photo == null
+                ? const Icon(Icons.person, size: 35)
+                : null,
           ),
           const SizedBox(height: 15),
           Text(
@@ -257,8 +271,9 @@ class _InternsListState extends State<InternsList> {
   Widget build(BuildContext context) {
     return Container(
       padding: const EdgeInsets.all(25),
-      color:
-          widget.isDarkMode ? const Color(0xFF1E1E1E) : const Color(0xFFF7F7F7),
+      color: widget.isDarkMode
+          ? const Color(0xFF1E1E1E)
+          : const Color(0xFFF7F7F7),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
@@ -283,8 +298,8 @@ class _InternsListState extends State<InternsList> {
               SizedBox(
                 width: 260,
                 child: TextField(
-                  style: TextStyle(
-                      color: const Color.fromARGB(223, 255, 255, 255)),
+                  style: const TextStyle(
+                      color: Color.fromARGB(223, 255, 255, 255)),
                   controller: searchController,
                   onChanged: searchIntern,
                   decoration: InputDecoration(
@@ -312,7 +327,7 @@ class _InternsListState extends State<InternsList> {
                 padding: const EdgeInsets.symmetric(horizontal: 15),
                 decoration: BoxDecoration(
                   color: widget.isDarkMode
-                      ? Color.fromARGB(255, 64, 64, 64)
+                      ? const Color.fromARGB(255, 64, 64, 64)
                       : Colors.white,
                   borderRadius: BorderRadius.circular(30),
                 ),
