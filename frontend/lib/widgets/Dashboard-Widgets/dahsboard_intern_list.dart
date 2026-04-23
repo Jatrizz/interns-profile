@@ -2,10 +2,10 @@ import 'package:flutter/material.dart';
 
 class DahsboardInternList extends StatelessWidget {
   final bool isDarkMode;
-  final List<dynamic> admins;
+  final List<dynamic> interns;
 
   const DahsboardInternList(
-      {super.key, required this.isDarkMode, required this.admins});
+      {super.key, required this.isDarkMode, required this.interns});
 
   Color _statusColor(String status) {
     switch (status.toLowerCase()) {
@@ -42,7 +42,7 @@ class DahsboardInternList extends StatelessWidget {
                 isDarkMode ? const Color(0xFF2E2E2E) : const Color(0xFFE8E8E8),
             borderRadius: BorderRadius.circular(10),
           ),
-          child: admins.isEmpty
+          child: interns.isEmpty
               ? Padding(
                   padding: const EdgeInsets.all(15),
                   child: Text(
@@ -56,13 +56,13 @@ class DahsboardInternList extends StatelessWidget {
                   shrinkWrap: true,
                   physics: const NeverScrollableScrollPhysics(),
                   padding: EdgeInsets.zero,
-                  itemCount: admins.length,
+                  itemCount: interns.length,
                   separatorBuilder: (_, __) => Divider(
                     color: isDarkMode ? Colors.grey[700] : Colors.grey[300],
                     height: 1,
                   ),
                   itemBuilder: (context, index) {
-                    final intern = admins[index];
+                    final intern = interns[index];
                     final status = intern['status'] ?? 'absent';
                     return Padding(
                       padding: const EdgeInsets.symmetric(
