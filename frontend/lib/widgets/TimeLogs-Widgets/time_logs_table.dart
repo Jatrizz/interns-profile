@@ -66,7 +66,7 @@ class TimeLogsTable extends StatelessWidget {
               children: [
                 if (showName) _headerCell('NAME', flex: 3, color: headerColor),
                 _headerCell('DATE', flex: 2, color: headerColor),
-                _headerCell('DAY', flex: 1, color: headerColor),
+                _headerCell('DAY', flex: 2, color: headerColor),
                 _headerCell('TIME IN', flex: 2, color: headerColor),
                 _headerCell('TIME OUT', flex: 2, color: headerColor),
                 _headerCell('TOTAL HOURS', flex: 2, color: headerColor),
@@ -107,7 +107,7 @@ class TimeLogsTable extends StatelessWidget {
                     if (showName)
                       _dataCell(log['name'] ?? '–', flex: 3, color: textColor),
                     _dataCell(log['date'] ?? '–', flex: 2, color: textColor),
-                    _dataCell(log['day'] ?? '–', flex: 1, color: textColor),
+                    _dataCell(log['day'] ?? '–', flex: 2, color: textColor),
                     _dataCell(log['time_in'] ?? '–', flex: 2, color: textColor),
                     _dataCell(log['time_out'] ?? '–',
                         flex: 2, color: textColor),

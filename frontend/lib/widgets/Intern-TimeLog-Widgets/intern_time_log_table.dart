@@ -62,7 +62,7 @@ class InternTimeLogTable extends StatelessWidget {
             child: Row(
               children: [
                 _headerCell('DATE', flex: 2, color: headerColor),
-                _headerCell('DAY', flex: 1, color: headerColor),
+                _headerCell('DAY', flex: 2, color: headerColor),
                 _headerCell('TIME IN', flex: 2, color: headerColor),
                 _headerCell('TIME OUT', flex: 2, color: headerColor),
                 _headerCell('TOTAL HOURS', flex: 2, color: headerColor),
@@ -86,7 +86,7 @@ class InternTimeLogTable extends StatelessWidget {
               child: Row(
                 children: [
                   _dataCell(log['date'] ?? '–', flex: 2, color: textColor),
-                  _dataCell(log['day'] ?? '–', flex: 1, color: textColor),
+                  _dataCell(log['day'] ?? '–', flex: 2, color: textColor),
                   _dataCell(log['time_in'] ?? '–', flex: 2, color: textColor),
                   _dataCell(log['time_out'] ?? '–', flex: 2, color: textColor),
                   _dataCell(log['total_hours'] ?? '–',
