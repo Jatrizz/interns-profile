@@ -47,7 +47,7 @@ func InternTimeIn(w http.ResponseWriter, r *http.Request) {
 	}
 
 	// Determine status: late if past 8:15 AM
-	status := "present"
+	status := "on-time"
 	graceEnd := time.Date(now.Year(), now.Month(), now.Day(), 8, 15, 0, 0, now.Location())
 	if now.After(graceEnd) {
 		status = "late"
