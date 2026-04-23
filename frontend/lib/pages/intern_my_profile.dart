@@ -86,11 +86,11 @@ class _InternMyProfilePageState extends State<InternMyProfilePage> {
           _emailController.text = data['email'] ?? '';
           _phoneController.text = data['phone_number'] ?? '';
           idNumber = data['id_number'] ?? '';
-          final rawPhoto = data['profile_image_url'] ?? '';
+          final rawPhoto = data['photo'] ?? '';
           _profileImageUrl = rawPhoto.isNotEmpty && !rawPhoto.startsWith('http')
               ? '$_base$rawPhoto'
               : rawPhoto.isNotEmpty ? rawPhoto : null;
-          final rawResume = data['resume_url'] ?? '';
+          final rawResume = data['resume'] ?? '';
           _resumeUrl = rawResume.isNotEmpty && !rawResume.startsWith('http')
               ? '$_base$rawResume'
     : rawResume.isNotEmpty ? rawResume : null;
