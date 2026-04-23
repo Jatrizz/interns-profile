@@ -35,7 +35,7 @@ class NavBar extends StatelessWidget implements PreferredSizeWidget {
               },
               child: Text(
                 'Home',
-                style: TextStyle(fontSize: 12, color: Colors.white),
+                style: TextStyle(fontSize: 14, color: Colors.white),
               ),
             ),
             SizedBox(width: 20),
@@ -53,7 +53,7 @@ class NavBar extends StatelessWidget implements PreferredSizeWidget {
               },
               child: Text(
                 'About',
-                style: TextStyle(color: Colors.white, fontSize: 12),
+                style: TextStyle(color: Colors.white, fontSize: 14),
               ),
             ),
             SizedBox(width: 20),
@@ -71,7 +71,7 @@ class NavBar extends StatelessWidget implements PreferredSizeWidget {
               },
               child: Text(
                 'Contact',
-                style: TextStyle(color: Colors.white, fontSize: 12),
+                style: TextStyle(color: Colors.white, fontSize: 14),
               ),
             ),
             Spacer(),
@@ -89,7 +89,7 @@ class NavBar extends StatelessWidget implements PreferredSizeWidget {
               },
               child: Text(
                 'Login',
-                style: TextStyle(color: Colors.white, fontSize: 12),
+                style: TextStyle(color: Colors.white, fontSize: 14),
               ),
             ),
             SizedBox(width: 20),
@@ -107,7 +107,7 @@ class NavBar extends StatelessWidget implements PreferredSizeWidget {
               },
               child: Text(
                 'Register',
-                style: TextStyle(color: Colors.white, fontSize: 12),
+                style: TextStyle(color: Colors.white, fontSize: 14),
               ),
             ),
             SizedBox(width: 20),
