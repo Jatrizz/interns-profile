@@ -24,11 +24,11 @@ class Sidebar extends StatelessWidget {
           const SizedBox(height: 5),
           Image.asset(
             'assets/images/logo.png',
-            width: 65,
-            height: 65,
+            width: 60,
+            height: 60,
             errorBuilder: (c, e, s) => Container(
-              width: 65,
-              height: 65,
+              width: 60,
+              height: 60,
               decoration: const BoxDecoration(
                 color: Color(0xFF00BFFF),
                 shape: BoxShape.circle,
