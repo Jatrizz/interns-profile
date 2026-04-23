@@ -3,3 +3,5 @@
 *.exe
 frontend/.dart_tool/
 build/
+uploads/
+!uploads/.gitkeep
