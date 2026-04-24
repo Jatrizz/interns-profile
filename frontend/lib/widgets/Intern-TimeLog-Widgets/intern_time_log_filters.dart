@@ -57,13 +57,12 @@ class InternTimeLogFilters extends StatelessWidget {
           items: ['All', 'Present', 'Late', 'Absent', 'Half Day', 'Weekend'],
           onChanged: onStatusChanged,
         ),
-        if (!isSpecificDate) _buildLabel('Week'),
-        if (!isSpecificDate)
-          _buildDropdown(
-            value: selectedWeek,
-            items: ['All Weeks', 'Week 1', 'Week 2', 'Week 3', 'Week 4'],
-            onChanged: onWeekChanged,
-          ),
+        _buildLabel('Week'),
+        _buildDropdown(
+          value: selectedWeek,
+          items: ['All Weeks', 'Week 1', 'Week 2', 'Week 3', 'Week 4'],
+          onChanged: onWeekChanged,
+        ),
       ],
     );
   }
