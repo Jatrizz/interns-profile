@@ -97,12 +97,15 @@ class _TimeLogsPageState extends State<TimeLogsPage> {
     final parsed = _parseSelectedMonth();
     final month = parsed['month'];
     final year = parsed['year'];
+    debugPrint('>>> fetching today logs for month: $month year: $year');
 
     try {
       final response = await http.get(
         Uri.parse(
             'http://127.0.0.1:8080/timelogs/today?month=$month&year=$year'),
       );
+      debugPrint('>>> timelogs/today status: ${response.statusCode}');
+      debugPrint('>>> timelogs/today body: ${response.body}');
       if (response.statusCode == 200) {
         final List<dynamic> data = jsonDecode(response.body);
         setState(() {
@@ -304,6 +307,7 @@ class _TimeLogsPageState extends State<TimeLogsPage> {
                           selectedWeek: selectedWeek,
                           onMonthChanged: (val) {
                             setState(() => selectedMonth = val);
+                            debugPrint('>>> month changed to: $val');
                             if (_isDefaultView) {
                               fetchTodayLogs();
                             } else if (selectedIntern != null &&
