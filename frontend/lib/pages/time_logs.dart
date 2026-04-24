@@ -41,6 +41,8 @@ class _TimeLogsPageState extends State<TimeLogsPage> {
   int entriesPerPage = 8;
 
   bool _isDefaultView = true;
+  bool _isSpecificDate = false;
+  DateTime? selectedDate;
 
   List<Map<String, dynamic>> allLogs = [];
   List<Map<String, dynamic>> filteredLogs = [];
@@ -94,18 +96,17 @@ class _TimeLogsPageState extends State<TimeLogsPage> {
   }
 
   Future<void> fetchTodayLogs() async {
-    final parsed = _parseSelectedMonth();
-    final month = parsed['month'];
-    final year = parsed['year'];
-    debugPrint('>>> fetching today logs for month: $month year: $year');
-
+    String url;
+    if (_isSpecificDate && selectedDate != null) {
+      final date = selectedDate!.toIso8601String().split('T')[0];
+      url = 'http://127.0.0.1:8080/timelogs/today?date=$date';
+    } else {
+      final parsed = _parseSelectedMonth();
+      url =
+          'http://127.0.0.1:8080/timelogs/today?month=${parsed['month']}&year=${parsed['year']}';
+    }
     try {
-      final response = await http.get(
-        Uri.parse(
-            'http://127.0.0.1:8080/timelogs/today?month=$month&year=$year'),
-      );
-      debugPrint('>>> timelogs/today status: ${response.statusCode}');
-      debugPrint('>>> timelogs/today body: ${response.body}');
+      final response = await http.get(Uri.parse(url));
       if (response.statusCode == 200) {
         final List<dynamic> data = jsonDecode(response.body);
         setState(() {
@@ -120,16 +121,18 @@ class _TimeLogsPageState extends State<TimeLogsPage> {
   }
 
   Future<void> fetchLogsForIntern(String name) async {
-    final parsed = _parseSelectedMonth();
-    final month = parsed['month'];
-    final year = parsed['year'];
-
+    String url;
+    if (_isSpecificDate && selectedDate != null) {
+      final date = selectedDate!.toIso8601String().split('T')[0];
+      url =
+          'http://127.0.0.1:8080/timelogs/intern?name=${Uri.encodeComponent(name)}&date=$date';
+    } else {
+      final parsed = _parseSelectedMonth();
+      url =
+          'http://127.0.0.1:8080/timelogs/intern?name=${Uri.encodeComponent(name)}&month=${parsed['month']}&year=${parsed['year']}';
+    }
     try {
-      final response = await http.get(
-        Uri.parse(
-          'http://127.0.0.1:8080/timelogs/intern?name=${Uri.encodeComponent(name)}&month=$month&year=$year',
-        ),
-      );
+      final response = await http.get(Uri.parse(url));
       if (response.statusCode == 200) {
         final List<dynamic> data = jsonDecode(response.body);
         setState(() {
@@ -305,9 +308,57 @@ class _TimeLogsPageState extends State<TimeLogsPage> {
                           selectedMonth: selectedMonth,
                           selectedStatus: selectedStatus,
                           selectedWeek: selectedWeek,
-                          onMonthChanged: (val) {
-                            setState(() => selectedMonth = val);
-                            debugPrint('>>> month changed to: $val');
+                          isSpecificDate: _isSpecificDate,
+                          onToggleMode: (val) {
+                            setState(() {
+                              _isSpecificDate = val;
+                              selectedDate = null;
+                              // reset display
+                              final now = DateTime.now();
+                              final months = [
+                                'January',
+                                'February',
+                                'March',
+                                'April',
+                                'May',
+                                'June',
+                                'July',
+                                'August',
+                                'September',
+                                'October',
+                                'November',
+                                'December'
+                              ];
+                              selectedMonth =
+                                  '${months[now.month - 1]} ${now.year}';
+                            });
+                            fetchTodayLogs();
+                          },
+                          onMonthChanged: (DateTime picked) {
+                            final months = [
+                              'January',
+                              'February',
+                              'March',
+                              'April',
+                              'May',
+                              'June',
+                              'July',
+                              'August',
+                              'September',
+                              'October',
+                              'November',
+                              'December'
+                            ];
+                            setState(() {
+                              selectedDate = picked;
+                              if (_isSpecificDate) {
+                                selectedMonth =
+                                    '${months[picked.month - 1]} ${picked.day}, ${picked.year}';
+                              } else {
+                                selectedMonth =
+                                    '${months[picked.month - 1]} ${picked.year}';
+                              }
+                            });
                             if (_isDefaultView) {
                               fetchTodayLogs();
                             } else if (selectedIntern != null &&
