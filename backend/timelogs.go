@@ -37,6 +37,8 @@ func GetTimeLogsForIntern(w http.ResponseWriter, r *http.Request) {
 		}
 	}
 
+	dateStr := r.URL.Query().Get("date")
+
 	startDate := fmt.Sprintf("%d-%02d-01", year, month)
 	var endDate string
 	if month == 12 {
@@ -45,21 +47,42 @@ func GetTimeLogsForIntern(w http.ResponseWriter, r *http.Request) {
 		endDate = fmt.Sprintf("%d-%02d-01", year, month+1)
 	}
 
-	rows, err := db.Query(`
-        SELECT 
-            tl.log_date,
-            tl.time_in::text,
-            tl.time_out::text,
-            tl.hours_rendered,
-            tl.status,
-            tl.remarks
-        FROM time_logs tl
-        JOIN users u ON u.id = tl.user_id
-        WHERE CONCAT(u.first_name, ' ', u.last_name) = $1
-        AND tl.log_date >= $2
-        AND tl.log_date < $3
-        ORDER BY tl.log_date DESC
-    `, name, startDate, endDate)
+	var rows *sql.Rows
+	var err error
+
+	if dateStr != "" {
+		rows, err = db.Query(`
+			SELECT 
+				tl.log_date,
+				tl.time_in::text,
+				tl.time_out::text,
+				tl.hours_rendered,
+				tl.status,
+				tl.remarks
+			FROM time_logs tl
+			JOIN users u ON u.id = tl.user_id
+			WHERE CONCAT(u.first_name, ' ', u.last_name) = $1
+			AND tl.log_date = $2
+			ORDER BY tl.log_date DESC
+		`, name, dateStr)
+	} else {
+		rows, err = db.Query(`
+			SELECT 
+				tl.log_date,
+				tl.time_in::text,
+				tl.time_out::text,
+				tl.hours_rendered,
+				tl.status,
+				tl.remarks
+			FROM time_logs tl
+			JOIN users u ON u.id = tl.user_id
+			WHERE CONCAT(u.first_name, ' ', u.last_name) = $1
+			AND tl.log_date >= $2
+			AND tl.log_date < $3
+			ORDER BY tl.log_date DESC
+		`, name, startDate, endDate)
+	}
+
 	if err != nil {
 		jsonError(w, "Failed to fetch logs", http.StatusInternalServerError)
 		return
@@ -77,6 +100,7 @@ func GetTimeLogsForIntern(w http.ResponseWriter, r *http.Request) {
 	}
 
 	var logs []LogEntry
+
 	for rows.Next() {
 		var logDate time.Time
 		var timeIn, timeOut sql.NullString
@@ -95,16 +119,14 @@ func GetTimeLogsForIntern(w http.ResponseWriter, r *http.Request) {
 
 		timeInStr := "–"
 		if timeIn.Valid && timeIn.String != "" {
-			t, err := time.Parse("15:04:05", timeIn.String)
-			if err == nil {
+			if t, err := time.Parse("15:04:05", timeIn.String); err == nil {
 				timeInStr = t.Format("3:04 PM")
 			}
 		}
 
 		timeOutStr := "–"
 		if timeOut.Valid && timeOut.String != "" {
-			t, err := time.Parse("15:04:05", timeOut.String)
-			if err == nil {
+			if t, err := time.Parse("15:04:05", timeOut.String); err == nil {
 				timeOutStr = t.Format("3:04 PM")
 			}
 		}

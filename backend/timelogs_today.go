@@ -15,7 +15,7 @@ func TimeLogsToday(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	// Get month and year from query params, default to current
+	// Get query params
 	now := time.Now()
 	month := int(now.Month())
 	year := now.Year()
@@ -31,6 +31,8 @@ func TimeLogsToday(w http.ResponseWriter, r *http.Request) {
 		}
 	}
 
+	dateStr := r.URL.Query().Get("date")
+
 	startDate := fmt.Sprintf("%d-%02d-01", year, month)
 	var endDate string
 	if month == 12 {
@@ -39,24 +41,50 @@ func TimeLogsToday(w http.ResponseWriter, r *http.Request) {
 		endDate = fmt.Sprintf("%d-%02d-01", year, month+1)
 	}
 
-	rows, err := db.Query(`
-		SELECT 
-			u.first_name,
-			u.last_name,
-			tl.log_date,
-			tl.time_in::text,
-			tl.time_out::text,
-			tl.hours_rendered,
-			COALESCE(tl.status, 'absent') AS status,
-			tl.remarks
-		FROM users u
-		LEFT JOIN time_logs tl 
-			ON tl.user_id = u.id 
-			AND tl.log_date >= $1
-			AND tl.log_date < $2
-		WHERE u.role = 'intern'
-		ORDER BY u.first_name ASC, tl.log_date DESC
-	`, startDate, endDate)
+	var rows *sql.Rows
+	var err error
+
+	if dateStr != "" {
+		// Filter by exact date
+		rows, err = db.Query(`
+			SELECT 
+				u.first_name,
+				u.last_name,
+				tl.log_date,
+				tl.time_in::text,
+				tl.time_out::text,
+				tl.hours_rendered,
+				COALESCE(tl.status, 'absent') AS status,
+				tl.remarks
+			FROM users u
+			LEFT JOIN time_logs tl 
+				ON tl.user_id = u.id 
+				AND tl.log_date = $1
+			WHERE u.role = 'intern'
+			ORDER BY u.first_name ASC
+		`, dateStr)
+	} else {
+		// Filter by month/year
+		rows, err = db.Query(`
+			SELECT 
+				u.first_name,
+				u.last_name,
+				tl.log_date,
+				tl.time_in::text,
+				tl.time_out::text,
+				tl.hours_rendered,
+				COALESCE(tl.status, 'absent') AS status,
+				tl.remarks
+			FROM users u
+			LEFT JOIN time_logs tl 
+				ON tl.user_id = u.id 
+				AND tl.log_date >= $1
+				AND tl.log_date < $2
+			WHERE u.role = 'intern'
+			ORDER BY u.first_name ASC, tl.log_date DESC
+		`, startDate, endDate)
+	}
+
 	if err != nil {
 		jsonError(w, "Failed to fetch logs", http.StatusInternalServerError)
 		return
@@ -75,6 +103,7 @@ func TimeLogsToday(w http.ResponseWriter, r *http.Request) {
 	}
 
 	var logs []LogEntry
+
 	for rows.Next() {
 		var firstName, lastName string
 		var logDate sql.NullTime
@@ -89,25 +118,24 @@ func TimeLogsToday(w http.ResponseWriter, r *http.Request) {
 		months := []string{"January", "February", "March", "April", "May", "June",
 			"July", "August", "September", "October", "November", "December"}
 
-		dateStr := "–"
-		dayStr := "–"
+		dateDisplay := "–"
+		dayDisplay := "–"
+
 		if logDate.Valid {
-			dateStr = fmt.Sprintf("%s %d", months[logDate.Time.Month()-1], logDate.Time.Day())
-			dayStr = logDate.Time.Weekday().String()[:3]
+			dateDisplay = fmt.Sprintf("%s %d", months[logDate.Time.Month()-1], logDate.Time.Day())
+			dayDisplay = logDate.Time.Weekday().String()[:3]
 		}
 
 		timeInStr := "–"
 		if timeIn.Valid && timeIn.String != "" {
-			t, err := time.Parse("15:04:05", timeIn.String)
-			if err == nil {
+			if t, err := time.Parse("15:04:05", timeIn.String); err == nil {
 				timeInStr = t.Format("3:04 PM")
 			}
 		}
 
 		timeOutStr := "–"
 		if timeOut.Valid && timeOut.String != "" {
-			t, err := time.Parse("15:04:05", timeOut.String)
-			if err == nil {
+			if t, err := time.Parse("15:04:05", timeOut.String); err == nil {
 				timeOutStr = t.Format("3:04 PM")
 			}
 		}
@@ -135,8 +163,8 @@ func TimeLogsToday(w http.ResponseWriter, r *http.Request) {
 
 		logs = append(logs, LogEntry{
 			Name:       firstName + " " + lastName,
-			Date:       dateStr,
-			Day:        dayStr,
+			Date:       dateDisplay,
+			Day:        dayDisplay,
 			TimeIn:     timeInStr,
 			TimeOut:    timeOutStr,
 			TotalHours: hoursStr,
