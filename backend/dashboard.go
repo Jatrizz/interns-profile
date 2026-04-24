@@ -68,3 +68,53 @@ func Dashboard(w http.ResponseWriter, r *http.Request) {
 		TotalSchools: totalSchools,
 	})
 }
+
+func GetRecentActivity(w http.ResponseWriter, r *http.Request) {
+	if r.Method != http.MethodGet {
+		jsonError(w, "Invalid Request Method", http.StatusMethodNotAllowed)
+		return
+	}
+
+	rows, err := db.Query(`
+        SELECT 
+            CONCAT(u.first_name, ' ', u.last_name) AS name,
+            tl.status,
+            tl.time_in::text,
+            tl.log_date
+        FROM time_logs tl
+        JOIN users u ON u.id = tl.user_id
+        ORDER BY tl.created_at DESC
+        LIMIT 5
+    `)
+	if err != nil {
+		jsonError(w, "Failed to fetch recent activity", http.StatusInternalServerError)
+		return
+	}
+	defer rows.Close()
+
+	type Activity struct {
+		Name    string `json:"name"`
+		Status  string `json:"status"`
+		TimeIn  string `json:"time_in"`
+		LogDate string `json:"log_date"`
+	}
+
+	var activities []Activity
+	for rows.Next() {
+		var a Activity
+		var timeIn, status string
+		if err := rows.Scan(&a.Name, &status, &timeIn, &a.LogDate); err != nil {
+			continue
+		}
+		a.Status = status
+		a.TimeIn = timeIn
+		activities = append(activities, a)
+	}
+
+	if activities == nil {
+		activities = []Activity{}
+	}
+
+	w.Header().Set("Content-Type", "application/json")
+	json.NewEncoder(w).Encode(activities)
+}

@@ -12,6 +12,7 @@ func RegisterRoutes(r *mux.Router) {
 	r.HandleFunc("/get-stats", GetStats).Methods("GET")
 	r.HandleFunc("/school-stats", SchoolStats).Methods("GET")
 	r.HandleFunc("/attendance-stats", HandleAttendanceStats(db)).Methods("GET")
+	r.HandleFunc("/recent-activity", GetRecentActivity).Methods("GET")
 
 	// Forgot Password
 	r.HandleFunc("/forgot-password/send-otp", ForgotPasswordHandler).Methods("POST")
