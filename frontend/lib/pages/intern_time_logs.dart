@@ -38,6 +38,9 @@ class _InternTimeLogsPageState extends State<InternTimeLogsPage> {
   List<Map<String, dynamic>> allLogs = [];
   List<Map<String, dynamic>> filteredLogs = [];
 
+  bool _isSpecificDate = false;
+  DateTime? selectedDate;
+
   @override
   void initState() {
     super.initState();
@@ -80,16 +83,22 @@ class _InternTimeLogsPageState extends State<InternTimeLogsPage> {
       'November',
       'December'
     ];
-    final parts = selectedMonth.split(' ');
-    final monthIndex = months.indexOf(parts[0]) + 1;
-    final year = parts[1];
+
+    String url;
+    if (_isSpecificDate && selectedDate != null) {
+      final date = selectedDate!.toIso8601String().split('T')[0];
+      url =
+          'http://127.0.0.1:8080/intern/timelogs?user_id=${widget.userId}&date=$date';
+    } else {
+      final parts = selectedMonth.split(' ');
+      final monthIndex = months.indexOf(parts[0]) + 1;
+      final year = parts[1];
+      url =
+          'http://127.0.0.1:8080/intern/timelogs?user_id=${widget.userId}&month=$monthIndex&year=$year';
+    }
 
     try {
-      final response = await http.get(
-        Uri.parse(
-          'http://127.0.0.1:8080/intern/timelogs?user_id=${widget.userId}&month=$monthIndex&year=$year',
-        ),
-      );
+      final response = await http.get(Uri.parse(url));
       if (response.statusCode == 200) {
         final List<dynamic> data = jsonDecode(response.body);
         setState(() {
@@ -234,8 +243,54 @@ class _InternTimeLogsPageState extends State<InternTimeLogsPage> {
             selectedMonth: selectedMonth,
             selectedStatus: selectedStatus,
             selectedWeek: selectedWeek,
-            onMonthChanged: (val) {
-              setState(() => selectedMonth = val);
+            isSpecificDate: _isSpecificDate,
+            onToggleMode: (val) {
+              final now = DateTime.now();
+              final months = [
+                'January',
+                'February',
+                'March',
+                'April',
+                'May',
+                'June',
+                'July',
+                'August',
+                'September',
+                'October',
+                'November',
+                'December'
+              ];
+              setState(() {
+                _isSpecificDate = val;
+                selectedDate = null;
+                selectedMonth = '${months[now.month - 1]} ${now.year}';
+              });
+              fetchTimeLogs();
+            },
+            onMonthChanged: (DateTime picked) {
+              final months = [
+                'January',
+                'February',
+                'March',
+                'April',
+                'May',
+                'June',
+                'July',
+                'August',
+                'September',
+                'October',
+                'November',
+                'December'
+              ];
+              setState(() {
+                selectedDate = picked;
+                if (_isSpecificDate) {
+                  selectedMonth =
+                      '${months[picked.month - 1]} ${picked.day}, ${picked.year}';
+                } else {
+                  selectedMonth = '${months[picked.month - 1]} ${picked.year}';
+                }
+              });
               fetchTimeLogs();
             },
             onStatusChanged: (val) {

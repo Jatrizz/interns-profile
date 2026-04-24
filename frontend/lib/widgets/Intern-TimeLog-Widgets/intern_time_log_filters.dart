@@ -5,9 +5,11 @@ class InternTimeLogFilters extends StatelessWidget {
   final String selectedMonth;
   final String selectedStatus;
   final String selectedWeek;
-  final ValueChanged<String> onMonthChanged;
+  final bool isSpecificDate;
+  final ValueChanged<DateTime> onMonthChanged;
   final ValueChanged<String> onStatusChanged;
   final ValueChanged<String> onWeekChanged;
+  final ValueChanged<bool> onToggleMode;
 
   const InternTimeLogFilters({
     super.key,
@@ -15,33 +17,77 @@ class InternTimeLogFilters extends StatelessWidget {
     required this.selectedMonth,
     required this.selectedStatus,
     required this.selectedWeek,
+    required this.isSpecificDate,
     required this.onMonthChanged,
     required this.onStatusChanged,
     required this.onWeekChanged,
+    required this.onToggleMode,
   });
 
   @override
   Widget build(BuildContext context) {
-    return Row(
+    return Wrap(
+      spacing: 12,
+      runSpacing: 12,
+      crossAxisAlignment: WrapCrossAlignment.center,
       children: [
+        // Toggle
+        Container(
+          decoration: BoxDecoration(
+            color:
+                isDarkMode ? const Color(0xFF2C2C2C) : const Color(0xFFF0F0F0),
+            borderRadius: BorderRadius.circular(8),
+            border: Border.all(
+              color: isDarkMode ? Colors.grey[700]! : Colors.grey[300]!,
+            ),
+          ),
+          child: Row(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              _toggleButton(
+                  'Month', !isSpecificDate, () => onToggleMode(false)),
+              _toggleButton('Date', isSpecificDate, () => onToggleMode(true)),
+            ],
+          ),
+        ),
         _buildMonthPicker(context),
-        const SizedBox(width: 24),
         _buildLabel('Status'),
-        const SizedBox(width: 8),
         _buildDropdown(
           value: selectedStatus,
           items: ['All', 'Present', 'Late', 'Absent', 'Half Day', 'Weekend'],
           onChanged: onStatusChanged,
         ),
-        const SizedBox(width: 24),
-        _buildLabel('Week'),
-        const SizedBox(width: 8),
-        _buildDropdown(
-          value: selectedWeek,
-          items: ['All Weeks', 'Week 1', 'Week 2', 'Week 3', 'Week 4'],
-          onChanged: onWeekChanged,
-        ),
+        if (!isSpecificDate) _buildLabel('Week'),
+        if (!isSpecificDate)
+          _buildDropdown(
+            value: selectedWeek,
+            items: ['All Weeks', 'Week 1', 'Week 2', 'Week 3', 'Week 4'],
+            onChanged: onWeekChanged,
+          ),
       ],
+    );
+  }
+
+  Widget _toggleButton(String label, bool isActive, VoidCallback onTap) {
+    return GestureDetector(
+      onTap: onTap,
+      child: Container(
+        padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
+        decoration: BoxDecoration(
+          color: isActive ? const Color(0xFF00BFFF) : Colors.transparent,
+          borderRadius: BorderRadius.circular(7),
+        ),
+        child: Text(
+          label,
+          style: TextStyle(
+            color: isActive
+                ? Colors.white
+                : (isDarkMode ? Colors.grey[400] : Colors.grey[600]),
+            fontSize: 13,
+            fontWeight: isActive ? FontWeight.w600 : FontWeight.normal,
+          ),
+        ),
+      ),
     );
   }
 
@@ -57,74 +103,52 @@ class InternTimeLogFilters extends StatelessWidget {
   }
 
   Widget _buildMonthPicker(BuildContext context) {
-    return Row(
-      children: [
-        _buildLabel('Month'),
-        const SizedBox(width: 8),
-        GestureDetector(
-          onTap: () async {
-            final now = DateTime.now();
-            final picked = await showDatePicker(
-              context: context,
-              initialDate: now,
-              firstDate: DateTime(2020),
-              lastDate: DateTime(2030),
-              initialEntryMode: DatePickerEntryMode.calendarOnly,
-              builder: (context, child) => Theme(
-                data: ThemeData.dark(),
-                child: child!,
-              ),
-            );
-            if (picked != null) {
-              final months = [
-                'January',
-                'February',
-                'March',
-                'April',
-                'May',
-                'June',
-                'July',
-                'August',
-                'September',
-                'October',
-                'November',
-                'December'
-              ];
-              onMonthChanged('${months[picked.month - 1]} ${picked.year}');
-            }
-          },
-          child: Container(
-            padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
-            decoration: BoxDecoration(
-              color: isDarkMode
-                  ? const Color(0xFF2C2C2C)
-                  : const Color(0xFFF0F0F0),
-              borderRadius: BorderRadius.circular(8),
-              border: Border.all(
-                color: isDarkMode ? Colors.grey[700]! : Colors.grey[300]!,
-              ),
-            ),
-            child: Row(
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                Text(
-                  selectedMonth,
-                  style: TextStyle(
-                    color: isDarkMode ? Colors.white : Colors.black,
-                    fontSize: 14,
-                  ),
-                ),
-                const SizedBox(width: 10),
-                Icon(
-                  Icons.calendar_today,
-                  size: 16,
-                  color: isDarkMode ? Colors.grey[400] : Colors.grey[600],
-                ),
-              ],
-            ),
+    return GestureDetector(
+      onTap: () async {
+        final now = DateTime.now();
+        final picked = await showDatePicker(
+          context: context,
+          initialDate: now,
+          firstDate: DateTime(2020),
+          lastDate: DateTime(2030),
+          initialEntryMode: DatePickerEntryMode.calendarOnly,
+          builder: (context, child) => Theme(
+            data: ThemeData.dark(),
+            child: child!,
+          ),
+        );
+        if (picked != null) {
+          onMonthChanged(picked);
+        }
+      },
+      child: Container(
+        padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
+        decoration: BoxDecoration(
+          color: isDarkMode ? const Color(0xFF2C2C2C) : const Color(0xFFF0F0F0),
+          borderRadius: BorderRadius.circular(8),
+          border: Border.all(
+            color: isDarkMode ? Colors.grey[700]! : Colors.grey[300]!,
           ),
         ),
-      ],
+        child: Row(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Text(
+              selectedMonth,
+              style: TextStyle(
+                color: isDarkMode ? Colors.white : Colors.black,
+                fontSize: 14,
+              ),
+            ),
+            const SizedBox(width: 10),
+            Icon(
+              Icons.calendar_today,
+              size: 16,
+              color: isDarkMode ? Colors.grey[400] : Colors.grey[600],
+            ),
+          ],
+        ),
+      ),
     );
   }
 
