@@ -15,7 +15,6 @@ func TimeLogsToday(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	// Get query params
 	now := time.Now()
 	month := int(now.Month())
 	year := now.Year()
@@ -45,7 +44,6 @@ func TimeLogsToday(w http.ResponseWriter, r *http.Request) {
 	var err error
 
 	if dateStr != "" {
-		// Filter by exact date
 		rows, err = db.Query(`
 			SELECT 
 				u.first_name,
@@ -53,7 +51,6 @@ func TimeLogsToday(w http.ResponseWriter, r *http.Request) {
 				tl.log_date,
 				tl.time_in::text,
 				tl.time_out::text,
-				tl.hours_rendered,
 				COALESCE(tl.status, 'absent') AS status,
 				tl.remarks
 			FROM users u
@@ -64,7 +61,6 @@ func TimeLogsToday(w http.ResponseWriter, r *http.Request) {
 			ORDER BY u.first_name ASC
 		`, dateStr)
 	} else {
-		// Filter by month/year
 		rows, err = db.Query(`
 			SELECT 
 				u.first_name,
@@ -72,7 +68,6 @@ func TimeLogsToday(w http.ResponseWriter, r *http.Request) {
 				tl.log_date,
 				tl.time_in::text,
 				tl.time_out::text,
-				tl.hours_rendered,
 				COALESCE(tl.status, 'absent') AS status,
 				tl.remarks
 			FROM users u
@@ -102,25 +97,23 @@ func TimeLogsToday(w http.ResponseWriter, r *http.Request) {
 		Remarks    string `json:"remarks"`
 	}
 
+	months := []string{"January", "February", "March", "April", "May", "June",
+		"July", "August", "September", "October", "November", "December"}
+
 	var logs []LogEntry
 
 	for rows.Next() {
 		var firstName, lastName string
 		var logDate sql.NullTime
 		var timeIn, timeOut sql.NullString
-		var hoursRendered sql.NullFloat64
 		var status, remarks sql.NullString
 
-		if err := rows.Scan(&firstName, &lastName, &logDate, &timeIn, &timeOut, &hoursRendered, &status, &remarks); err != nil {
+		if err := rows.Scan(&firstName, &lastName, &logDate, &timeIn, &timeOut, &status, &remarks); err != nil {
 			continue
 		}
 
-		months := []string{"January", "February", "March", "April", "May", "June",
-			"July", "August", "September", "October", "November", "December"}
-
 		dateDisplay := "–"
 		dayDisplay := "–"
-
 		if logDate.Valid {
 			dateDisplay = fmt.Sprintf("%s %d", months[logDate.Time.Month()-1], logDate.Time.Day())
 			dayDisplay = logDate.Time.Weekday().String()[:3]
@@ -140,14 +133,18 @@ func TimeLogsToday(w http.ResponseWriter, r *http.Request) {
 			}
 		}
 
+		// Compute capped hours for this specific day only from time_in/time_out
 		hoursStr := "–"
-		if hoursRendered.Valid && hoursRendered.Float64 > 0 {
-			h := int(hoursRendered.Float64)
-			m := int((hoursRendered.Float64 - float64(h)) * 60)
-			if m == 0 {
-				hoursStr = fmt.Sprintf("%dh", h)
-			} else {
-				hoursStr = fmt.Sprintf("%dh %dm", h, m)
+		if timeIn.Valid && timeIn.String != "" && timeOut.Valid && timeOut.String != "" {
+			capped := capDailyHours(timeIn.String, timeOut.String)
+			if capped > 0 {
+				h := int(capped)
+				m := int((capped - float64(h)) * 60)
+				if m == 0 {
+					hoursStr = fmt.Sprintf("%dh", h)
+				} else {
+					hoursStr = fmt.Sprintf("%dh %dm", h, m)
+				}
 			}
 		}
 
