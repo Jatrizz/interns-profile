@@ -5,6 +5,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"net/http"
+	"strconv"
 	"time"
 )
 
@@ -20,17 +21,62 @@ func InternTimeLogs(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	rows, err := db.Query(`
-		SELECT log_date, time_in::text, time_out::text, hours_rendered, status, remarks
-		FROM time_logs
-		WHERE user_id = $1
-		ORDER BY log_date DESC
-	`, userID)
+	dateStr := r.URL.Query().Get("date")
+
+	var rows *sql.Rows
+	var err error
+
+	if dateStr != "" {
+		// specific date
+		rows, err = db.Query(`
+			SELECT log_date, time_in::text, time_out::text, hours_rendered, status, remarks
+			FROM time_logs
+			WHERE user_id = $1
+			AND log_date = $2
+			ORDER BY log_date DESC
+		`, userID, dateStr)
+	} else {
+		// month/year
+		now := time.Now()
+		month := int(now.Month())
+		year := now.Year()
+
+		if monthStr := r.URL.Query().Get("month"); monthStr != "" {
+			if m, err := strconv.Atoi(monthStr); err == nil {
+				month = m
+			}
+		}
+		if yearStr := r.URL.Query().Get("year"); yearStr != "" {
+			if y, err := strconv.Atoi(yearStr); err == nil {
+				year = y
+			}
+		}
+
+		startDate := fmt.Sprintf("%d-%02d-01", year, month)
+		var endDate string
+		if month == 12 {
+			endDate = fmt.Sprintf("%d-01-01", year+1)
+		} else {
+			endDate = fmt.Sprintf("%d-%02d-01", year, month+1)
+		}
+
+		rows, err = db.Query(`
+			SELECT log_date, time_in::text, time_out::text, hours_rendered, status, remarks
+			FROM time_logs
+			WHERE user_id = $1
+			AND log_date >= $2
+			AND log_date < $3
+			ORDER BY log_date DESC
+		`, userID, startDate, endDate)
+	}
+
 	if err != nil {
 		jsonError(w, "Failed to fetch logs", http.StatusInternalServerError)
 		return
 	}
 	defer rows.Close()
+
+	// ... rest of the handler stays the same
 
 	type LogEntry struct {
 		Date       string `json:"date"`
