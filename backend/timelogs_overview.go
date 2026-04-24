@@ -33,14 +33,23 @@ func TimeLogsOverview(w http.ResponseWriter, r *http.Request) {
 		AND status = 'late'
 	`).Scan(&lateToday)
 
-	// Absent today (interns with no time log today)
+	// Absent today:
+	// 1. Interns with an explicit 'absent' status log for today, OR
+	// 2. Interns with no log entry at all for today
 	var absentToday int
 	db.QueryRow(`
 		SELECT COUNT(*) FROM users
 		WHERE role = 'intern'
-		AND id NOT IN (
-			SELECT DISTINCT user_id FROM time_logs
-			WHERE log_date = CURRENT_DATE
+		AND (
+			id IN (
+				SELECT DISTINCT user_id FROM time_logs
+				WHERE log_date = CURRENT_DATE
+				AND status = 'absent'
+			)
+			OR id NOT IN (
+				SELECT DISTINCT user_id FROM time_logs
+				WHERE log_date = CURRENT_DATE
+			)
 		)
 	`).Scan(&absentToday)
 
