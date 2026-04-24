@@ -10,17 +10,6 @@ class RecentActivity extends StatelessWidget {
     required this.activities,
   });
 
-  String _formatDate(String? isoDate) {
-    if (isoDate == null || isoDate.isEmpty) return '';
-
-    try {
-      final date = DateTime.parse(isoDate).toLocal();
-      return "${_monthName(date.month)} ${date.day}, ${date.year}";
-    } catch (e) {
-      return isoDate;
-    }
-  }
-
   String _monthName(int month) {
     const months = [
       'Jan',
@@ -98,11 +87,15 @@ class RecentActivity extends StatelessWidget {
                       child: Row(
                         children: [
                           Icon(
-                            Icons.access_time,
+                            a['action'] == 'clocked out'
+                                ? Icons.logout
+                                : Icons.login,
                             size: 16,
-                            color: isDarkMode
-                                ? Colors.grey[400]
-                                : Colors.grey[600],
+                            color: a['action'] == 'clocked out'
+                                ? Colors.orangeAccent
+                                : (isDarkMode
+                                    ? Colors.grey[400]
+                                    : Colors.grey[600]),
                           ),
                           const SizedBox(width: 8),
                           Expanded(
@@ -121,7 +114,7 @@ class RecentActivity extends StatelessWidget {
                                   ),
                                   TextSpan(
                                     text:
-                                        ' clocked in · ${a['status']} · ${_formatDateTime(context, a['log_date'], a['time_in'])}',
+                                        ' ${a['action'] ?? 'clocked in'} · ${a['status']} · ${_formatDateTime(context, a['log_date'], a['action'] == 'clocked out' ? a['time_out'] : a['time_in'])}',
                                     style: TextStyle(
                                       color: isDarkMode
                                           ? Colors.grey[400]
