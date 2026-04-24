@@ -10,6 +10,7 @@ import (
 	"net/http"
 	"net/smtp"
 	"strings"
+	"time"
 
 	"golang.org/x/crypto/bcrypt"
 )
@@ -25,15 +26,12 @@ func generateOTP() (string, error) {
 }
 
 // ================= PASSWORD VALIDATION =================
-// at least 8 chars, must include uppercase, lowercase, number
 
 func isValidPassword(pw string) bool {
 	if len(pw) < 8 {
 		return false
 	}
-
 	var hasUpper, hasLower, hasNumber bool
-
 	for _, c := range pw {
 		switch {
 		case c >= 'A' && c <= 'Z':
@@ -44,42 +42,213 @@ func isValidPassword(pw string) bool {
 			hasNumber = true
 		}
 	}
-
 	return hasUpper && hasLower && hasNumber
 }
 
 // ================= EMAIL SENDER =================
 
 func sendResetOTP(toEmail, otp string) error {
-	subject := "Subject: Password Reset OTP\r\n"
+	subject := "Reset Your Password"
+
+	// Build individual digit boxes
+	digits := strings.Split(otp, "")
+	digitBoxes := ""
+	for _, d := range digits {
+		digitBoxes += fmt.Sprintf(`
+			<td style="padding: 0 6px;">
+				<div style="
+					width: 48px;
+					height: 56px;
+					background-color: #F3F4F6;
+					border-radius: 10px;
+					font-size: 28px;
+					font-weight: 700;
+					color: #111827;
+					text-align: center;
+					line-height: 56px;
+					font-family: 'Courier New', monospace;
+				">%s</div>
+			</td>
+		`, d)
+	}
 
 	body := fmt.Sprintf(`
-		<h3>Password Reset Request</h3>
-		<p>Your OTP code is: <b>%s</b></p>
-		<p>This code will expire in 5 minutes.</p>
-	`, otp)
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Password Reset</title>
+</head>
+<body style="margin:0;padding:0;background-color:#F0F2F5;font-family:'Segoe UI',Arial,sans-serif;">
+  <table width="100%%" cellpadding="0" cellspacing="0" style="padding: 48px 16px;">
+    <tr>
+      <td align="center">
+        <table width="560" cellpadding="0" cellspacing="0" style="
+          background-color: #ffffff;
+          border-radius: 20px;
+          overflow: hidden;
+          box-shadow: 0 4px 24px rgba(0,0,0,0.08);
+        ">
 
-	headers := "MIME-Version: 1.0\r\n" +
-		"Content-Type: text/html; charset=\"UTF-8\"\r\n"
+          <!-- Header -->
+          <tr>
+            <td align="center" style="
+              background: linear-gradient(135deg, #DC2626 0%%, #B91C1C 100%%);
+              padding: 36px 40px 28px;
+            ">
+              <table cellpadding="0" cellspacing="0">
+                <tr>
+                  <td align="center">
+                    <div style="
+                      background: rgba(255,255,255,0.15);
+                      border-radius: 16px;
+                      padding: 12px 20px;
+                      margin-bottom: 16px;
+                      display: inline-block;
+                    ">
+                      <span style="font-size: 28px;">🔑</span>
+                    </div>
+                  </td>
+                </tr>
+                <tr>
+                  <td align="center">
+                    <h1 style="
+                      margin: 0;
+                      color: #ffffff;
+                      font-size: 24px;
+                      font-weight: 700;
+                      letter-spacing: -0.5px;
+                    ">Password Reset</h1>
+                  </td>
+                </tr>
+                <tr>
+                  <td align="center">
+                    <p style="
+                      margin: 8px 0 0;
+                      color: rgba(255,255,255,0.80);
+                      font-size: 14px;
+                    ">Internship Management System</p>
+                  </td>
+                </tr>
+              </table>
+            </td>
+          </tr>
 
-	message := []byte(subject + headers + "\r\n" + body)
+          <!-- Body -->
+          <tr>
+            <td style="padding: 40px 48px 32px;">
+              <p style="margin: 0 0 8px; font-size: 15px; color: #374151;">Hello,</p>
+              <p style="margin: 0 0 28px; font-size: 15px; color: #374151; line-height: 1.6;">
+                We received a request to reset your password. Use the one-time code below to proceed. If you did not request this, you can safely ignore this email.
+              </p>
 
-	auth := smtp.PlainAuth("", Mail.Sender, Mail.Password, Mail.Host)
+              <!-- OTP Box -->
+              <table width="100%%" cellpadding="0" cellspacing="0" style="margin-bottom: 28px;">
+                <tr>
+                  <td align="center">
+                    <table cellpadding="0" cellspacing="0" style="
+                      background: #F9FAFB;
+                      border: 1.5px dashed #D1D5DB;
+                      border-radius: 14px;
+                      padding: 28px 24px;
+                    ">
+                      <tr>
+                        <td align="center">
+                          <p style="
+                            margin: 0 0 16px;
+                            font-size: 12px;
+                            font-weight: 600;
+                            color: #6B7280;
+                            letter-spacing: 1.5px;
+                            text-transform: uppercase;
+                          ">Your reset code</p>
+                        </td>
+                      </tr>
+                      <tr>
+                        <td align="center">
+                          <table cellpadding="0" cellspacing="0" style="margin: 0 auto;">
+                            <tr>
+                              %s
+                            </tr>
+                          </table>
+                        </td>
+                      </tr>
+                      <tr>
+                        <td align="center">
+                          <p style="
+                            margin: 16px 0 0;
+                            font-size: 12px;
+                            color: #9CA3AF;
+                          ">⏱ Expires in <strong style="color: #EF4444;">5 minutes</strong></p>
+                        </td>
+                      </tr>
+                    </table>
+                  </td>
+                </tr>
+              </table>
 
-	// ✅ FIX: send to user email, NOT Mail.Receiver
-	err := smtp.SendMail(
-		Mail.Host+":"+Mail.Port,
-		auth,
-		Mail.Sender,
-		[]string{toEmail}, // <-- THIS IS THE IMPORTANT FIX
-		message,
+              <!-- Warning Box -->
+              <table width="100%%" cellpadding="0" cellspacing="0" style="margin-bottom: 8px;">
+                <tr>
+                  <td style="
+                    background: #FFF7ED;
+                    border: 1px solid #FED7AA;
+                    border-radius: 10px;
+                    padding: 14px 18px;
+                  ">
+                    <p style="margin: 0; font-size: 13px; color: #92400E; line-height: 1.6;">
+                      ⚠️ <strong>Never share this code</strong> with anyone. Our team will never ask for your OTP.
+                    </p>
+                  </td>
+                </tr>
+              </table>
+
+              <p style="margin: 16px 0 0; font-size: 13px; color: #6B7280; line-height: 1.6;">
+                If you did not request a password reset, please secure your account immediately by changing your password.
+              </p>
+            </td>
+          </tr>
+
+          <!-- Divider -->
+          <tr>
+            <td style="padding: 0 48px;">
+              <hr style="border: none; border-top: 1px solid #E5E7EB; margin: 0;" />
+            </td>
+          </tr>
+
+          <!-- Footer -->
+          <tr>
+            <td align="center" style="padding: 24px 48px 36px;">
+              <p style="margin: 0 0 4px; font-size: 12px; color: #9CA3AF;">
+                This email was sent by the Internship Management System.
+              </p>
+              <p style="margin: 0; font-size: 12px; color: #9CA3AF;">
+                &copy; %d All rights reserved.
+              </p>
+            </td>
+          </tr>
+
+        </table>
+      </td>
+    </tr>
+  </table>
+</body>
+</html>
+	`, digitBoxes, time.Now().Year())
+
+	message := []byte(
+		"From: Internship System <" + Mail.Sender + ">\r\n" +
+			"To: " + toEmail + "\r\n" +
+			"Subject: " + subject + "\r\n" +
+			"MIME-Version: 1.0\r\n" +
+			"Content-Type: text/html; charset=\"UTF-8\"\r\n\r\n" +
+			body,
 	)
 
-	if err != nil {
-		slog.Error("smtp send failed",
-			"to", toEmail,
-			"error", err,
-		)
+	auth := smtp.PlainAuth("", Mail.Sender, Mail.Password, Mail.Host)
+	if err := smtp.SendMail(Mail.Host+":"+Mail.Port, auth, Mail.Sender, []string{toEmail}, message); err != nil {
+		slog.Error("smtp send failed", "to", toEmail, "error", err)
 		return fmt.Errorf("smtp error")
 	}
 
@@ -128,10 +297,7 @@ func ForgotPasswordHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	_, err = db.Exec(`
-		DELETE FROM forgot_password_requests WHERE email=$1
-	`, req.Email)
-
+	_, err = db.Exec(`DELETE FROM forgot_password_requests WHERE email=$1`, req.Email)
 	if err != nil {
 		slog.Warn("forgot.cleanup old otp failed", "error", err)
 	}
