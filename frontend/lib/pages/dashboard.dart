@@ -5,7 +5,6 @@ import 'package:http/http.dart' as http;
 import '../widgets/Dashboard-Widgets/welcome_card.dart';
 import '../widgets/Dashboard-Widgets/stats_cards.dart';
 import '../widgets/Dashboard-Widgets/bar_chart.dart';
-import '../widgets/Dashboard-Widgets/search_bar.dart';
 import '../widgets/Dashboard-Widgets/recent_activity.dart';
 import '../widgets/Dashboard-Widgets/right_panel.dart';
 
@@ -159,8 +158,6 @@ class _DashboardOverviewPageState extends State<DashboardOverviewPage> {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                DashboardSearchBar(isDarkMode: widget.isDarkMode),
-                const SizedBox(height: 20),
                 WelcomeCard(
                   isDarkMode: widget.isDarkMode,
                   firstName: widget.firstName,
