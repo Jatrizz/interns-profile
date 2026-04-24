@@ -94,9 +94,14 @@ class _TimeLogsPageState extends State<TimeLogsPage> {
   }
 
   Future<void> fetchTodayLogs() async {
+    final parsed = _parseSelectedMonth();
+    final month = parsed['month'];
+    final year = parsed['year'];
+
     try {
       final response = await http.get(
-        Uri.parse('http://127.0.0.1:8080/timelogs/today'),
+        Uri.parse(
+            'http://127.0.0.1:8080/timelogs/today?month=$month&year=$year'),
       );
       if (response.statusCode == 200) {
         final List<dynamic> data = jsonDecode(response.body);
@@ -112,14 +117,16 @@ class _TimeLogsPageState extends State<TimeLogsPage> {
   }
 
   Future<void> fetchLogsForIntern(String name) async {
+    final parsed = _parseSelectedMonth();
+    final month = parsed['month'];
+    final year = parsed['year'];
+
     try {
       final response = await http.get(
         Uri.parse(
-            'http://127.0.0.1:8080/timelogs/intern?name=${Uri.encodeComponent(name)}'),
+          'http://127.0.0.1:8080/timelogs/intern?name=${Uri.encodeComponent(name)}&month=$month&year=$year',
+        ),
       );
-      debugPrint('>>> timelogs/intern status: ${response.statusCode}');
-      debugPrint('>>> timelogs/intern body: ${response.body}');
-
       if (response.statusCode == 200) {
         final List<dynamic> data = jsonDecode(response.body);
         setState(() {
@@ -129,22 +136,74 @@ class _TimeLogsPageState extends State<TimeLogsPage> {
       }
     } catch (e) {
       debugPrint('>>> Error fetching logs: $e');
-      setState(() {
-        allLogs = [];
-        applyFilters();
-      });
     }
   }
 
   void applyFilters() {
     List<Map<String, dynamic>> result = List.from(allLogs);
+
+    // Status filter
     if (selectedStatus != 'All') {
-      result = result.where((log) => log['status'] == selectedStatus).toList();
+      result = result.where((log) {
+        final status = log['status']?.toString().toLowerCase() ?? '';
+        return status == selectedStatus.toLowerCase();
+      }).toList();
     }
+
+    // Month filter
+    final parts = selectedMonth.split(' ');
+    if (parts.length == 2) {
+      final monthName = parts[0];
+      result = result.where((log) {
+        final date = log['date']?.toString() ?? '';
+        return date.startsWith(monthName);
+      }).toList();
+    }
+
+    // Week filter
+    if (selectedWeek != 'All Weeks') {
+      final weekNumber = int.tryParse(selectedWeek.replaceAll('Week ', ''));
+      if (weekNumber != null) {
+        result = result.where((log) {
+          final date = log['date']?.toString() ?? '';
+          final parts = date.split(' ');
+          if (parts.length == 2) {
+            final day = int.tryParse(parts[1]);
+            if (day != null) {
+              final week = ((day - 1) ~/ 7) + 1;
+              return week == weekNumber;
+            }
+          }
+          return false;
+        }).toList();
+      }
+    }
+
     setState(() {
       filteredLogs = result;
       currentPage = 1;
     });
+  }
+
+  Map<String, int> _parseSelectedMonth() {
+    final months = [
+      'January',
+      'February',
+      'March',
+      'April',
+      'May',
+      'June',
+      'July',
+      'August',
+      'September',
+      'October',
+      'November',
+      'December'
+    ];
+    final parts = selectedMonth.split(' ');
+    final monthIndex = months.indexOf(parts[0]) + 1;
+    final year = int.tryParse(parts[1]) ?? DateTime.now().year;
+    return {'month': monthIndex, 'year': year};
   }
 
   List<Map<String, dynamic>> get paginatedLogs {
@@ -243,14 +302,23 @@ class _TimeLogsPageState extends State<TimeLogsPage> {
                           selectedMonth: selectedMonth,
                           selectedStatus: selectedStatus,
                           selectedWeek: selectedWeek,
-                          onMonthChanged: (val) =>
-                              setState(() => selectedMonth = val),
+                          onMonthChanged: (val) {
+                            setState(() => selectedMonth = val);
+                            if (_isDefaultView) {
+                              fetchTodayLogs();
+                            } else if (selectedIntern != null &&
+                                selectedIntern != 'All Interns') {
+                              fetchLogsForIntern(selectedIntern!);
+                            }
+                          },
                           onStatusChanged: (val) {
                             setState(() => selectedStatus = val);
                             applyFilters();
                           },
-                          onWeekChanged: (val) =>
-                              setState(() => selectedWeek = val),
+                          onWeekChanged: (val) {
+                            setState(() => selectedWeek = val);
+                            applyFilters();
+                          },
                         ),
                       ],
                     ),

@@ -66,10 +66,29 @@ class _InternTimeLogsPageState extends State<InternTimeLogsPage> {
   }
 
   Future<void> fetchTimeLogs() async {
+    final months = [
+      'January',
+      'February',
+      'March',
+      'April',
+      'May',
+      'June',
+      'July',
+      'August',
+      'September',
+      'October',
+      'November',
+      'December'
+    ];
+    final parts = selectedMonth.split(' ');
+    final monthIndex = months.indexOf(parts[0]) + 1;
+    final year = parts[1];
+
     try {
       final response = await http.get(
         Uri.parse(
-            'http://127.0.0.1:8080/intern/timelogs?user_id=${widget.userId}'),
+          'http://127.0.0.1:8080/intern/timelogs?user_id=${widget.userId}&month=$monthIndex&year=$year',
+        ),
       );
       if (response.statusCode == 200) {
         final List<dynamic> data = jsonDecode(response.body);
@@ -80,21 +99,48 @@ class _InternTimeLogsPageState extends State<InternTimeLogsPage> {
       }
     } catch (e) {
       debugPrint('>>> Error fetching time logs: $e');
-      setState(() {
-        allLogs = [];
-        applyFilters();
-      });
     }
   }
 
   void applyFilters() {
     List<Map<String, dynamic>> result = List.from(allLogs);
 
+    // Status filter
     if (selectedStatus != 'All') {
-      result = result.where((log) => log['status'] == selectedStatus).toList();
+      result = result.where((log) {
+        final status = log['status']?.toString().toLowerCase() ?? '';
+        return status == selectedStatus.toLowerCase();
+      }).toList();
     }
 
-    // Week filter logic can be extended here
+    // Month filter
+    final parts = selectedMonth.split(' ');
+    if (parts.length == 2) {
+      final monthName = parts[0];
+      result = result.where((log) {
+        final date = log['date']?.toString() ?? '';
+        return date.startsWith(monthName);
+      }).toList();
+    }
+
+    // Week filter
+    if (selectedWeek != 'All Weeks') {
+      final weekNumber = int.tryParse(selectedWeek.replaceAll('Week ', ''));
+      if (weekNumber != null) {
+        result = result.where((log) {
+          final date = log['date']?.toString() ?? '';
+          final parts = date.split(' ');
+          if (parts.length == 2) {
+            final day = int.tryParse(parts[1]);
+            if (day != null) {
+              final week = ((day - 1) ~/ 7) + 1;
+              return week == weekNumber;
+            }
+          }
+          return false;
+        }).toList();
+      }
+    }
 
     setState(() {
       filteredLogs = result;
@@ -188,12 +234,18 @@ class _InternTimeLogsPageState extends State<InternTimeLogsPage> {
             selectedMonth: selectedMonth,
             selectedStatus: selectedStatus,
             selectedWeek: selectedWeek,
-            onMonthChanged: (val) => setState(() => selectedMonth = val),
+            onMonthChanged: (val) {
+              setState(() => selectedMonth = val);
+              fetchTimeLogs();
+            },
             onStatusChanged: (val) {
               setState(() => selectedStatus = val);
               applyFilters();
             },
-            onWeekChanged: (val) => setState(() => selectedWeek = val),
+            onWeekChanged: (val) {
+              setState(() => selectedWeek = val);
+              applyFilters();
+            },
           ),
           const SizedBox(height: 16),
           InternTimeLogTable(
