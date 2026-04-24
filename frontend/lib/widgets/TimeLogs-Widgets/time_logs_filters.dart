@@ -26,6 +26,8 @@ class TimeLogsFilters extends StatelessWidget {
       children: [
         _buildMonthPicker(context),
         const SizedBox(width: 12),
+        _buildLabel('Status'),
+        const SizedBox(width: 8),
         _buildDropdown(
           value: selectedStatus,
           items: [
@@ -39,6 +41,8 @@ class TimeLogsFilters extends StatelessWidget {
           onChanged: onStatusChanged,
         ),
         const SizedBox(width: 12),
+        _buildLabel('Week'),
+        const SizedBox(width: 8),
         _buildDropdown(
           value: selectedWeek,
           items: [
@@ -54,67 +58,86 @@ class TimeLogsFilters extends StatelessWidget {
     );
   }
 
+  Widget _buildLabel(String text) {
+    return Text(
+      text,
+      style: TextStyle(
+        color: isDarkMode ? Colors.white : Colors.black,
+        fontSize: 14,
+        fontWeight: FontWeight.w500,
+      ),
+    );
+  }
+
   Widget _buildMonthPicker(BuildContext context) {
-    return GestureDetector(
-      onTap: () async {
-        final now = DateTime.now();
-        final picked = await showDatePicker(
-          context: context,
-          initialDate: now,
-          firstDate: DateTime(2020),
-          lastDate: DateTime(2030),
-          initialEntryMode: DatePickerEntryMode.calendarOnly,
-          builder: (context, child) => Theme(
-            data: ThemeData.dark(),
-            child: child!,
-          ),
-        );
-        if (picked != null) {
-          const months = [
-            'January',
-            'February',
-            'March',
-            'April',
-            'May',
-            'June',
-            'July',
-            'August',
-            'September',
-            'October',
-            'November',
-            'December',
-          ];
-          onMonthChanged('${months[picked.month - 1]} ${picked.year}');
-        }
-      },
-      child: Container(
-        padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
-        decoration: BoxDecoration(
-          color: isDarkMode ? const Color(0xFF2C2C2C) : const Color(0xFFF0F0F0),
-          borderRadius: BorderRadius.circular(8),
-          border: Border.all(
-            color: isDarkMode ? Colors.grey[700]! : Colors.grey[300]!,
-          ),
-        ),
-        child: Row(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            Text(
-              selectedMonth,
-              style: TextStyle(
-                color: isDarkMode ? Colors.white : Colors.black,
-                fontSize: 14,
+    return Row(
+      children: [
+        _buildLabel('Month'),
+        const SizedBox(width: 8),
+        GestureDetector(
+          onTap: () async {
+            final now = DateTime.now();
+            final picked = await showDatePicker(
+              context: context,
+              initialDate: now,
+              firstDate: DateTime(2020),
+              lastDate: DateTime(2030),
+              initialEntryMode: DatePickerEntryMode.calendarOnly,
+              builder: (context, child) => Theme(
+                data: ThemeData.dark(),
+                child: child!,
+              ),
+            );
+            if (picked != null) {
+              final months = [
+                'January',
+                'February',
+                'March',
+                'April',
+                'May',
+                'June',
+                'July',
+                'August',
+                'September',
+                'October',
+                'November',
+                'December'
+              ];
+              onMonthChanged('${months[picked.month - 1]} ${picked.year}');
+            }
+          },
+          child: Container(
+            padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
+            decoration: BoxDecoration(
+              color: isDarkMode
+                  ? const Color(0xFF2C2C2C)
+                  : const Color(0xFFF0F0F0),
+              borderRadius: BorderRadius.circular(8),
+              border: Border.all(
+                color: isDarkMode ? Colors.grey[700]! : Colors.grey[300]!,
               ),
             ),
-            const SizedBox(width: 10),
-            Icon(
-              Icons.calendar_today,
-              size: 16,
-              color: isDarkMode ? Colors.grey[400] : Colors.grey[600],
+            child: Row(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                Text(
+                  selectedMonth,
+                  style: TextStyle(
+                    color: isDarkMode ? Colors.white : Colors.black,
+                    fontSize: 14,
+                  ),
+                ),
+                const SizedBox(width: 10),
+                Icon(
+                  Icons.calendar_today,
+                  size: 16,
+                  color: isDarkMode ? Colors.grey[400] : Colors.grey[600],
+                ),
+              ],
             ),
-          ],
+          ),
         ),
-      ),
+      ],
     );
   }
 
