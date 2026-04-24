@@ -5,6 +5,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"net/http"
+	"strconv"
 	"time"
 )
 
@@ -20,6 +21,30 @@ func GetTimeLogsForIntern(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	// Get month and year from query params, default to current
+	now := time.Now()
+	month := int(now.Month())
+	year := now.Year()
+
+	if monthStr := r.URL.Query().Get("month"); monthStr != "" {
+		if m, err := strconv.Atoi(monthStr); err == nil {
+			month = m
+		}
+	}
+	if yearStr := r.URL.Query().Get("year"); yearStr != "" {
+		if y, err := strconv.Atoi(yearStr); err == nil {
+			year = y
+		}
+	}
+
+	startDate := fmt.Sprintf("%d-%02d-01", year, month)
+	var endDate string
+	if month == 12 {
+		endDate = fmt.Sprintf("%d-01-01", year+1)
+	} else {
+		endDate = fmt.Sprintf("%d-%02d-01", year, month+1)
+	}
+
 	rows, err := db.Query(`
         SELECT 
             tl.log_date,
@@ -31,8 +56,10 @@ func GetTimeLogsForIntern(w http.ResponseWriter, r *http.Request) {
         FROM time_logs tl
         JOIN users u ON u.id = tl.user_id
         WHERE CONCAT(u.first_name, ' ', u.last_name) = $1
+        AND tl.log_date >= $2
+        AND tl.log_date < $3
         ORDER BY tl.log_date DESC
-    `, name)
+    `, name, startDate, endDate)
 	if err != nil {
 		jsonError(w, "Failed to fetch logs", http.StatusInternalServerError)
 		return
@@ -70,7 +97,7 @@ func GetTimeLogsForIntern(w http.ResponseWriter, r *http.Request) {
 		if timeIn.Valid && timeIn.String != "" {
 			t, err := time.Parse("15:04:05", timeIn.String)
 			if err == nil {
-				timeInStr = t.Format("3:04 PM") // formats as "10:57 AM"
+				timeInStr = t.Format("3:04 PM")
 			}
 		}
 
@@ -78,7 +105,7 @@ func GetTimeLogsForIntern(w http.ResponseWriter, r *http.Request) {
 		if timeOut.Valid && timeOut.String != "" {
 			t, err := time.Parse("15:04:05", timeOut.String)
 			if err == nil {
-				timeOutStr = t.Format("3:04 PM") // formats as "5:00 PM"
+				timeOutStr = t.Format("3:04 PM")
 			}
 		}
 
