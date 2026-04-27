@@ -157,19 +157,20 @@ class _TimeLogsPageState extends State<TimeLogsPage> {
     if (selectedStatus != 'All') {
       result = result.where((log) {
         final status = log['status']?.toString().toLowerCase() ?? '';
+        if (selectedStatus == 'Present') {
+          return status == 'on-time' || status == 'late';
+        }
+        if (selectedStatus == 'On Time') {
+          return status == 'on-time';
+        }
+        if (selectedStatus == 'Half Day') {
+          return status == 'half-day' || status == 'halfday';
+        }
         return status == selectedStatus.toLowerCase();
       }).toList();
     }
 
-    // Month filter
-    final parts = selectedMonth.split(' ');
-    if (parts.length == 2) {
-      final monthName = parts[0];
-      result = result.where((log) {
-        final date = log['date']?.toString() ?? '';
-        return date.startsWith(monthName);
-      }).toList();
-    }
+    // Note: backend already filters by month range; no frontend month filter needed.
 
     // Week filter
     if (selectedWeek != 'All Weeks') {

@@ -39,10 +39,28 @@ class TimeLogsFilters extends StatelessWidget {
     'December'
   ];
 
+  DateTime? get _parsedDate {
+    final parts = selectedMonth.split(' ');
+    if (parts.length == 3) {
+      final month = _months.indexOf(parts[0]) + 1;
+      final day = int.tryParse(parts[1].replaceAll(',', ''));
+      final year = int.tryParse(parts[2]);
+      if (month > 0 && day != null && year != null) {
+        return DateTime(year, month, day);
+      }
+    } else if (parts.length == 2) {
+      final month = _months.indexOf(parts[0]) + 1;
+      final year = int.tryParse(parts[1]);
+      if (month > 0 && year != null) {
+        return DateTime(year, month);
+      }
+    }
+    return null;
+  }
+
   DateTime get _initialDate {
     final parts = selectedMonth.split(' ');
     if (parts.length == 3) {
-      // e.g. "April 15, 2026"
       final month = _months.indexOf(parts[0]) + 1;
       final day =
           int.tryParse(parts[1].replaceAll(',', '')) ?? DateTime.now().day;
@@ -50,6 +68,17 @@ class TimeLogsFilters extends StatelessWidget {
       return DateTime(year, month, day);
     }
     return DateTime.now();
+  }
+
+  void _adjustDate(int direction) {
+    final current = _parsedDate ?? DateTime.now();
+    final DateTime adjusted;
+    if (isSpecificDate) {
+      adjusted = current.add(Duration(days: direction));
+    } else {
+      adjusted = DateTime(current.year, current.month + direction);
+    }
+    onMonthChanged(adjusted);
   }
 
   @override
@@ -82,15 +111,25 @@ class TimeLogsFilters extends StatelessWidget {
         _buildLabel('Status'),
         _buildDropdown(
           value: selectedStatus,
-          items: ['All', 'Present', 'Late', 'Absent', 'Half Day', 'Weekend'],
+          items: [
+            'All',
+            'Present',
+            'On Time',
+            'Late',
+            'Absent',
+            'Half Day',
+            'Weekend'
+          ],
           onChanged: onStatusChanged,
         ),
-        _buildLabel('Week'),
-        _buildDropdown(
-          value: selectedWeek,
-          items: ['All Weeks', 'Week 1', 'Week 2', 'Week 3', 'Week 4'],
-          onChanged: onWeekChanged,
-        ),
+        if (!isSpecificDate) ...[
+          _buildLabel('Week'),
+          _buildDropdown(
+            value: selectedWeek,
+            items: ['All Weeks', 'Week 1', 'Week 2', 'Week 3', 'Week 4'],
+            onChanged: onWeekChanged,
+          ),
+        ],
       ],
     );
   }
@@ -130,6 +169,31 @@ class TimeLogsFilters extends StatelessWidget {
   }
 
   Widget _buildDatePicker(BuildContext context) {
+    return Row(
+      mainAxisSize: MainAxisSize.min,
+      children: [
+        _navArrow(Icons.chevron_left, () => _adjustDate(-1)),
+        _buildDatePickerButton(context),
+        _navArrow(Icons.chevron_right, () => _adjustDate(1)),
+      ],
+    );
+  }
+
+  Widget _navArrow(IconData icon, VoidCallback onTap) {
+    return GestureDetector(
+      onTap: onTap,
+      child: Container(
+        padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 10),
+        child: Icon(
+          icon,
+          size: 18,
+          color: isDarkMode ? Colors.grey[400] : Colors.grey[600],
+        ),
+      ),
+    );
+  }
+
+  Widget _buildDatePickerButton(BuildContext context) {
     return GestureDetector(
       onTap: () async {
         final DateTime? picked;
@@ -153,7 +217,8 @@ class TimeLogsFilters extends StatelessWidget {
         }
       },
       child: Container(
-        padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
+        width: 170,
+        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
         decoration: BoxDecoration(
           color: isDarkMode ? const Color(0xFF2C2C2C) : const Color(0xFFF0F0F0),
           borderRadius: BorderRadius.circular(8),
@@ -162,16 +227,19 @@ class TimeLogsFilters extends StatelessWidget {
           ),
         ),
         child: Row(
-          mainAxisSize: MainAxisSize.min,
+          mainAxisAlignment: MainAxisAlignment.spaceBetween,
           children: [
-            Text(
-              selectedMonth,
-              style: TextStyle(
-                color: isDarkMode ? Colors.white : Colors.black,
-                fontSize: 14,
+            Expanded(
+              child: Text(
+                selectedMonth,
+                overflow: TextOverflow.ellipsis,
+                style: TextStyle(
+                  color: isDarkMode ? Colors.white : Colors.black,
+                  fontSize: 14,
+                ),
               ),
             ),
-            const SizedBox(width: 10),
+            const SizedBox(width: 8),
             Icon(
               isSpecificDate ? Icons.calendar_month : Icons.calendar_today,
               size: 16,
