@@ -10,16 +10,28 @@ import 'intern_my_profile.dart';
 class InternMainPage extends StatefulWidget {
   final String firstName;
   final String userId;
-
-  const InternMainPage(
-      {super.key, required this.firstName, required this.userId});
+  final bool isDarkMode;
+  final VoidCallback onToggleTheme;
+  const InternMainPage({
+    super.key,
+    required this.firstName,
+    required this.userId,
+    required this.isDarkMode,
+    required this.onToggleTheme,
+  });
 
   @override
   State<InternMainPage> createState() => _InternMainPageState();
 }
 
 class _InternMainPageState extends State<InternMainPage> {
-  bool isDarkMode = true;
+  late bool isDarkMode;
+
+  @override
+  void initState() {
+    super.initState();
+    isDarkMode = widget.isDarkMode;
+  }
   int selectedIndex = 0;
 
   Future<void> handleLogout() async {
@@ -63,7 +75,10 @@ class _InternMainPageState extends State<InternMainPage> {
     Navigator.pushReplacement(
       context,
       PageRouteBuilder(
-        pageBuilder: (_, __, ___) => const LoginPage(),
+        pageBuilder: (_, __, ___) => LoginPage(
+          isDarkMode: isDarkMode,
+          onToggleTheme: () => setState(() => isDarkMode = !isDarkMode),
+        ),
         transitionDuration: Duration.zero,
         reverseTransitionDuration: Duration.zero,
       ),

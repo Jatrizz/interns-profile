@@ -3,10 +3,11 @@ import 'dart:convert';
 import 'package:http/http.dart' as http;
 
 class StatsSection extends StatefulWidget {
-  const StatsSection({super.key});
+  final bool isDarkMode;
+  const StatsSection({super.key, required this.isDarkMode});
 
   @override
-  _StatsSectionState createState() => _StatsSectionState();
+  State<StatsSection> createState() => _StatsSectionState();
 }
 
 class _StatsSectionState extends State<StatsSection> {
@@ -61,12 +62,12 @@ class _StatsSectionState extends State<StatsSection> {
           children: [
             Text(
               'Statistics',
-              style: TextStyle(fontSize: 30, color: Colors.white),
+              style: TextStyle(fontSize: 30, color: widget.isDarkMode ? Colors.white : Colors.black),
             ),
             SizedBox(height: 5),
             Text(
               'Empowering organizations to manage their interns efficiently and effectively.',
-              style: TextStyle(color: Colors.white, fontSize: 12),
+              style: TextStyle(color: widget.isDarkMode ? Colors.white : Colors.black87, fontSize: 12),
             ),
             SizedBox(
               width: 1100,
@@ -95,14 +96,14 @@ class _StatsSectionState extends State<StatsSection> {
       child: Column(
         mainAxisAlignment: MainAxisAlignment.center,
         children: [
-          Text(value, style: TextStyle(fontSize: 40, color: Colors.white)),
-          Text(label, style: TextStyle(fontSize: 20, color: Colors.white)),
+          Text(value, style: TextStyle(fontSize: 40, color: widget.isDarkMode ? Colors.white : Colors.black)),
+          Text(label, style: TextStyle(fontSize: 20, color: widget.isDarkMode ? Colors.white : Colors.black)),
         ],
       ),
     );
   }
 
   Widget divider() {
-    return Container(height: 160, width: 1.5, color: Colors.white);
+    return Container(height: 160, width: 1.5, color: widget.isDarkMode ? Colors.white : Colors.black26);
   }
 }

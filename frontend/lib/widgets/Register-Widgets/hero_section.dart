@@ -6,7 +6,10 @@ import 'package:interfaces/pages/login_page.dart';
 import 'package:flutter/gestures.dart';
 
 class HeroSection extends StatefulWidget {
-  const HeroSection({super.key});
+  final bool isDarkMode;
+  final VoidCallback onToggleTheme;
+  const HeroSection(
+      {super.key, required this.isDarkMode, required this.onToggleTheme});
 
   @override
   State<HeroSection> createState() => _HeroSectionState();
@@ -37,12 +40,27 @@ class _HeroSectionState extends State<HeroSection> {
     'number': false,
   };
 
+  // ── Theme helpers ────────────────────────────────────────────────────────
+
+  bool get _dark => widget.isDarkMode;
+
+  Color get _textColor => _dark ? Colors.white : Colors.black87;
+  Color get _labelColor => _dark ? Colors.white70 : Colors.black54;
+  Color get _iconColor => _dark ? Colors.white : Colors.black54;
+  Color get _cursorColor => _dark ? Colors.white : Colors.black87;
+  Color get _focusedBorderColor => _dark ? Colors.white : Colors.black54;
+
+  /// Gradient for input containers.
+  List<Color> get _fieldGradient => _dark
+      ? [Colors.black, const Color.fromARGB(131, 158, 158, 158)]
+      : [const Color(0xFFE8E8E8), const Color(0xFFD0D0D0)];
+
+  // ────────────────────────────────────────────────────────────────────────
+
   @override
   void initState() {
     super.initState();
-
     _checkPassword(_passwordController.text);
-
     _passwordController.addListener(() {
       _checkPassword(_passwordController.text);
     });
@@ -149,7 +167,6 @@ class _HeroSectionState extends State<HeroSection> {
         ScaffoldMessenger.of(context).showSnackBar(
           const SnackBar(content: Text('OTP sent to your email')),
         );
-
         _showOtpDialog();
       } else {
         final error = jsonDecode(response.body);
@@ -223,15 +240,15 @@ class _HeroSectionState extends State<HeroSection> {
 
       if (response.statusCode == 200) {
         Navigator.pop(context);
-
         ScaffoldMessenger.of(context).showSnackBar(
           const SnackBar(content: Text("Account created successfully!")),
         );
-
         Navigator.pushReplacement(
           context,
           MaterialPageRoute(
-            builder: (_) => LoginPage(),
+            builder: (_) => LoginPage(
+                isDarkMode: widget.isDarkMode,
+                onToggleTheme: widget.onToggleTheme),
           ),
         );
       } else {
@@ -251,30 +268,45 @@ class _HeroSectionState extends State<HeroSection> {
   Widget build(BuildContext context) {
     return Row(
       children: [
+        // ── Left: Logo ──────────────────────────────────────────────────
         Expanded(
           child: SizedBox(
             height: 700,
-            child: Image.asset(
-              'assets/images/logo.png',
-              fit: BoxFit.contain,
-            ),
+            child: _dark
+                ? Image.asset('assets/images/logo.png', fit: BoxFit.contain)
+                : ColorFiltered(
+                    colorFilter: const ColorFilter.matrix(<double>[
+                      -1, 0, 0, 0, 255,
+                       0,-1, 0, 0, 255,
+                       0, 0,-1, 0, 255,
+                       0, 0, 0, 1,   0,
+                    ]),
+                    child: Image.asset(
+                      'assets/images/logo.png',
+                      fit: BoxFit.contain,
+                    ),
+                  ),
           ),
         ),
+
+        // ── Right: Form ─────────────────────────────────────────────────
         Expanded(
           child: SingleChildScrollView(
             child: Form(
               key: _formKey,
               child: Column(
                 children: [
-                  const Text(
+                  Text(
                     "Create your Account",
                     style: TextStyle(
-                      color: Colors.white,
+                      color: _textColor,
                       fontSize: 40,
                       fontWeight: FontWeight.w600,
                     ),
                   ),
                   const SizedBox(height: 20),
+
+                  // First + Last name
                   SizedBox(
                     width: 400,
                     child: Row(
@@ -309,6 +341,8 @@ class _HeroSectionState extends State<HeroSection> {
                     inputFormatters: [FilteringTextInputFormatter.digitsOnly],
                   ),
                   const SizedBox(height: 10),
+
+                  // Password + Confirm
                   SizedBox(
                     width: 400,
                     child: Row(
@@ -325,13 +359,10 @@ class _HeroSectionState extends State<HeroSection> {
                                 _showPassword
                                     ? Icons.visibility
                                     : Icons.visibility_off,
-                                color: Colors.white,
+                                color: _iconColor,
                               ),
-                              onPressed: () {
-                                setState(() {
-                                  _showPassword = !_showPassword;
-                                });
-                              },
+                              onPressed: () => setState(
+                                  () => _showPassword = !_showPassword),
                             ),
                           ),
                         ),
@@ -348,13 +379,10 @@ class _HeroSectionState extends State<HeroSection> {
                                 _showConfirmPassword
                                     ? Icons.visibility
                                     : Icons.visibility_off,
-                                color: Colors.white,
+                                color: _iconColor,
                               ),
-                              onPressed: () {
-                                setState(() {
-                                  _showConfirmPassword = !_showConfirmPassword;
-                                });
-                              },
+                              onPressed: () => setState(() =>
+                                  _showConfirmPassword = !_showConfirmPassword),
                             ),
                           ),
                         ),
@@ -362,20 +390,27 @@ class _HeroSectionState extends State<HeroSection> {
                     ),
                   ),
                   const SizedBox(height: 8),
+
+                  // Password strength indicators
                   _buildCheck("At least 8 characters",
                       _passwordChecks['minLength'] ?? false),
                   _buildCheck("At least 1 uppercase",
                       _passwordChecks['uppercase'] ?? false),
                   _buildCheck("At least 1 lowercase",
                       _passwordChecks['lowercase'] ?? false),
-                  _buildCheck(
-                      "At least 1 number", _passwordChecks['number'] ?? false),
+                  _buildCheck("At least 1 number",
+                      _passwordChecks['number'] ?? false),
                   const SizedBox(height: 15),
+
+                  // Register button
                   Container(
                     width: 400,
                     decoration: const BoxDecoration(
                       gradient: LinearGradient(
-                        colors: [Colors.blue, Color.fromARGB(255, 2, 55, 230)],
+                        colors: [
+                          Colors.blue,
+                          Color.fromARGB(255, 2, 55, 230),
+                        ],
                       ),
                     ),
                     child: InkWell(
@@ -392,22 +427,22 @@ class _HeroSectionState extends State<HeroSection> {
                       ),
                     ),
                   ),
-                  SizedBox(
-                    height: 6,
-                  ),
+                  const SizedBox(height: 6),
+
+                  // Terms & Privacy
                   SizedBox(
                     width: 400,
                     child: RichText(
                       textAlign: TextAlign.center,
                       text: TextSpan(
-                        style: const TextStyle(
-                          color: Colors.white,
+                        style: TextStyle(
+                          color: _textColor,
                           fontSize: 12,
                         ),
                         children: [
                           const TextSpan(
-                            text: 'By creating an account, you agree to our ',
-                          ),
+                              text:
+                                  'By creating an account, you agree to our '),
                           TextSpan(
                             text: 'Terms and Conditions',
                             style: const TextStyle(
@@ -416,9 +451,7 @@ class _HeroSectionState extends State<HeroSection> {
                             ),
                             recognizer: TapGestureRecognizer()..onTap = () {},
                           ),
-                          const TextSpan(
-                            text: ' and ',
-                          ),
+                          const TextSpan(text: ' and '),
                           TextSpan(
                             text: 'Privacy Policy',
                             style: const TextStyle(
@@ -431,6 +464,7 @@ class _HeroSectionState extends State<HeroSection> {
                       ),
                     ),
                   ),
+                  const SizedBox(height: 20),
                 ],
               ),
             ),
@@ -439,6 +473,8 @@ class _HeroSectionState extends State<HeroSection> {
       ],
     );
   }
+
+  // ── Field builder ──────────────────────────────────────────────────────
 
   Widget _buildField(
     TextEditingController controller,
@@ -456,27 +492,27 @@ class _HeroSectionState extends State<HeroSection> {
         Container(
           width: 400,
           padding: const EdgeInsets.symmetric(horizontal: 1, vertical: 3),
-          decoration: const BoxDecoration(
-            gradient: LinearGradient(
-              colors: [Colors.black, Color.fromARGB(131, 158, 158, 158)],
-            ),
+          decoration: BoxDecoration(
+            gradient: LinearGradient(colors: _fieldGradient),
           ),
           child: TextFormField(
             controller: controller,
             obscureText: obscureText,
-            cursorColor: Colors.white,
+            cursorColor: _cursorColor,
             onChanged: (v) {
               onChanged?.call(v);
             },
             inputFormatters: inputFormatters,
-            style: const TextStyle(color: Colors.white),
+            style: TextStyle(color: _textColor),
             decoration: InputDecoration(
               border: InputBorder.none,
               focusedBorder: OutlineInputBorder(
-                  borderSide: BorderSide(color: Colors.white)),
-              prefixIcon: icon != null ? Icon(icon, color: Colors.white) : null,
+                borderSide: BorderSide(color: _focusedBorderColor),
+              ),
+              prefixIcon:
+                  icon != null ? Icon(icon, color: _iconColor) : null,
               labelText: label,
-              labelStyle: const TextStyle(color: Colors.white, fontSize: 12),
+              labelStyle: TextStyle(color: _labelColor, fontSize: 12),
               suffixIcon: suffixIcon,
             ),
           ),
@@ -492,6 +528,8 @@ class _HeroSectionState extends State<HeroSection> {
       ],
     );
   }
+
+  // ── Password check row ─────────────────────────────────────────────────
 
   Widget _buildCheck(String text, bool valid) {
     return SizedBox(

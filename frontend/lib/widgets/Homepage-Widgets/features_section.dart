@@ -1,7 +1,8 @@
 import 'package:flutter/material.dart';
 
 class FeaturesSection extends StatelessWidget {
-  const FeaturesSection({super.key});
+  final bool isDarkMode;
+  const FeaturesSection({super.key, required this.isDarkMode});
 
   @override
   Widget build(BuildContext context) {
@@ -19,7 +20,7 @@ class FeaturesSection extends StatelessWidget {
                 children: [
                   Text(
                     'Our Features',
-                    style: TextStyle(fontSize: 30, color: Colors.white),
+                    style: TextStyle(fontSize: 15, color: isDarkMode ? Colors.white : Colors.black),
                   ),
                   SizedBox(height: 20),
                   Row(
@@ -43,12 +44,12 @@ class FeaturesSection extends StatelessWidget {
                                       Icon(
                                         Icons.manage_accounts,
                                         size: 60,
-                                        color: Colors.white,
+                                        color: isDarkMode ? Colors.white : Colors.black87,
                                       ),
                                       Text(
                                         'Profile Management',
                                         textAlign: TextAlign.center,
-                                        style: TextStyle(color: Colors.white),
+                                        style: TextStyle(fontSize: 15, color: isDarkMode ? Colors.white : Colors.black),
                                       ),
                                     ],
                                   ),
@@ -65,11 +66,11 @@ class FeaturesSection extends StatelessWidget {
                           mainAxisAlignment: MainAxisAlignment.center,
                           crossAxisAlignment: CrossAxisAlignment.center,
                           children: [
-                            Icon(Icons.search, size: 60, color: Colors.white),
+                            Icon(Icons.search, size: 60, color: isDarkMode ? Colors.white : Colors.black87,),
                             Text(
                               'Search and Filter',
                               textAlign: TextAlign.center,
-                              style: TextStyle(color: Colors.white),
+                              style: TextStyle(fontSize: 15, color: isDarkMode ? Colors.white : Colors.black),
                             ),
                           ],
                         ),
@@ -83,12 +84,12 @@ class FeaturesSection extends StatelessWidget {
                             Icon(
                               Icons.dashboard,
                               size: 60,
-                              color: Colors.white,
+                              color: isDarkMode ? Colors.white : Colors.black87,
                             ),
                             Text(
                               'Dashboard Overview',
                               textAlign: TextAlign.center,
-                              style: TextStyle(color: Colors.white),
+                              style: TextStyle(fontSize: 15, color: isDarkMode ? Colors.white : Colors.black),
                             ),
                           ],
                         ),
@@ -99,11 +100,11 @@ class FeaturesSection extends StatelessWidget {
                         child: Column(
                           mainAxisAlignment: MainAxisAlignment.center,
                           children: [
-                            Icon(Icons.sort, size: 60, color: Colors.white),
+                            Icon(Icons.sort, size: 60, color: isDarkMode ? Colors.white : Colors.black87,),
                             Text(
                               'Sort and Organize',
                               textAlign: TextAlign.center,
-                              style: TextStyle(color: Colors.white),
+                              style: TextStyle(fontSize: 15, color: isDarkMode ? Colors.white : Colors.black),
                             ),
                           ],
                         ),
@@ -117,12 +118,12 @@ class FeaturesSection extends StatelessWidget {
                             Icon(
                               Icons.contact_page,
                               size: 60,
-                              color: Colors.white,
+                              color: isDarkMode ? Colors.white : Colors.black87,
                             ),
                             Text(
                               'Contact Management',
                               textAlign: TextAlign.center,
-                              style: TextStyle(color: Colors.white),
+                              style: TextStyle(fontSize: 15, color: isDarkMode ? Colors.white : Colors.black),
                             ),
                           ],
                         ),

@@ -1,7 +1,8 @@
 import 'package:flutter/material.dart';
 
 class AboutIntro extends StatelessWidget {
-  const AboutIntro({super.key});
+  final bool isDarkMode;
+  const AboutIntro({super.key, required this.isDarkMode});
   @override
   Widget build(BuildContext context) {
     return Row(
@@ -17,7 +18,7 @@ class AboutIntro extends StatelessWidget {
                 textAlign: TextAlign.start,
                 style: TextStyle(
                   fontSize: 30,
-                  color: Colors.white,
+                  color: isDarkMode ? Colors.white : Colors.black,
                   fontWeight: FontWeight(600),
                 ),
               ),
@@ -27,7 +28,7 @@ class AboutIntro extends StatelessWidget {
               style: TextStyle(
                 height: 1.7,
                 fontSize: 15,
-                color: Colors.white,
+                color: isDarkMode ? Colors.white : Colors.black87,
               ),
             )
           ],

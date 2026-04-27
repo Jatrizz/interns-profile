@@ -1,35 +1,32 @@
 import 'package:flutter/material.dart';
-import 'package:interfaces/pages/contact_page.dart';
-import 'package:interfaces/pages/dashboard.dart';
-import 'package:interfaces/pages/login_page.dart';
 import 'pages/home_page.dart';
-import 'pages/about_page.dart';
-import 'pages/register_page.dart';
 
 void main() {
-  runApp(InternsProfile());
+  runApp(const InternsProfile());
 }
 
-class InternsProfile extends StatelessWidget {
+class InternsProfile extends StatefulWidget {
   const InternsProfile({super.key});
+
+  @override
+  State<InternsProfile> createState() => _InternsProfileState();
+}
+
+class _InternsProfileState extends State<InternsProfile> {
+  bool isDarkMode = true;
+
+  void _toggleTheme() => setState(() => isDarkMode = !isDarkMode);
+
   @override
   Widget build(BuildContext context) {
     return MaterialApp(
       debugShowCheckedModeBanner: false,
-      theme: ThemeData(scaffoldBackgroundColor: Colors.black),
-      title: 'Intern`s Profile',
-      initialRoute: '/',
-      routes: {
-        '/': (context) => HomePage(),
-        '/about': (context) => AboutPage(),
-        '/contacts': (context) => ContactPage(),
-        'register': (context) => RegisterPage(),
-        '/login': (context) => LoginPage(),
-        '/dashboard': (context) => const DashboardOverviewPage(
-              firstName: 'first_name',
-              isDarkMode: true,
-            ),
-      },
+      theme: ThemeData(
+        scaffoldBackgroundColor: isDarkMode 
+          ? Colors.black : const Color(0xFFF7F9FC),
+      ),
+      title: 'Intern\'s Profile',
+      home: HomePage(isDarkMode: isDarkMode, onToggleTheme: _toggleTheme),
     );
   }
 }

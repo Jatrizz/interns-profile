@@ -7,7 +7,9 @@ import 'package:interfaces/pages/register_page.dart';
 import 'package:interfaces/pages/intern_main.dart';
 
 class Login extends StatefulWidget {
-  const Login({super.key});
+  final bool isDarkMode;
+  final VoidCallback onToggleTheme;
+  const Login({super.key, required this.isDarkMode, required this.onToggleTheme});
 
   @override
   State<Login> createState() => _LoginState();
@@ -80,8 +82,11 @@ class _LoginState extends State<Login> {
           Navigator.pushReplacement(
             context,
             MaterialPageRoute(
-              builder: (_) =>
-                  AdminMainPage(firstName: data['first_name'] ?? ''),
+              builder: (_) => AdminMainPage(
+                firstName: data['first_name'] ?? '',
+                isDarkMode: widget.isDarkMode,
+                onToggleTheme: widget.onToggleTheme,
+              ),
             ),
           );
         } else if (role == 'intern') {
@@ -91,6 +96,8 @@ class _LoginState extends State<Login> {
               builder: (_) => InternMainPage(
                 firstName: data['first_name'] ?? '',
                 userId: data['user_id'] ?? '',
+                isDarkMode: widget.isDarkMode,
+                onToggleTheme: widget.onToggleTheme,
               ),
             ),
           );
@@ -399,11 +406,11 @@ class _LoginState extends State<Login> {
                           obscureText: !showPass,
                           style: const TextStyle(color: Colors.white),
                           decoration: InputDecoration(
-                            prefixIcon: Icon(
+                            prefixIcon: const Icon(
                               Icons.password_outlined,
                               color: Colors.white,
                             ),
-                            enabledBorder: OutlineInputBorder(
+                            enabledBorder: const OutlineInputBorder(
                                 borderSide: BorderSide(color: Colors.grey)),
                             focusedBorder: const OutlineInputBorder(
                               borderSide: BorderSide(color: Colors.white),
@@ -430,7 +437,7 @@ class _LoginState extends State<Login> {
                           width: double.infinity,
                           child: ElevatedButton(
                             style: ElevatedButton.styleFrom(
-                                padding: EdgeInsetsDirectional.symmetric(
+                                padding: const EdgeInsetsDirectional.symmetric(
                                     vertical: 20),
                                 backgroundColor: Colors.green,
                                 shape: RoundedRectangleBorder(
@@ -462,53 +469,83 @@ class _LoginState extends State<Login> {
     super.dispose();
   }
 
+  // ── helpers ──────────────────────────────────────────────────────────────
+
+  /// Gradient colours for the input containers, adapts to theme.
+  List<Color> get _fieldGradient => widget.isDarkMode
+      ? [Colors.black, Colors.grey]
+      : [const Color(0xFFE8E8E8), const Color(0xFFD0D0D0)];
+
+  Color get _textColor => widget.isDarkMode ? Colors.white : Colors.black87;
+  Color get _labelColor =>
+      widget.isDarkMode ? Colors.white70 : Colors.black54;
+  Color get _iconColor => widget.isDarkMode ? Colors.white : Colors.black54;
+  Color get _cursorColor => widget.isDarkMode ? Colors.white : Colors.black87;
+  Color get _focusedBorderColor =>
+      widget.isDarkMode ? Colors.white : Colors.black54;
+
   @override
   Widget build(BuildContext context) {
     return Row(
       children: [
+        // ── Left: Logo ────────────────────────────────────────────────────
         Expanded(
           child: SizedBox(
             height: 700,
-            child: Image.asset('assets/images/logo.png', fit: BoxFit.contain),
+            child: widget.isDarkMode
+                ? Image.asset('assets/images/logo.png', fit: BoxFit.contain)
+                : ColorFiltered(
+                    colorFilter: const ColorFilter.matrix(<double>[
+                      -1, 0, 0, 0, 255,
+                       0,-1, 0, 0, 255,
+                       0, 0,-1, 0, 255,
+                       0, 0, 0, 1,   0,
+                    ]),
+                    child: Image.asset(
+                      'assets/images/logo.png',
+                      fit: BoxFit.contain,
+                    ),
+                  ),
           ),
         ),
+
+        // ── Right: Form ───────────────────────────────────────────────────
         Expanded(
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.center,
             children: [
-              const Text(
+              Text(
                 'Welcome to Orbis',
                 style: TextStyle(
-                    color: Colors.white,
-                    fontSize: 40,
-                    fontWeight: FontWeight.w600),
+                  color: _textColor,
+                  fontSize: 40,
+                  fontWeight: FontWeight.w600,
+                ),
               ),
               const SizedBox(height: 2),
-              const Text(
+              Text(
                 'Manage your interns, track hours, and monitor attendance with ease.',
                 textAlign: TextAlign.center,
-                style: TextStyle(
-                    color: Color.fromARGB(255, 255, 255, 255), fontSize: 15),
+                style: TextStyle(color: _textColor),
               ),
               const SizedBox(height: 15),
+
+              // Email field
               Container(
                 width: 400,
-                decoration: const BoxDecoration(
-                  gradient: LinearGradient(
-                    colors: [Colors.black, Colors.grey],
-                  ),
+                decoration: BoxDecoration(
+                  gradient: LinearGradient(colors: _fieldGradient),
                 ),
                 child: TextFormField(
-                  cursorColor: Colors.white,
+                  cursorColor: _cursorColor,
                   controller: _emailController,
-                  style: const TextStyle(color: Colors.white),
-                  decoration: const InputDecoration(
+                  style: TextStyle(color: _textColor),
+                  decoration: InputDecoration(
                     focusedBorder: OutlineInputBorder(
-                        borderSide: BorderSide(
-                      color: Colors.white,
-                    )),
-                    prefixIcon: Icon(Icons.email_outlined, color: Colors.white),
-                    label: Text('Email', style: TextStyle(color: Colors.white)),
+                      borderSide: BorderSide(color: _focusedBorderColor),
+                    ),
+                    prefixIcon: Icon(Icons.email_outlined, color: _iconColor),
+                    label: Text('Email', style: TextStyle(color: _labelColor)),
                     border: InputBorder.none,
                   ),
                 ),
@@ -520,40 +557,41 @@ class _LoginState extends State<Login> {
                     padding: const EdgeInsets.only(top: 5),
                     child: Text(
                       _emailError!,
-                      style: const TextStyle(color: Colors.red, fontSize: 12),
+                      style:
+                          const TextStyle(color: Colors.red, fontSize: 12),
                     ),
                   ),
                 ),
               const SizedBox(height: 10),
+
+              // Password field
               Container(
                 width: 400,
-                decoration: const BoxDecoration(
-                  gradient: LinearGradient(
-                    colors: [Colors.black, Colors.grey],
-                  ),
+                decoration: BoxDecoration(
+                  gradient: LinearGradient(colors: _fieldGradient),
                 ),
                 child: TextFormField(
-                  cursorColor: Colors.white,
+                  cursorColor: _cursorColor,
                   controller: _passwordController,
                   obscureText: !_showPassword,
-                  style: const TextStyle(color: Colors.white),
+                  style: TextStyle(color: _textColor),
                   decoration: InputDecoration(
                     focusedBorder: OutlineInputBorder(
-                        borderSide: BorderSide(color: Colors.white)),
+                      borderSide: BorderSide(color: _focusedBorderColor),
+                    ),
                     prefixIcon:
-                        const Icon(Icons.lock_outline, color: Colors.white),
-                    label: const Text('Password',
-                        style: TextStyle(color: Colors.white)),
+                        Icon(Icons.lock_outline, color: _iconColor),
+                    label: Text('Password',
+                        style: TextStyle(color: _labelColor)),
                     suffixIcon: IconButton(
                       icon: Icon(
-                        _showPassword ? Icons.visibility : Icons.visibility_off,
-                        color: Colors.white,
+                        _showPassword
+                            ? Icons.visibility
+                            : Icons.visibility_off,
+                        color: _iconColor,
                       ),
-                      onPressed: () {
-                        setState(() {
-                          _showPassword = !_showPassword;
-                        });
-                      },
+                      onPressed: () =>
+                          setState(() => _showPassword = !_showPassword),
                     ),
                     border: InputBorder.none,
                   ),
@@ -566,21 +604,24 @@ class _LoginState extends State<Login> {
                     padding: const EdgeInsets.only(top: 5),
                     child: Text(
                       _passwordError!,
-                      style: const TextStyle(color: Colors.red, fontSize: 12),
+                      style:
+                          const TextStyle(color: Colors.red, fontSize: 12),
                     ),
                   ),
                 ),
               const SizedBox(height: 10),
+
+              // Forgot password
               TextButton(
                 onPressed: _showForgotPasswordDialog,
-                child: const Text(
+                child: Text(
                   "Forgot Password?",
-                  style: TextStyle(
-                    color: Colors.white70,
-                  ),
+                  style: TextStyle(color: _textColor),
                 ),
               ),
               const SizedBox(height: 10),
+
+              // Login button
               Container(
                 width: 400,
                 decoration: const BoxDecoration(
@@ -594,7 +635,8 @@ class _LoginState extends State<Login> {
                     padding: const EdgeInsets.symmetric(vertical: 14),
                     child: Center(
                       child: _isLoading
-                          ? const CircularProgressIndicator(color: Colors.white)
+                          ? const CircularProgressIndicator(
+                              color: Colors.white)
                           : const Text('Login',
                               style: TextStyle(color: Colors.white)),
                     ),

@@ -6,7 +6,9 @@ import '../../pages/about_page.dart';
 import '../../pages/register_page.dart';
 
 class NavBar extends StatelessWidget implements PreferredSizeWidget {
-  const NavBar({super.key});
+  final bool isDarkMode;
+  final VoidCallback onToggleTheme;
+  const NavBar({super.key, required this.isDarkMode, required this.onToggleTheme});
 
   @override
   Size get preferredSize => const Size.fromHeight(95);
@@ -14,7 +16,7 @@ class NavBar extends StatelessWidget implements PreferredSizeWidget {
   Widget build(BuildContext context) {
     return AppBar(
       automaticallyImplyLeading: false,
-      backgroundColor: Colors.black,
+      backgroundColor: isDarkMode ? Colors.black : Colors.white,
       toolbarHeight: 95,
       scrolledUnderElevation: 0,
       title: Padding(
@@ -23,11 +25,10 @@ class NavBar extends StatelessWidget implements PreferredSizeWidget {
           children: [
             TextButton(
               onPressed: () {
-                Navigator.push(
+                Navigator.pushReplacement(
                   context,
                   PageRouteBuilder(
-                    pageBuilder: (context, animation1, animation2) =>
-                        HomePage(),
+                    pageBuilder: (context, animation1, animation2) => HomePage(isDarkMode: isDarkMode, onToggleTheme: onToggleTheme),
                     transitionDuration: Duration.zero,
                     reverseTransitionDuration: Duration.zero,
                   ),
@@ -35,17 +36,16 @@ class NavBar extends StatelessWidget implements PreferredSizeWidget {
               },
               child: Text(
                 'Home',
-                style: TextStyle(fontSize: 14, color: Colors.white),
+                style: TextStyle(fontSize: 14, color: isDarkMode ? Colors.white : Colors.black),
               ),
             ),
             SizedBox(width: 20),
             TextButton(
               onPressed: () {
-                Navigator.push(
+                Navigator.pushReplacement(
                   context,
                   PageRouteBuilder(
-                    pageBuilder: (context, animation1, animation2) =>
-                        AboutPage(),
+                    pageBuilder: (context, animation1, animation2) => AboutPage(isDarkMode: isDarkMode, onToggleTheme: onToggleTheme),
                     transitionDuration: Duration.zero,
                     reverseTransitionDuration: Duration.zero,
                   ),
@@ -53,17 +53,16 @@ class NavBar extends StatelessWidget implements PreferredSizeWidget {
               },
               child: Text(
                 'About',
-                style: TextStyle(color: Colors.white, fontSize: 14),
+                style: TextStyle(fontSize: 14, color: isDarkMode ? Colors.white : Colors.black),
               ),
             ),
             SizedBox(width: 20),
             TextButton(
               onPressed: () {
-                Navigator.push(
+                Navigator.pushReplacement(
                   context,
                   PageRouteBuilder(
-                    pageBuilder: (context, animation1, animation2) =>
-                        ContactPage(),
+                    pageBuilder: (context, animation1, animation2) => ContactPage(isDarkMode: isDarkMode, onToggleTheme: onToggleTheme),
                     transitionDuration: Duration.zero,
                     reverseTransitionDuration: Duration.zero,
                   ),
@@ -71,17 +70,16 @@ class NavBar extends StatelessWidget implements PreferredSizeWidget {
               },
               child: Text(
                 'Contact',
-                style: TextStyle(color: Colors.white, fontSize: 14),
+                style: TextStyle(fontSize: 14, color: isDarkMode ? Colors.white : Colors.black),
               ),
             ),
             Spacer(),
             TextButton(
               onPressed: () {
-                Navigator.push(
+                Navigator.pushReplacement(
                   context,
                   PageRouteBuilder(
-                    pageBuilder: (context, animation1, animation2) =>
-                        LoginPage(),
+                    pageBuilder: (context, animation1, animation2) => LoginPage(isDarkMode: isDarkMode, onToggleTheme: onToggleTheme),
                     transitionDuration: Duration.zero,
                     reverseTransitionDuration: Duration.zero,
                   ),
@@ -89,17 +87,16 @@ class NavBar extends StatelessWidget implements PreferredSizeWidget {
               },
               child: Text(
                 'Login',
-                style: TextStyle(color: Colors.white, fontSize: 14),
+                style: TextStyle(fontSize: 14, color: isDarkMode ? Colors.white : Colors.black),
               ),
             ),
             SizedBox(width: 20),
             TextButton(
               onPressed: () {
-                Navigator.push(
+                Navigator.pushReplacement(
                   context,
                   PageRouteBuilder(
-                    pageBuilder: (context, animation1, animation2) =>
-                        RegisterPage(),
+                    pageBuilder: (context, animation1, animation2) => RegisterPage(isDarkMode: isDarkMode, onToggleTheme: onToggleTheme),
                     transitionDuration: Duration.zero,
                     reverseTransitionDuration: Duration.zero,
                   ),
@@ -107,13 +104,15 @@ class NavBar extends StatelessWidget implements PreferredSizeWidget {
               },
               child: Text(
                 'Register',
-                style: TextStyle(color: Colors.white, fontSize: 14),
+                style: TextStyle(fontSize: 14, color: isDarkMode ? Colors.white : Colors.black),
               ),
             ),
             SizedBox(width: 20),
             IconButton(
-              onPressed: () {},
-              icon: Icon(Icons.light_mode, color: Colors.white, size: 20),
+              onPressed: onToggleTheme,
+              icon: Icon(
+                isDarkMode ? Icons.nightlight_round : Icons.wb_sunny_outlined,
+                color: isDarkMode ? Colors.white : Colors.black, size: 20),
             ),
           ],
         ),

@@ -1,11 +1,13 @@
 import 'package:flutter/material.dart';
 
 class Footer extends StatelessWidget {
+  final bool isDarkMode;
+  const Footer({super.key, required this.isDarkMode});
   @override
   Widget build(BuildContext context) {
     return Container(
       height: 50,
-      decoration: BoxDecoration(color: Colors.white),
+      decoration: BoxDecoration(color: isDarkMode ? const Color(0xFF0A0A0A) : Colors.white,),
       child: Padding(
         padding: EdgeInsetsGeometry.only(left: 65, right: 65),
         child: Row(

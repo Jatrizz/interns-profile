@@ -207,7 +207,10 @@ class _InternTimeLogsPageState extends State<InternTimeLogsPage> {
     Navigator.pushReplacement(
       context,
       PageRouteBuilder(
-        pageBuilder: (_, __, ___) => const LoginPage(),
+        pageBuilder: (_, __, ___) => LoginPage(
+          isDarkMode: isDarkMode,
+          onToggleTheme: () => setState(() => isDarkMode = !isDarkMode),
+        ),
         transitionDuration: Duration.zero,
         reverseTransitionDuration: Duration.zero,
       ),

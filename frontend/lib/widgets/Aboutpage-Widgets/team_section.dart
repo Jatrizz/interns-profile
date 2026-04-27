@@ -1,7 +1,8 @@
 import 'package:flutter/material.dart';
 
 class TeamSection extends StatelessWidget {
-  const TeamSection({super.key});
+  final bool isDarkMode;
+  const TeamSection({super.key, required this.isDarkMode});
   @override
   Widget build(BuildContext context) {
     return Padding(
@@ -15,14 +16,14 @@ class TeamSection extends StatelessWidget {
               'Meet the Team',
               style: TextStyle(
                 fontSize: 30,
-                color: Colors.white,
+                color: isDarkMode ? Colors.white : Colors.black,
                 fontWeight: FontWeight(600),
               ),
             ),
             Text(
               'The people behind Orbis.',
               style: TextStyle(
-                color: Colors.white,
+                color: isDarkMode ? Colors.white : Colors.black,
                 fontSize: 15,
               ),
             ),
@@ -48,13 +49,13 @@ class TeamSection extends StatelessWidget {
                     'Lester John Manzanero',
                     style: TextStyle(
                       fontSize: 15,
-                      color: Colors.white,
+                      color: isDarkMode ? Colors.white : Colors.black,
                       fontWeight: FontWeight(600),
                     ),
                   ),
                   Text(
                     'Pogi lang',
-                    style: TextStyle(color: Colors.white, fontSize: 14),
+                    style: TextStyle(color: isDarkMode ? Colors.white : Colors.black, fontSize: 14),
                   )
                 ]),
                 Column(
@@ -73,13 +74,13 @@ class TeamSection extends StatelessWidget {
                       'Janna Tricia Pujeda',
                       style: TextStyle(
                         fontSize: 15,
-                        color: Colors.white,
+                        color: isDarkMode ? Colors.white : Colors.black,
                         fontWeight: FontWeight(600),
                       ),
                     ),
                     Text(
                       'Fullstack Developer',
-                      style: TextStyle(color: Colors.white, fontSize: 14),
+                      style: TextStyle(color: isDarkMode ? Colors.white : Colors.black, fontSize: 14),
                     )
                   ],
                 ),
@@ -98,7 +99,7 @@ class TeamSection extends StatelessWidget {
                     Text(
                       'Nathaniel Velasco',
                       style: TextStyle(
-                        color: Colors.white,
+                        color: isDarkMode ? Colors.white : Colors.black,
                         fontWeight: FontWeight(600),
                         fontSize: 15,
                       ),
@@ -106,7 +107,7 @@ class TeamSection extends StatelessWidget {
                     Text(
                       'Backend Developer',
                       style: TextStyle(
-                        color: Colors.white,
+                        color: isDarkMode ? Colors.white : Colors.black,
                         fontSize: 14,
                       ),
                     )
