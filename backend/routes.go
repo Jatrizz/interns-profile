@@ -9,6 +9,7 @@ func RegisterRoutes(r *mux.Router) {
 	r.HandleFunc("/register", registerHandler).Methods("POST")
 	r.HandleFunc("/login", Login).Methods("POST")
 	r.HandleFunc("/dashboard", Dashboard).Methods("GET")
+	r.HandleFunc("/new-interns-today", NewInternsToday).Methods("GET")
 	r.HandleFunc("/get-stats", GetStats).Methods("GET")
 	r.HandleFunc("/school-stats", SchoolStats).Methods("GET")
 	r.HandleFunc("/attendance-stats", HandleAttendanceStats(db)).Methods("GET")
@@ -37,10 +38,10 @@ func RegisterRoutes(r *mux.Router) {
 	// Admin list
 	r.HandleFunc("/admins", GetAdminsHandler).Methods("GET")
 
-	//intern dashboard
+	// Intern dashboard
 	r.HandleFunc("/intern-dashboard", InternDashboard).Methods("GET")
 
-	//time logs
+	// Time logs
 	r.HandleFunc("/intern-time-in", InternTimeIn).Methods("POST")
 	r.HandleFunc("/intern-time-out", InternTimeOut).Methods("POST")
 	r.HandleFunc("/intern-calculate-hours-rendered", InternCalculateHoursRendered).Methods("GET")
@@ -53,5 +54,4 @@ func RegisterRoutes(r *mux.Router) {
 	r.HandleFunc("/intern/timelogs/stats", InternTimeLogStats).Methods("GET")
 	r.HandleFunc("/timelogs/overview", TimeLogsOverview).Methods("GET")
 	r.HandleFunc("/timelogs/today", TimeLogsToday).Methods("GET")
-
 }

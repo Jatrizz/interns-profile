@@ -33,22 +33,10 @@ func Dashboard(w http.ResponseWriter, r *http.Request) {
 	firstName := r.URL.Query().Get("first_name")
 
 	// Get total interns count
-	// Shows the Total Number of Interns in the Dashboard
 	var totalInterns int
 	err := db.QueryRow("SELECT COUNT(*) FROM users WHERE role = 'intern'").Scan(&totalInterns)
 	if err != nil {
 		http.Error(w, "Error getting total users", http.StatusInternalServerError)
-		return
-	}
-
-	// Get new interns this month
-	// Shown as "No. of New Interns: 3" on dashboard
-	var newInterns int
-	err = db.QueryRow(`SELECT COUNT(*) FROM users 
-		WHERE role = 'intern' AND EXTRACT(MONTH FROM created_at) = EXTRACT(MONTH FROM CURRENT_DATE)
-		AND EXTRACT(YEAR FROM created_at) = EXTRACT(YEAR FROM CURRENT_DATE)`).Scan(&newInterns)
-	if err != nil {
-		http.Error(w, "Error getting new users", http.StatusInternalServerError)
 		return
 	}
 
@@ -64,9 +52,40 @@ func Dashboard(w http.ResponseWriter, r *http.Request) {
 	json.NewEncoder(w).Encode(DashboardResponse{
 		FirstName:    firstName,
 		TotalInterns: totalInterns,
-		NewInterns:   newInterns,
+		NewInterns:   0, // now handled by /new-interns-today
 		TotalSchools: totalSchools,
 	})
+}
+
+// NewInternsToday returns the count of interns added on a specific date.
+// Expects a query param: ?date=YYYY-MM-DD
+// Example: GET /new-interns-today?date=2025-04-24
+func NewInternsToday(w http.ResponseWriter, r *http.Request) {
+	if r.Method != http.MethodGet {
+		http.Error(w, "Invalid Request Method", http.StatusMethodNotAllowed)
+		return
+	}
+
+	date := r.URL.Query().Get("date")
+	if date == "" {
+		http.Error(w, "Missing 'date' query parameter", http.StatusBadRequest)
+		return
+	}
+
+	var count int
+	err := db.QueryRow(`
+		SELECT COUNT(*)
+		FROM users
+		WHERE role = 'intern'
+		AND DATE(created_at) = $1
+	`, date).Scan(&count)
+	if err != nil {
+		http.Error(w, "Error getting new interns count", http.StatusInternalServerError)
+		return
+	}
+
+	w.Header().Set("Content-Type", "application/json")
+	json.NewEncoder(w).Encode(map[string]int{"count": count})
 }
 
 func GetRecentActivity(w http.ResponseWriter, r *http.Request) {
