@@ -24,6 +24,34 @@ class TimeLogsFilters extends StatelessWidget {
     required this.onToggleMode,
   });
 
+  static const List<String> _months = [
+    'January',
+    'February',
+    'March',
+    'April',
+    'May',
+    'June',
+    'July',
+    'August',
+    'September',
+    'October',
+    'November',
+    'December'
+  ];
+
+  DateTime get _initialDate {
+    final parts = selectedMonth.split(' ');
+    if (parts.length == 3) {
+      // e.g. "April 15, 2026"
+      final month = _months.indexOf(parts[0]) + 1;
+      final day =
+          int.tryParse(parts[1].replaceAll(',', '')) ?? DateTime.now().day;
+      final year = int.tryParse(parts[2]) ?? DateTime.now().year;
+      return DateTime(year, month, day);
+    }
+    return DateTime.now();
+  }
+
   @override
   Widget build(BuildContext context) {
     return Wrap(
@@ -50,7 +78,7 @@ class TimeLogsFilters extends StatelessWidget {
             ],
           ),
         ),
-        _buildMonthPicker(context),
+        _buildDatePicker(context),
         _buildLabel('Status'),
         _buildDropdown(
           value: selectedStatus,
@@ -101,21 +129,25 @@ class TimeLogsFilters extends StatelessWidget {
     );
   }
 
-  Widget _buildMonthPicker(BuildContext context) {
+  Widget _buildDatePicker(BuildContext context) {
     return GestureDetector(
       onTap: () async {
-        final now = DateTime.now();
-        final picked = await showDatePicker(
-          context: context,
-          initialDate: now,
-          firstDate: DateTime(2020),
-          lastDate: DateTime(2030),
-          initialEntryMode: DatePickerEntryMode.calendarOnly,
-          builder: (context, child) => Theme(
-            data: ThemeData.dark(),
-            child: child!,
-          ),
-        );
+        final DateTime? picked;
+        if (isSpecificDate) {
+          picked = await showDatePicker(
+            context: context,
+            initialDate: _initialDate,
+            firstDate: DateTime(2020),
+            lastDate: DateTime(2030),
+            initialEntryMode: DatePickerEntryMode.calendarOnly,
+            builder: (context, child) => Theme(
+              data: isDarkMode ? ThemeData.dark() : ThemeData.light(),
+              child: child!,
+            ),
+          );
+        } else {
+          picked = await _showMonthPickerDialog(context);
+        }
         if (picked != null) {
           onMonthChanged(picked);
         }
@@ -141,13 +173,122 @@ class TimeLogsFilters extends StatelessWidget {
             ),
             const SizedBox(width: 10),
             Icon(
-              Icons.calendar_today,
+              isSpecificDate ? Icons.calendar_month : Icons.calendar_today,
               size: 16,
               color: isDarkMode ? Colors.grey[400] : Colors.grey[600],
             ),
           ],
         ),
       ),
+    );
+  }
+
+  Future<DateTime?> _showMonthPickerDialog(BuildContext context) async {
+    int selectedYear = DateTime.now().year;
+    int selectedMonthIndex = DateTime.now().month - 1;
+
+    final parts = selectedMonth.split(' ');
+    if (parts.isNotEmpty) {
+      final idx = _months.indexOf(parts[0]);
+      if (idx != -1) selectedMonthIndex = idx;
+    }
+    if (parts.isNotEmpty) {
+      selectedYear = int.tryParse(parts.last) ?? selectedYear;
+    }
+
+    return showDialog<DateTime>(
+      context: context,
+      builder: (context) {
+        return StatefulBuilder(
+          builder: (context, setDialogState) {
+            return AlertDialog(
+              backgroundColor:
+                  isDarkMode ? const Color(0xFF2C2C2C) : Colors.white,
+              contentPadding: const EdgeInsets.all(16),
+              content: SizedBox(
+                width: 320,
+                child: Column(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    // Year navigation
+                    Row(
+                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                      children: [
+                        IconButton(
+                          icon: Icon(
+                            Icons.chevron_left,
+                            color: isDarkMode ? Colors.white : Colors.black,
+                          ),
+                          onPressed: () => setDialogState(() => selectedYear--),
+                        ),
+                        Text(
+                          '$selectedYear',
+                          style: TextStyle(
+                            fontSize: 18,
+                            fontWeight: FontWeight.bold,
+                            color: isDarkMode ? Colors.white : Colors.black,
+                          ),
+                        ),
+                        IconButton(
+                          icon: Icon(
+                            Icons.chevron_right,
+                            color: isDarkMode ? Colors.white : Colors.black,
+                          ),
+                          onPressed: () => setDialogState(() => selectedYear++),
+                        ),
+                      ],
+                    ),
+                    const SizedBox(height: 12),
+                    // Month grid
+                    GridView.count(
+                      shrinkWrap: true,
+                      crossAxisCount: 3,
+                      childAspectRatio: 2,
+                      mainAxisSpacing: 8,
+                      crossAxisSpacing: 8,
+                      children: List.generate(12, (index) {
+                        final isSelected = index == selectedMonthIndex;
+                        return GestureDetector(
+                          onTap: () {
+                            Navigator.pop(
+                              context,
+                              DateTime(selectedYear, index + 1),
+                            );
+                          },
+                          child: Container(
+                            decoration: BoxDecoration(
+                              color: isSelected
+                                  ? const Color(0xFF00BFFF)
+                                  : (isDarkMode
+                                      ? const Color(0xFF3A3A3A)
+                                      : const Color(0xFFF0F0F0)),
+                              borderRadius: BorderRadius.circular(8),
+                            ),
+                            alignment: Alignment.center,
+                            child: Text(
+                              _months[index].substring(0, 3),
+                              style: TextStyle(
+                                color: isSelected
+                                    ? Colors.white
+                                    : (isDarkMode
+                                        ? Colors.white
+                                        : Colors.black),
+                                fontWeight: isSelected
+                                    ? FontWeight.bold
+                                    : FontWeight.normal,
+                              ),
+                            ),
+                          ),
+                        );
+                      }),
+                    ),
+                  ],
+                ),
+              ),
+            );
+          },
+        );
+      },
     );
   }
 

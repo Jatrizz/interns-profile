@@ -272,8 +272,14 @@ class _InternTimeLogsPageState extends State<InternTimeLogsPage> {
               ];
               setState(() {
                 _isSpecificDate = val;
-                selectedDate = null;
-                selectedMonth = '${months[now.month - 1]} ${now.year}';
+                if (val) {
+                  selectedDate = now;
+                  selectedMonth =
+                      '${months[now.month - 1]} ${now.day}, ${now.year}';
+                } else {
+                  selectedDate = null;
+                  selectedMonth = '${months[now.month - 1]} ${now.year}';
+                }
               });
               fetchTimeLogs();
             },

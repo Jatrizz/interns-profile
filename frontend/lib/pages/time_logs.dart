@@ -312,8 +312,6 @@ class _TimeLogsPageState extends State<TimeLogsPage> {
                           onToggleMode: (val) {
                             setState(() {
                               _isSpecificDate = val;
-                              selectedDate = null;
-                              // reset display
                               final now = DateTime.now();
                               final months = [
                                 'January',
@@ -329,8 +327,15 @@ class _TimeLogsPageState extends State<TimeLogsPage> {
                                 'November',
                                 'December'
                               ];
-                              selectedMonth =
-                                  '${months[now.month - 1]} ${now.year}';
+                              if (val) {
+                                selectedDate = now;
+                                selectedMonth =
+                                    '${months[now.month - 1]} ${now.day}, ${now.year}';
+                              } else {
+                                selectedDate = null;
+                                selectedMonth =
+                                    '${months[now.month - 1]} ${now.year}';
+                              }
                             });
                             fetchTodayLogs();
                           },
