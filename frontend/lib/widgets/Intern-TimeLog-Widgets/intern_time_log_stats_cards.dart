@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import '../../theme/app_theme.dart';
 
 class InternTimeLogStatsCards extends StatelessWidget {
   final bool isDarkMode;
@@ -25,6 +26,7 @@ class InternTimeLogStatsCards extends StatelessWidget {
       {'label': 'Number of Absences', 'value': absences},
     ];
 
+    final theme = AppTheme.of(isDarkMode);
     return Row(
       children: cards.map((card) {
         return Expanded(
@@ -32,10 +34,9 @@ class InternTimeLogStatsCards extends StatelessWidget {
             margin: const EdgeInsets.only(right: 12),
             padding: const EdgeInsets.symmetric(vertical: 24, horizontal: 16),
             decoration: BoxDecoration(
-              color: isDarkMode
-                  ? const Color(0xFF2C2C2C)
-                  : const Color(0xFFF5F5F5),
+              color: theme.cardBg,
               borderRadius: BorderRadius.circular(12),
+              boxShadow: theme.cardShadow,
             ),
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
@@ -43,7 +44,7 @@ class InternTimeLogStatsCards extends StatelessWidget {
                 Text(
                   card['label'] as String,
                   style: TextStyle(
-                    color: isDarkMode ? Colors.grey[400] : Colors.grey[600],
+                    color: theme.textSecondary,
                     fontSize: 13,
                   ),
                 ),
@@ -51,7 +52,7 @@ class InternTimeLogStatsCards extends StatelessWidget {
                 Text(
                   '${card['value']}',
                   style: TextStyle(
-                    color: isDarkMode ? Colors.white : Colors.black,
+                    color: theme.textPrimary,
                     fontSize: 36,
                     fontWeight: FontWeight.bold,
                   ),

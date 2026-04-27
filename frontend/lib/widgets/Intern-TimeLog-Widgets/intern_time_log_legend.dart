@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import '../../theme/app_theme.dart';
 
 class InternTimeLogLegend extends StatelessWidget {
   final bool isDarkMode;
@@ -7,6 +8,7 @@ class InternTimeLogLegend extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final theme = AppTheme.of(isDarkMode);
     final legends = [
       {'label': 'On Time', 'color': const Color(0xFF4CAF50)},
       {'label': 'Late', 'color': const Color(0xFFFFA726)},
@@ -20,7 +22,7 @@ class InternTimeLogLegend extends StatelessWidget {
         Text(
           'Legend:',
           style: TextStyle(
-            color: isDarkMode ? Colors.grey[400] : Colors.grey[600],
+            color: theme.textSecondary,
             fontSize: 13,
             fontWeight: FontWeight.w500,
           ),

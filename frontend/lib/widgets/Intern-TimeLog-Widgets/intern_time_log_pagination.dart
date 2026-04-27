@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import '../../theme/app_theme.dart';
 
 class InternTimeLogPagination extends StatelessWidget {
   final bool isDarkMode;
@@ -22,18 +23,21 @@ class InternTimeLogPagination extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final theme = AppTheme.of(isDarkMode);
     return Row(
       children: [
         Text(
           'Showing $shownCount of $totalEntries entries',
           style: TextStyle(
-            color: isDarkMode ? Colors.grey[400] : Colors.grey[600],
+            color: theme.textSecondary,
             fontSize: 13,
           ),
         ),
         const Spacer(),
-        _buildPageButton('Prev',
-            currentPage > 1 ? () => onPageChanged(currentPage - 1) : null),
+        _buildPageButton(
+            'Prev',
+            currentPage > 1 ? () => onPageChanged(currentPage - 1) : null,
+            theme),
         const SizedBox(width: 6),
         ...List.generate(totalPages, (index) {
           final page = index + 1;
@@ -46,20 +50,14 @@ class InternTimeLogPagination extends StatelessWidget {
                 width: 34,
                 height: 34,
                 decoration: BoxDecoration(
-                  color: isActive
-                      ? const Color(0xFF00BCD4)
-                      : (isDarkMode
-                          ? const Color(0xFF2C2C2C)
-                          : const Color(0xFFF0F0F0)),
+                  color: isActive ? AppTheme.accent : theme.cardInnerBg,
                   borderRadius: BorderRadius.circular(6),
                 ),
                 alignment: Alignment.center,
                 child: Text(
                   '$page',
                   style: TextStyle(
-                    color: isActive
-                        ? Colors.white
-                        : (isDarkMode ? Colors.white : Colors.black),
+                    color: isActive ? Colors.white : theme.textPrimary,
                     fontWeight: FontWeight.w600,
                     fontSize: 13,
                   ),
@@ -72,30 +70,25 @@ class InternTimeLogPagination extends StatelessWidget {
             'Next',
             currentPage < totalPages
                 ? () => onPageChanged(currentPage + 1)
-                : null),
+                : null,
+            theme),
       ],
     );
   }
 
-  Widget _buildPageButton(String label, VoidCallback? onTap) {
+  Widget _buildPageButton(String label, VoidCallback? onTap, AppTheme theme) {
     return GestureDetector(
       onTap: onTap,
       child: Container(
         padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
         decoration: BoxDecoration(
-          color: onTap != null
-              ? const Color(0xFF00BCD4)
-              : (isDarkMode
-                  ? const Color(0xFF2C2C2C)
-                  : const Color(0xFFE0E0E0)),
+          color: onTap != null ? AppTheme.accent : theme.cardInnerBg,
           borderRadius: BorderRadius.circular(6),
         ),
         child: Text(
           label,
           style: TextStyle(
-            color: onTap != null
-                ? Colors.white
-                : (isDarkMode ? Colors.grey[600]! : Colors.grey[400]!),
+            color: onTap != null ? Colors.white : theme.textMuted,
             fontWeight: FontWeight.w600,
             fontSize: 13,
           ),

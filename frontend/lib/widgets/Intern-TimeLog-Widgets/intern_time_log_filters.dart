@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import '../../theme/app_theme.dart';
 
 class InternTimeLogFilters extends StatelessWidget {
   final bool isDarkMode;
@@ -26,6 +27,7 @@ class InternTimeLogFilters extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final theme = AppTheme.of(isDarkMode);
     return Wrap(
       spacing: 12,
       runSpacing: 12,
@@ -34,11 +36,10 @@ class InternTimeLogFilters extends StatelessWidget {
         // Toggle
         Container(
           decoration: BoxDecoration(
-            color:
-                isDarkMode ? const Color(0xFF2C2C2C) : const Color(0xFFF0F0F0),
+            color: theme.cardInnerBg,
             borderRadius: BorderRadius.circular(8),
             border: Border.all(
-              color: isDarkMode ? Colors.grey[700]! : Colors.grey[300]!,
+              color: theme.divider,
             ),
           ),
           child: Row(
@@ -50,18 +51,20 @@ class InternTimeLogFilters extends StatelessWidget {
             ],
           ),
         ),
-        _buildMonthPicker(context),
-        _buildLabel('Status'),
+        _buildMonthPicker(context, theme),
+        _buildLabel('Status', theme),
         _buildDropdown(
           value: selectedStatus,
           items: ['All', 'Present', 'Late', 'Absent', 'Half Day', 'Weekend'],
           onChanged: onStatusChanged,
+          theme: theme,
         ),
-        _buildLabel('Week'),
+        _buildLabel('Week', theme),
         _buildDropdown(
           value: selectedWeek,
           items: ['All Weeks', 'Week 1', 'Week 2', 'Week 3', 'Week 4'],
           onChanged: onWeekChanged,
+          theme: theme,
         ),
       ],
     );
@@ -73,15 +76,14 @@ class InternTimeLogFilters extends StatelessWidget {
       child: Container(
         padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
         decoration: BoxDecoration(
-          color: isActive ? const Color(0xFF00BFFF) : Colors.transparent,
+          color: isActive ? AppTheme.accent : Colors.transparent,
           borderRadius: BorderRadius.circular(7),
         ),
         child: Text(
           label,
           style: TextStyle(
-            color: isActive
-                ? Colors.white
-                : (isDarkMode ? Colors.grey[400] : Colors.grey[600]),
+            color:
+                isActive ? Colors.white : AppTheme.of(isDarkMode).textSecondary,
             fontSize: 13,
             fontWeight: isActive ? FontWeight.w600 : FontWeight.normal,
           ),
@@ -90,18 +92,18 @@ class InternTimeLogFilters extends StatelessWidget {
     );
   }
 
-  Widget _buildLabel(String text) {
+  Widget _buildLabel(String text, AppTheme theme) {
     return Text(
       text,
       style: TextStyle(
-        color: isDarkMode ? Colors.white : Colors.black,
+        color: theme.textPrimary,
         fontSize: 14,
         fontWeight: FontWeight.w500,
       ),
     );
   }
 
-  Widget _buildMonthPicker(BuildContext context) {
+  Widget _buildMonthPicker(BuildContext context, AppTheme theme) {
     return GestureDetector(
       onTap: () async {
         final now = DateTime.now();
@@ -112,7 +114,7 @@ class InternTimeLogFilters extends StatelessWidget {
           lastDate: DateTime(2030),
           initialEntryMode: DatePickerEntryMode.calendarOnly,
           builder: (context, child) => Theme(
-            data: ThemeData.dark(),
+            data: isDarkMode ? ThemeData.dark() : ThemeData.light(),
             child: child!,
           ),
         );
@@ -123,10 +125,10 @@ class InternTimeLogFilters extends StatelessWidget {
       child: Container(
         padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
         decoration: BoxDecoration(
-          color: isDarkMode ? const Color(0xFF2C2C2C) : const Color(0xFFF0F0F0),
+          color: theme.cardInnerBg,
           borderRadius: BorderRadius.circular(8),
           border: Border.all(
-            color: isDarkMode ? Colors.grey[700]! : Colors.grey[300]!,
+            color: theme.divider,
           ),
         ),
         child: Row(
@@ -135,7 +137,7 @@ class InternTimeLogFilters extends StatelessWidget {
             Text(
               selectedMonth,
               style: TextStyle(
-                color: isDarkMode ? Colors.white : Colors.black,
+                color: theme.textPrimary,
                 fontSize: 14,
               ),
             ),
@@ -143,7 +145,7 @@ class InternTimeLogFilters extends StatelessWidget {
             Icon(
               Icons.calendar_today,
               size: 16,
-              color: isDarkMode ? Colors.grey[400] : Colors.grey[600],
+              color: theme.iconMuted,
             ),
           ],
         ),
@@ -155,27 +157,28 @@ class InternTimeLogFilters extends StatelessWidget {
     required String value,
     required List<String> items,
     required ValueChanged<String> onChanged,
+    required AppTheme theme,
   }) {
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 2),
       decoration: BoxDecoration(
-        color: isDarkMode ? const Color(0xFF2C2C2C) : const Color(0xFFF0F0F0),
+        color: theme.cardInnerBg,
         borderRadius: BorderRadius.circular(8),
         border: Border.all(
-          color: isDarkMode ? Colors.grey[700]! : Colors.grey[300]!,
+          color: theme.divider,
         ),
       ),
       child: DropdownButtonHideUnderline(
         child: DropdownButton<String>(
           value: value,
-          dropdownColor: isDarkMode ? const Color(0xFF2C2C2C) : Colors.white,
+          dropdownColor: theme.cardBg,
           style: TextStyle(
-            color: isDarkMode ? Colors.white : Colors.black,
+            color: theme.textPrimary,
             fontSize: 14,
           ),
           icon: Icon(
             Icons.keyboard_arrow_down,
-            color: isDarkMode ? Colors.grey[400] : Colors.grey[600],
+            color: theme.iconMuted,
           ),
           items: items.map((item) {
             return DropdownMenuItem(value: item, child: Text(item));

@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'dart:convert';
 import 'package:http/http.dart' as http;
+import '../theme/app_theme.dart';
 import '../widgets/Intern-TimeLog-Widgets/intern_time_log_stats_cards.dart';
 import '../widgets/Intern-TimeLog-Widgets/intern_time_log_filters.dart';
 import '../widgets/Intern-TimeLog-Widgets/intern_time_log_table.dart';
@@ -12,15 +13,19 @@ import 'package:shared_preferences/shared_preferences.dart';
 class InternTimeLogsPage extends StatefulWidget {
   final String firstName;
   final String userId;
+  final bool isDarkMode;
   const InternTimeLogsPage(
-      {super.key, required this.firstName, required this.userId});
+      {super.key,
+      required this.firstName,
+      required this.userId,
+      required this.isDarkMode});
 
   @override
   State<InternTimeLogsPage> createState() => _InternTimeLogsPageState();
 }
 
 class _InternTimeLogsPageState extends State<InternTimeLogsPage> {
-  bool isDarkMode = true;
+  bool get isDarkMode => widget.isDarkMode;
 
   int totalHours = 0;
   int remainingHours = 0;
@@ -167,21 +172,22 @@ class _InternTimeLogsPageState extends State<InternTimeLogsPage> {
   int get totalPages => (totalEntries / entriesPerPage).ceil();
 
   Future<void> handleLogout() async {
+    final theme = AppTheme.of(isDarkMode);
     final confirm = await showDialog<bool>(
       context: context,
       builder: (context) => AlertDialog(
-        backgroundColor: isDarkMode ? const Color(0xFF242424) : Colors.white,
+        backgroundColor: theme.sidebarBg,
         title: Text(
           'Logout',
           style: TextStyle(
-            color: isDarkMode ? Colors.white : Colors.black,
+            color: theme.textPrimary,
             fontWeight: FontWeight.bold,
           ),
         ),
         content: Text(
           'Are you sure you want to logout?',
           style: TextStyle(
-            color: isDarkMode ? Colors.grey[400] : Colors.grey[600],
+            color: theme.textSecondary,
           ),
         ),
         actions: [
@@ -209,7 +215,7 @@ class _InternTimeLogsPageState extends State<InternTimeLogsPage> {
       PageRouteBuilder(
         pageBuilder: (_, __, ___) => LoginPage(
           isDarkMode: isDarkMode,
-          onToggleTheme: () => setState(() => isDarkMode = !isDarkMode),
+          onToggleTheme: () {},
         ),
         transitionDuration: Duration.zero,
         reverseTransitionDuration: Duration.zero,
@@ -219,6 +225,7 @@ class _InternTimeLogsPageState extends State<InternTimeLogsPage> {
 
   @override
   Widget build(BuildContext context) {
+    final theme = AppTheme.of(isDarkMode);
     return SingleChildScrollView(
       padding: const EdgeInsets.all(24),
       child: Column(
@@ -227,7 +234,7 @@ class _InternTimeLogsPageState extends State<InternTimeLogsPage> {
           Text(
             'Time Logs',
             style: TextStyle(
-              color: isDarkMode ? Colors.white : Colors.black,
+              color: theme.textPrimary,
               fontSize: 20,
               fontWeight: FontWeight.bold,
             ),

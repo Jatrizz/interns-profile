@@ -32,6 +32,7 @@ class _InternMainPageState extends State<InternMainPage> {
     super.initState();
     isDarkMode = widget.isDarkMode;
   }
+
   int selectedIndex = 0;
 
   Future<void> handleLogout() async {
@@ -104,6 +105,7 @@ class _InternMainPageState extends State<InternMainPage> {
         return InternTimeLogsPage(
           firstName: widget.firstName,
           userId: widget.userId,
+          isDarkMode: isDarkMode,
         );
       case 3:
         return const Center(

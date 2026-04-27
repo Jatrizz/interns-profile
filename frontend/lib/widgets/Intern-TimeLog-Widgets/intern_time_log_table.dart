@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import '../../theme/app_theme.dart';
 
 class InternTimeLogTable extends StatelessWidget {
   final bool isDarkMode;
@@ -36,18 +37,18 @@ class InternTimeLogTable extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final headerColor = isDarkMode ? Colors.grey[400]! : Colors.grey[700]!;
-    final rowColor =
-        isDarkMode ? const Color(0xFF242424) : const Color(0xFFF9F9F9);
-    final borderColor =
-        isDarkMode ? const Color(0xFF333333) : const Color(0xFFE0E0E0);
-    final textColor = isDarkMode ? Colors.white : Colors.black;
+    final theme = AppTheme.of(isDarkMode);
+    final headerColor = theme.textSecondary;
+    final rowColor = theme.cardInnerBg;
+    final borderColor = theme.divider;
+    final textColor = theme.textPrimary;
 
     return Container(
       decoration: BoxDecoration(
-        color: isDarkMode ? const Color(0xFF1E1E1E) : Colors.white,
+        color: theme.cardBg,
         borderRadius: BorderRadius.circular(12),
         border: Border.all(color: borderColor),
+        boxShadow: theme.cardShadow,
       ),
       child: Column(
         children: [
