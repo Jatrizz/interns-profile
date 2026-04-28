@@ -69,7 +69,6 @@ func autoMarkAbsent(today time.Time) error {
 		return nil
 	}
 
-	// Insert absent if no record exists
 	_, err = db.Exec(`
 		INSERT INTO time_logs (user_id, log_date, status)
 		SELECT u.id, $1::date, 'absent'
@@ -79,6 +78,12 @@ func autoMarkAbsent(today time.Time) error {
 			SELECT 1 FROM time_logs tl
 			WHERE tl.user_id = u.id
 			AND tl.log_date = $1::date
+		)
+		AND EXISTS (
+			SELECT 1 FROM time_logs tl2
+			WHERE tl2.user_id = u.id
+			AND tl2.time_in IS NOT NULL
+			AND tl2.log_date < $1::date
 		)
 	`, dateStr)
 
@@ -100,6 +105,7 @@ func backfillAbsent() error {
 		FROM users u
 		JOIN time_logs tl ON tl.user_id = u.id
 		WHERE u.role = 'intern'
+		  AND tl.time_in IS NOT NULL
 		GROUP BY u.id
 	`)
 	if err != nil {

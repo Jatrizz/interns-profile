@@ -43,46 +43,74 @@ func TimeLogsToday(w http.ResponseWriter, r *http.Request) {
 	var rows *sql.Rows
 	var err error
 
-	if dateStr != "" {
-		rows, err = db.Query(`
-			SELECT 
-				u.first_name,
-				u.last_name,
-				$1::date AS log_date,
-				tl.time_in::text,
-				tl.time_out::text,
-				CASE 
-					WHEN tl.status IS NOT NULL THEN tl.status
-					WHEN $1::date > CURRENT_DATE THEN NULL
-					ELSE 'absent'
-				END AS status,
-				tl.remarks
-			FROM users u
-			LEFT JOIN time_logs tl 
-				ON tl.user_id = u.id 
-				AND tl.log_date = $1
-			WHERE u.role = 'intern'
-			ORDER BY u.first_name ASC
-		`, dateStr)
-	} else {
-		rows, err = db.Query(`
-			SELECT 
-				u.first_name,
-				u.last_name,
-				tl.log_date,
-				tl.time_in::text,
-				tl.time_out::text,
-				COALESCE(tl.status, 'absent') AS status,
-				tl.remarks
-			FROM users u
-			LEFT JOIN time_logs tl 
-				ON tl.user_id = u.id 
-				AND tl.log_date >= $1
-				AND tl.log_date < $2
-			WHERE u.role = 'intern'
-			ORDER BY u.first_name ASC, tl.log_date DESC
-		`, startDate, endDate)
-	}
+		if dateStr != "" {
+			rows, err = db.Query(`
+				SELECT 
+					u.first_name,
+					u.last_name,
+					$1::date AS log_date,
+					tl.time_in::text,
+					tl.time_out::text,
+					CASE
+						WHEN EXTRACT(DOW FROM $1::date) IN (0, 6) THEN 'weekend'
+						WHEN tl.status IS NOT NULL THEN tl.status
+						WHEN $1::date > CURRENT_DATE THEN NULL
+						WHEN $1::date < (
+							SELECT MIN(tl2.log_date)
+							FROM time_logs tl2
+							WHERE tl2.user_id = u.id
+							AND tl2.time_in IS NOT NULL
+						) THEN NULL
+						ELSE 'absent'
+					END AS status,
+					tl.remarks
+				FROM users u
+				LEFT JOIN time_logs tl 
+					ON tl.user_id = u.id 
+					AND tl.log_date = $1
+				WHERE u.role = 'intern'
+				ORDER BY u.first_name ASC
+			`, dateStr)
+		} else {
+			rows, err = db.Query(`
+				WITH date_series AS (
+					SELECT generate_series($1::date, $2::date - INTERVAL '1 day', '1 day')::date AS log_date
+				),
+				intern_start AS (
+					SELECT user_id, MIN(log_date) AS first_log
+					FROM time_logs
+					WHERE time_in IS NOT NULL
+					GROUP BY user_id
+				)
+				SELECT
+					u.first_name,
+					u.last_name,
+					ds.log_date,
+					tl.time_in::text,
+					tl.time_out::text,
+					CASE
+						WHEN tl.status IS NOT NULL THEN tl.status
+						WHEN ds.log_date > CURRENT_DATE THEN NULL
+						WHEN ist.first_log IS NULL THEN NULL
+						WHEN ds.log_date < ist.first_log THEN NULL
+						ELSE 'absent'
+					END AS status,
+					tl.remarks
+				FROM users u
+				CROSS JOIN date_series ds
+				LEFT JOIN time_logs tl
+					ON tl.user_id = u.id
+					AND tl.log_date = ds.log_date
+					AND tl.time_in IS NOT NULL
+				LEFT JOIN intern_start ist
+					ON ist.user_id = u.id
+				WHERE u.role = 'intern'
+				AND EXTRACT(DOW FROM ds.log_date) NOT IN (0, 6)
+				AND ds.log_date <= CURRENT_DATE
+				AND ds.log_date >= u.created_at::date
+				ORDER BY ds.log_date DESC, u.first_name ASC
+			`, startDate, endDate)
+		}
 
 	if err != nil {
 		jsonError(w, "Failed to fetch logs", http.StatusInternalServerError)
