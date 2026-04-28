@@ -29,6 +29,9 @@ func main() {
 		log.Fatal("DB connection failed:", err)
 	}
 
+	c := StartAttendanceCron()
+	defer c.Stop()
+
 	r := mux.NewRouter()
 	RegisterRoutes(r)
 
