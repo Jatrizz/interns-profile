@@ -68,7 +68,9 @@ func TimeLogsToday(w http.ResponseWriter, r *http.Request) {
 				LEFT JOIN time_logs tl 
 					ON tl.user_id = u.id 
 					AND tl.log_date = $1
+					AND tl.time_in IS NOT NULL
 				WHERE u.role = 'intern'
+				AND u.created_at::date <= $1::date
 				ORDER BY u.first_name ASC
 			`, dateStr)
 		} else {
