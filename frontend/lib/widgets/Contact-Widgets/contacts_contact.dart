@@ -159,8 +159,34 @@ class _ContactsContactState extends State<ContactsContact> {
               height: 400,
               decoration: BoxDecoration(
                 color: widget.isDarkMode
-                    ? const Color.fromARGB(255, 109, 108, 108)
-                    : const Color(0xFFE8E8E8),
+                    ? const Color(0xFF1E1E1E)
+                    : Colors.white,
+                boxShadow: [
+                  // ambient shadow
+                  BoxShadow(
+                    color: widget.isDarkMode
+                        ? Colors.black.withOpacity(0.6)
+                        : Colors.black.withOpacity(0.08),
+                    blurRadius: 40,
+                    spreadRadius: 0,
+                    offset: const Offset(0, 16),
+                  ),
+                  // top highlight for depth
+                  BoxShadow(
+                    color: widget.isDarkMode
+                        ? Colors.white.withOpacity(0.04)
+                        : Colors.white.withOpacity(0.9),
+                    blurRadius: 0,
+                    spreadRadius: 0,
+                    offset: const Offset(0, -1),
+                  ),
+                ],
+                border: Border.all(
+                  color: widget.isDarkMode
+                      ? const Color(0xFF2A2A2A)
+                      : const Color(0xFFEAEAEA),
+                  width: 1,
+                ),
               ),
               child: Padding(
                 padding: const EdgeInsets.symmetric(

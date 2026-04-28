@@ -540,6 +540,8 @@ class _LoginState extends State<Login> {
                   cursorColor: _cursorColor,
                   controller: _emailController,
                   style: TextStyle(color: _textColor),
+                  textInputAction: TextInputAction.next,
+                  onFieldSubmitted: (_) => FocusScope.of(context).nextFocus(), 
                   decoration: InputDecoration(
                     focusedBorder: OutlineInputBorder(
                       borderSide: BorderSide(color: _focusedBorderColor),
@@ -575,6 +577,8 @@ class _LoginState extends State<Login> {
                   controller: _passwordController,
                   obscureText: !_showPassword,
                   style: TextStyle(color: _textColor),
+                  textInputAction: TextInputAction.done,
+                  onFieldSubmitted: (_) => _login(), 
                   decoration: InputDecoration(
                     focusedBorder: OutlineInputBorder(
                       borderSide: BorderSide(color: _focusedBorderColor),
@@ -609,36 +613,42 @@ class _LoginState extends State<Login> {
                     ),
                   ),
                 ),
-              const SizedBox(height: 10),
+              
 
               // Forgot password
-              TextButton(
-                onPressed: _showForgotPasswordDialog,
-                child: Text(
-                  "Forgot Password?",
-                  style: TextStyle(color: _textColor),
+              SizedBox(
+                width: 420,
+                child: Align(
+                  alignment: Alignment.centerRight,
+                  child: TextButton(
+                    onPressed: _showForgotPasswordDialog,
+                    child: Text(
+                      "Forgot Password?",
+                      style: TextStyle(color: _textColor.withOpacity(0.5), fontSize: 12),
+                    ),
+                  ),
                 ),
               ),
-              const SizedBox(height: 10),
+              const SizedBox(height: 20),
 
               // Login button
               Container(
                 width: 400,
-                decoration: const BoxDecoration(
-                  gradient: LinearGradient(
+                decoration: BoxDecoration(
+                  gradient: const LinearGradient(
                     colors: [Colors.blue, Color.fromARGB(255, 2, 55, 230)],
                   ),
+                  borderRadius: BorderRadius.circular(0),
                 ),
                 child: InkWell(
+                  borderRadius: BorderRadius.circular(0),
                   onTap: _isLoading ? null : _login,
                   child: Padding(
                     padding: const EdgeInsets.symmetric(vertical: 14),
                     child: Center(
                       child: _isLoading
-                          ? const CircularProgressIndicator(
-                              color: Colors.white)
-                          : const Text('Login',
-                              style: TextStyle(color: Colors.white)),
+                          ? const CircularProgressIndicator(color: Colors.white)
+                          : const Text('Login', style: TextStyle(color: Colors.white)),
                     ),
                   ),
                 ),

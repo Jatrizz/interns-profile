@@ -4,6 +4,7 @@ import 'package:http/http.dart' as http;
 import 'package:flutter/services.dart';
 import 'package:interfaces/pages/login_page.dart';
 import 'package:flutter/gestures.dart';
+import 'package:interfaces/pages/privacy_policy_page.dart';
 
 class HeroSection extends StatefulWidget {
   final bool isDarkMode;
@@ -449,7 +450,20 @@ class _HeroSectionState extends State<HeroSection> {
                               color: Colors.blue,
                               decoration: TextDecoration.underline,
                             ),
-                            recognizer: TapGestureRecognizer()..onTap = () {},
+                            recognizer: TapGestureRecognizer()
+                            ..onTap = () {
+                              Navigator.push(
+                                context,
+                                PageRouteBuilder(
+                                  pageBuilder: (_, __, ___) => TermsOfServicePage(
+                                    isDarkMode: widget.isDarkMode,
+                                    onToggleTheme: widget.onToggleTheme,
+                                  ),
+                                  transitionDuration: Duration.zero,
+                                  reverseTransitionDuration: Duration.zero,
+                                ),
+                              );
+                            },
                           ),
                           const TextSpan(text: ' and '),
                           TextSpan(
@@ -458,7 +472,20 @@ class _HeroSectionState extends State<HeroSection> {
                               color: Colors.blue,
                               decoration: TextDecoration.underline,
                             ),
-                            recognizer: TapGestureRecognizer()..onTap = () {},
+                            recognizer: TapGestureRecognizer()
+                            ..onTap = () {
+                              Navigator.push(
+                                context,
+                                PageRouteBuilder(
+                                  pageBuilder: (_, __, ___) => PrivacyPolicyPage(
+                                    isDarkMode: widget.isDarkMode,
+                                    onToggleTheme: widget.onToggleTheme,
+                                  ),
+                                  transitionDuration: Duration.zero,
+                                  reverseTransitionDuration: Duration.zero,
+                                ),
+                              );
+                            },
                           ),
                         ],
                       ),

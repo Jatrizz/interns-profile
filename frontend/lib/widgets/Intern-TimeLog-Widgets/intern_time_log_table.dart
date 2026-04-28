@@ -84,6 +84,20 @@ class InternTimeLogTable extends StatelessWidget {
             ),
           ),
           // Data Rows
+          if (logs.isEmpty)
+            Padding(
+              padding: const EdgeInsets.all(32),
+              child: Center(
+                child: Text(
+                  'No records found.',
+                  style: TextStyle(
+                    color: theme.textSecondary,
+                    fontSize: 14,
+                  ),
+                ),
+              ),
+            )
+          else
           ...logs.asMap().entries.map((entry) {
             final index = entry.key;
             final log = entry.value;

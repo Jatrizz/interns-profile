@@ -50,25 +50,35 @@ class InternStatsCards extends StatelessWidget {
   }
 
   Color _statusColor(String status) {
-    switch (status.toLowerCase()) {
+    final normalized = status.toLowerCase().trim();
+    switch (normalized) {
       case 'on-time':
         return const Color(0xFF4CAF50);
       case 'late':
         return const Color(0xFFFFA726);
       case 'half-day':
-        return const Color(0xFFAB47BC);
-      case 'absent':
+      case 'halfday':
+      case 'half day':
         return const Color(0xFF42A5F5);
+      case 'absent':
+        return const Color(0xFFEF5350);
+      case 'weekend':
+      case 'holiday':
+        return const Color(0xFFAB47BC);
       default:
-        return Colors.white70;
+        return Colors.grey;
     }
   }
 
   String _capitalize(String text) {
-    if (text.isEmpty) return text;
-    if (text == 'half-day') return 'Half Day';
-    return text[0].toUpperCase() + text.substring(1);
-  }
+  final normalized = text.toLowerCase().trim();
+  if (normalized == 'on-time') return 'On Time';
+  if (normalized == 'half-day' || 
+      normalized == 'halfday' || 
+      normalized == 'half day') return 'Half Day';
+  if (text.isEmpty) return text;
+  return text[0].toUpperCase() + text.substring(1);
+}
 }
 
 class _StatCard extends StatelessWidget {
