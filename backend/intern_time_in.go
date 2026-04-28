@@ -17,10 +17,12 @@ func InternTimeIn(w http.ResponseWriter, r *http.Request) {
 	var req struct {
 		UserID string `json:"user_id"`
 	}
+
 	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
 		jsonError(w, "Invalid request body", http.StatusBadRequest)
 		return
 	}
+
 	if req.UserID == "" {
 		jsonError(w, "user_id is required", http.StatusBadRequest)
 		return
@@ -41,6 +43,7 @@ func InternTimeIn(w http.ResponseWriter, r *http.Request) {
 		jsonError(w, "Database error", http.StatusInternalServerError)
 		return
 	}
+
 	if exists {
 		jsonError(w, "Already timed in for today", http.StatusConflict)
 		return
