@@ -7,18 +7,22 @@ class InternList extends StatelessWidget {
   const InternList(
       {super.key, required this.isDarkMode, required this.interns});
 
-  Color _statusColor(String status) {
-    switch (status.toLowerCase()) {
-      case 'on-time':
-        return const Color(0xFF4CAF50);
-      case 'late':
-        return const Color(0xFFFFA726);
-      case 'absent':
-        return const Color(0xFFEF5350);
-      case 'half-day':
-        return const Color(0xFF42A5F5);
-      default:
-        return Colors.grey;
+    Color _statusColor(String status) {
+  final normalized = status.toLowerCase().replaceAll(' ', '-');
+
+  switch (normalized) {
+    case 'on-time':
+      return const Color(0xFF4CAF50);
+    case 'late':
+      return const Color(0xFFFFA726);
+    case 'absent':
+      return const Color(0xFFEF5350);
+    case 'half-day':
+      return const Color(0xFF42A5F5);
+    case 'weekend':
+      return const Color(0xFFAB47BC);
+    default:
+      return Colors.grey;
     }
   }
 

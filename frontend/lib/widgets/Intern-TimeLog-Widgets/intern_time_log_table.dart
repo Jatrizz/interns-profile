@@ -12,28 +12,39 @@ class InternTimeLogTable extends StatelessWidget {
   });
 
   Color _statusColor(String status) {
-    switch (status.toLowerCase()) {
-      case 'on-time':
-        return const Color(0xFF4CAF50);
-      case 'late':
-        return const Color(0xFFFFA726);
-      case 'absent':
-        return const Color(0xFFEF5350);
-      case 'half-day':
-        return const Color(0xFF42A5F5);
-      case 'weekend':
-        return const Color(0xFFAB47BC);
-      default:
-        return Colors.grey;
-    }
+  final normalized = status.toLowerCase().replaceAll(' ', '-');
+
+  switch (normalized) {
+    case 'on-time':
+      return const Color(0xFF4CAF50);
+    case 'late':
+      return const Color(0xFFFFA726);
+    case 'absent':
+      return const Color(0xFFEF5350);
+    case 'half-day':
+      return const Color(0xFF42A5F5);
+    case 'weekend':
+      return const Color(0xFFAB47BC);
+    default:
+      return Colors.grey;
   }
+}
 
   String _capitalize(String text) {
-    if (text.isEmpty) return text;
-    if (text == 'on-time') return 'On Time';
-    if (text == 'half-day') return 'Half Day';
-    return text[0].toUpperCase() + text.substring(1);
+  final normalized = text.toLowerCase().replaceAll(' ', '-');
+
+  switch (normalized) {
+    case 'on-time':
+      return 'On Time';
+    case 'half-day':
+      return 'Half Day';
+    case 'weekend':
+      return 'Weekend/Holiday';
   }
+
+  if (text.isEmpty) return text;
+  return text[0].toUpperCase() + text.substring(1);
+}
 
   @override
   Widget build(BuildContext context) {
