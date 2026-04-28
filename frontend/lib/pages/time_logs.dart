@@ -151,24 +151,31 @@ class _TimeLogsPageState extends State<TimeLogsPage> {
   }
 
   void applyFilters() {
-    List<Map<String, dynamic>> result = List.from(allLogs);
+  List<Map<String, dynamic>> result = List.from(allLogs);
 
-    // Status filter
-    if (selectedStatus != 'All') {
-      result = result.where((log) {
-        final status = log['status']?.toString().toLowerCase() ?? '';
-        if (selectedStatus == 'Present') {
+  if (selectedStatus != 'All') {
+    result = result.where((log) {
+      final status = log['status']?.toString().toLowerCase().trim() ?? '';
+      switch (selectedStatus) {
+        case 'Present':
           return status == 'on-time' || status == 'late';
-        }
-        if (selectedStatus == 'On Time') {
+        case 'On Time':
           return status == 'on-time';
-        }
-        if (selectedStatus == 'Half Day') {
-          return status == 'half-day' || status == 'halfday';
-        }
-        return status == selectedStatus.toLowerCase();
-      }).toList();
-    }
+        case 'Late':
+          return status == 'late';
+        case 'Absent':
+          return status == 'absent';
+        case 'Half Day':
+          return status == 'half-day' || 
+                 status == 'halfday' || 
+                 status == 'half day';
+        case 'Weekend':
+          return status == 'weekend';
+        default:
+          return status == selectedStatus.toLowerCase().trim();
+      }
+    }).toList();
+  }
 
     // Note: backend already filters by month range; no frontend month filter needed.
 
