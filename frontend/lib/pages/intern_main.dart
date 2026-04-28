@@ -6,6 +6,7 @@ import '../widgets/Intern-Dashboard-Widgets/intern_topbar.dart';
 import 'intern_dashboard.dart';
 import 'intern_time_logs.dart';
 import 'intern_my_profile.dart';
+import 'developer_team_page.dart';
 
 class InternMainPage extends StatefulWidget {
   final String firstName;
@@ -108,9 +109,7 @@ class _InternMainPageState extends State<InternMainPage> {
           isDarkMode: isDarkMode,
         );
       case 3:
-        return const Center(
-            child:
-                Text('Developers Team', style: TextStyle(color: Colors.white)));
+        return const DeveloperTeamPage();
       default:
         return InternDashboardPage(
           firstName: widget.firstName,

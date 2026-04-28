@@ -7,6 +7,7 @@ import 'dashboard.dart';
 import 'time_logs.dart';
 import 'interns_list.dart';
 import 'intern_profile_page.dart';
+import 'developer_team_page.dart';
 
 class AdminMainPage extends StatefulWidget {
   final String firstName;
@@ -121,9 +122,7 @@ class _AdminMainPageState extends State<AdminMainPage> {
           isDarkMode: isDarkMode,
         );
       case 3:
-        return const Center(
-          child: Text('Developers Team', style: TextStyle(color: Colors.white)),
-        );
+        return const DeveloperTeamPage();
       default:
         return DashboardOverviewPage(
           firstName: widget.firstName,
