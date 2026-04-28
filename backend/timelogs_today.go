@@ -48,10 +48,14 @@ func TimeLogsToday(w http.ResponseWriter, r *http.Request) {
 			SELECT 
 				u.first_name,
 				u.last_name,
-				tl.log_date,
+				$1::date AS log_date,
 				tl.time_in::text,
 				tl.time_out::text,
-				COALESCE(tl.status, 'absent') AS status,
+				CASE 
+					WHEN tl.status IS NOT NULL THEN tl.status
+					WHEN $1::date > CURRENT_DATE THEN NULL
+					ELSE 'absent'
+				END AS status,
 				tl.remarks
 			FROM users u
 			LEFT JOIN time_logs tl 
@@ -148,7 +152,7 @@ func TimeLogsToday(w http.ResponseWriter, r *http.Request) {
 			}
 		}
 
-		statusStr := "absent"
+		statusStr := ""
 		if status.Valid {
 			statusStr = status.String
 		}
