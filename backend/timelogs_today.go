@@ -77,12 +77,6 @@ func TimeLogsToday(w http.ResponseWriter, r *http.Request) {
 			rows, err = db.Query(`
 				WITH date_series AS (
 					SELECT generate_series($1::date, $2::date - INTERVAL '1 day', '1 day')::date AS log_date
-				),
-				intern_start AS (
-					SELECT user_id, MIN(log_date) AS first_log
-					FROM time_logs
-					WHERE time_in IS NOT NULL
-					GROUP BY user_id
 				)
 				SELECT
 					u.first_name,
@@ -93,8 +87,6 @@ func TimeLogsToday(w http.ResponseWriter, r *http.Request) {
 					CASE
 						WHEN tl.status IS NOT NULL THEN tl.status
 						WHEN ds.log_date > CURRENT_DATE THEN NULL
-						WHEN ist.first_log IS NULL THEN NULL
-						WHEN ds.log_date < ist.first_log THEN NULL
 						ELSE 'absent'
 					END AS status,
 					tl.remarks
@@ -104,8 +96,6 @@ func TimeLogsToday(w http.ResponseWriter, r *http.Request) {
 					ON tl.user_id = u.id
 					AND tl.log_date = ds.log_date
 					AND tl.time_in IS NOT NULL
-				LEFT JOIN intern_start ist
-					ON ist.user_id = u.id
 				WHERE u.role = 'intern'
 				AND EXTRACT(DOW FROM ds.log_date) NOT IN (0, 6)
 				AND ds.log_date <= CURRENT_DATE
