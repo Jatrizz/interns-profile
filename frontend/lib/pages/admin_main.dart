@@ -6,11 +6,13 @@ import '../widgets/Dashboard-Widgets/top_bar.dart';
 import 'dashboard.dart';
 import 'time_logs.dart';
 import 'interns_list.dart';
+import 'intern_profile_page.dart';
 
 class AdminMainPage extends StatefulWidget {
   final String firstName;
   final bool isDarkMode;
   final VoidCallback onToggleTheme;
+
   const AdminMainPage({
     super.key,
     required this.firstName,
@@ -24,12 +26,14 @@ class AdminMainPage extends StatefulWidget {
 
 class _AdminMainPageState extends State<AdminMainPage> {
   late bool isDarkMode;
+  int selectedIndex = 0;
+  dynamic selectedIntern; // ADD THIS
+
   @override
   void initState() {
     super.initState();
     isDarkMode = widget.isDarkMode;
   }
-  int selectedIndex = 0;
 
   Future<void> handleLogout() async {
     final confirm = await showDialog<bool>(
@@ -83,6 +87,19 @@ class _AdminMainPageState extends State<AdminMainPage> {
   }
 
   Widget _buildPage() {
+    // If an intern is selected, show their profile inline
+    if (selectedIntern != null) {
+      return InternProfileBody(
+        intern: selectedIntern,
+        isDarkMode: isDarkMode,
+        onBack: () {
+          setState(() {
+            selectedIntern = null;
+          });
+        },
+      );
+    }
+
     switch (selectedIndex) {
       case 0:
         return DashboardOverviewPage(
@@ -92,6 +109,11 @@ class _AdminMainPageState extends State<AdminMainPage> {
       case 1:
         return InternsList(
           isDarkMode: isDarkMode,
+          onViewProfile: (intern) {
+            setState(() {
+              selectedIntern = intern;
+            });
+          },
         );
       case 2:
         return TimeLogsPage(
@@ -100,8 +122,8 @@ class _AdminMainPageState extends State<AdminMainPage> {
         );
       case 3:
         return const Center(
-            child:
-                Text('Developers Team', style: TextStyle(color: Colors.white)));
+          child: Text('Developers Team', style: TextStyle(color: Colors.white)),
+        );
       default:
         return DashboardOverviewPage(
           firstName: widget.firstName,
@@ -120,7 +142,10 @@ class _AdminMainPageState extends State<AdminMainPage> {
             isDarkMode: isDarkMode,
             selectedIndex: selectedIndex,
             onLogout: handleLogout,
-            onItemSelected: (index) => setState(() => selectedIndex = index),
+            onItemSelected: (index) => setState(() {
+              selectedIndex = index;
+              selectedIntern = null; // Clear profile when switching pages
+            }),
           ),
           Expanded(
             child: Column(

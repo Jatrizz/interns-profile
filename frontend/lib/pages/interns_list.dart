@@ -1,12 +1,16 @@
 import 'dart:convert';
 import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
-import 'package:interfaces/pages/intern_profile_page.dart';
 
 class InternsList extends StatefulWidget {
   final bool isDarkMode;
+  final Function(dynamic intern) onViewProfile;
 
-  const InternsList({super.key, required this.isDarkMode});
+  const InternsList({
+    super.key,
+    required this.isDarkMode,
+    required this.onViewProfile,
+  });
 
   @override
   State<InternsList> createState() => _InternsListState();
@@ -37,10 +41,8 @@ class _InternsListState extends State<InternsList> {
   Future<void> fetchInterns() async {
     try {
       final response = await http.get(Uri.parse("$_baseUrl/interns"));
-
       if (response.statusCode == 200) {
         final data = jsonDecode(response.body);
-
         setState(() {
           interns = data;
           filteredInterns = data;
@@ -56,29 +58,17 @@ class _InternsListState extends State<InternsList> {
 
   Future<void> deleteIntern(String idNumber) async {
     try {
-      final uri = Uri.parse(
-        "$_baseUrl/delete-intern?id=$idNumber",
-      );
-
+      final uri = Uri.parse("$_baseUrl/delete-intern?id=$idNumber");
       final response = await http.delete(uri);
-
       if (response.statusCode == 200) {
         final data = jsonDecode(response.body);
-
         await fetchInterns();
-
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text(
-              "${data['message']} (${data['id_number']})",
-            ),
-          ),
+          SnackBar(content: Text("${data['message']} (${data['id_number']})")),
         );
       } else {
-        final msg = response.body;
-
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text("Delete failed: $msg")),
+          SnackBar(content: Text("Delete failed: ${response.body}")),
         );
       }
     } catch (e) {
@@ -96,15 +86,13 @@ class _InternsListState extends State<InternsList> {
             widget.isDarkMode ? const Color(0xFF2B2B2B) : Colors.white,
         title: Text(
           "Delete Intern",
-          style: TextStyle(
-            color: widget.isDarkMode ? Colors.white : Colors.black,
-          ),
+          style:
+              TextStyle(color: widget.isDarkMode ? Colors.white : Colors.black),
         ),
         content: Text(
           "Are you sure you want to delete ${intern['first_name']} ${intern['last_name']}?",
-          style: TextStyle(
-            color: widget.isDarkMode ? Colors.white : Colors.black,
-          ),
+          style:
+              TextStyle(color: widget.isDarkMode ? Colors.white : Colors.black),
         ),
         actions: [
           TextButton(
@@ -116,10 +104,7 @@ class _InternsListState extends State<InternsList> {
               Navigator.pop(context);
               deleteIntern(intern['id_number'].toString());
             },
-            child: const Text(
-              "Delete",
-              style: TextStyle(color: Colors.red),
-            ),
+            child: const Text("Delete", style: TextStyle(color: Colors.red)),
           ),
         ],
       ),
@@ -133,28 +118,31 @@ class _InternsListState extends State<InternsList> {
             "${intern['first_name']} ${intern['last_name']}".toLowerCase();
         return fullName.contains(value.toLowerCase());
       }).toList();
-
       sortInterns(sortType, refresh: false);
     });
   }
 
   void sortInterns(String type, {bool refresh = true}) {
     if (refresh) sortType = type;
-
     filteredInterns.sort((a, b) {
       String nameA = "${a['first_name']} ${a['last_name']}".toLowerCase();
       String nameB = "${b['first_name']} ${b['last_name']}".toLowerCase();
       return type == "A-Z" ? nameA.compareTo(nameB) : nameB.compareTo(nameA);
     });
-
     if (refresh) setState(() {});
+  }
+
+  int _getCrossAxisCount(double width) {
+    if (width < 600) return 2;
+    if (width < 900) return 3;
+    if (width < 1200) return 4;
+    return 5;
   }
 
   Widget buildCard(dynamic intern) {
     final photo = _photoProvider(intern);
 
     return Container(
-      width: 200,
       padding: const EdgeInsets.all(15),
       decoration: BoxDecoration(
         color: widget.isDarkMode ? Colors.black54 : Colors.white,
@@ -167,6 +155,8 @@ class _InternsListState extends State<InternsList> {
         ],
       ),
       child: Column(
+        mainAxisAlignment: MainAxisAlignment.start,
+        crossAxisAlignment: CrossAxisAlignment.center,
         children: [
           Align(
             alignment: Alignment.topRight,
@@ -177,9 +167,7 @@ class _InternsListState extends State<InternsList> {
               ),
               color: widget.isDarkMode ? Colors.black54 : Colors.white,
               onSelected: (value) {
-                if (value == "delete") {
-                  confirmDelete(intern);
-                }
+                if (value == "delete") confirmDelete(intern);
               },
               itemBuilder: (context) => [
                 PopupMenuItem(
@@ -211,28 +199,28 @@ class _InternsListState extends State<InternsList> {
           Text(
             "${intern['first_name']} ${intern['last_name']}",
             textAlign: TextAlign.center,
+            maxLines: 2,
+            overflow: TextOverflow.ellipsis,
             style: TextStyle(
-                color: widget.isDarkMode ? Colors.white : Colors.black,
-                fontWeight: FontWeight.bold,
-                fontSize: 18),
+              color: widget.isDarkMode ? Colors.white : Colors.black,
+              fontWeight: FontWeight.bold,
+              fontSize: 18,
+            ),
           ),
-          SizedBox(
-            height: 5,
-          ),
+          const SizedBox(height: 5),
           Container(
             height: 2,
             decoration: BoxDecoration(
               color: widget.isDarkMode ? Colors.grey : Colors.black,
             ),
           ),
-          SizedBox(
-            height: 5,
-          ),
+          const SizedBox(height: 5),
           Text(
             intern['id_number'] ?? '',
             textAlign: TextAlign.center,
             style: const TextStyle(fontSize: 13, color: Colors.grey),
           ),
+          const SizedBox(height: 4),
           Row(
             children: [
               Icon(
@@ -240,19 +228,17 @@ class _InternsListState extends State<InternsList> {
                 color: widget.isDarkMode ? Colors.white : Colors.black,
                 size: 15,
               ),
-              SizedBox(
-                width: 5,
-              ),
-              Text(
-                intern['program'] ?? '',
-                textAlign: TextAlign.center,
-                style: const TextStyle(fontSize: 13, color: Colors.grey),
+              const SizedBox(width: 5),
+              Expanded(
+                child: Text(
+                  intern['program'] ?? '',
+                  overflow: TextOverflow.ellipsis,
+                  style: const TextStyle(fontSize: 13, color: Colors.grey),
+                ),
               ),
             ],
           ),
-          SizedBox(
-            height: 3,
-          ),
+          const SizedBox(height: 3),
           Row(
             children: [
               Icon(
@@ -260,21 +246,20 @@ class _InternsListState extends State<InternsList> {
                 color: widget.isDarkMode ? Colors.white : Colors.black,
                 size: 15,
               ),
-              SizedBox(
-                width: 5,
-              ),
-              Text(
-                intern['school'] ?? '',
-                style: TextStyle(
-                  fontSize: 13,
-                  color: widget.isDarkMode ? Colors.grey : Colors.black54,
+              const SizedBox(width: 5),
+              Expanded(
+                child: Text(
+                  intern['school'] ?? '',
+                  overflow: TextOverflow.ellipsis,
+                  style: TextStyle(
+                    fontSize: 13,
+                    color: widget.isDarkMode ? Colors.grey : Colors.black54,
+                  ),
                 ),
               ),
             ],
           ),
-          SizedBox(
-            height: 3,
-          ),
+          const SizedBox(height: 3),
           Row(
             children: [
               Icon(
@@ -282,42 +267,32 @@ class _InternsListState extends State<InternsList> {
                 color: widget.isDarkMode ? Colors.white : Colors.black,
                 size: 15,
               ),
-              SizedBox(
-                width: 5,
-              ),
-              Text(
-                intern['phone_number'] ?? '',
-                style: TextStyle(
-                  fontSize: 13,
-                  color: widget.isDarkMode ? Colors.grey : Colors.black54,
+              const SizedBox(width: 5),
+              Expanded(
+                child: Text(
+                  intern['phone_number'] ?? '',
+                  overflow: TextOverflow.ellipsis,
+                  style: TextStyle(
+                    fontSize: 13,
+                    color: widget.isDarkMode ? Colors.grey : Colors.black54,
+                  ),
                 ),
               ),
             ],
           ),
-          const SizedBox(height: 15),
+          const Spacer(),
           SizedBox(
             width: double.infinity,
             child: ElevatedButton(
               style: const ButtonStyle(
-                  backgroundColor: WidgetStatePropertyAll(
-                    Colors.blue,
+                backgroundColor: WidgetStatePropertyAll(Colors.blue),
+                shape: WidgetStatePropertyAll(
+                  RoundedRectangleBorder(
+                    borderRadius: BorderRadiusGeometry.all(Radius.circular(5)),
                   ),
-                  shape: WidgetStatePropertyAll(RoundedRectangleBorder(
-                      borderRadius:
-                          BorderRadiusGeometry.all(Radius.circular(5))))),
-              onPressed: () {
-                Navigator.push(
-                  context,
-                  MaterialPageRoute(
-                    builder: (context) => InternProfilePage(
-                      intern: intern,
-                      isDarkMode: widget.isDarkMode,
-                      firstName: 'Admin' ?? '',
-                      onToggleDarkMode: () {},
-                    ),
-                  ),
-                );
-              },
+                ),
+              ),
+              onPressed: () => widget.onViewProfile(intern),
               child: const Text(
                 "VIEW PROFILE",
                 style: TextStyle(color: Colors.white),
@@ -343,7 +318,9 @@ class _InternsListState extends State<InternsList> {
             style: TextStyle(
               fontSize: 28,
               fontWeight: FontWeight.bold,
-              color: widget.isDarkMode ? Colors.white : Colors.black54,
+              color: widget.isDarkMode
+                  ? Colors.white
+                  : const Color.fromARGB(250, 0, 0, 0),
             ),
           ),
           const SizedBox(height: 5),
@@ -359,8 +336,9 @@ class _InternsListState extends State<InternsList> {
               SizedBox(
                 width: 260,
                 child: TextField(
-                  style: const TextStyle(
-                      color: Color.fromARGB(223, 255, 255, 255)),
+                  style: TextStyle(
+                    color: widget.isDarkMode ? Colors.white : Colors.black,
+                  ),
                   controller: searchController,
                   onChanged: searchIntern,
                   decoration: InputDecoration(
@@ -384,7 +362,6 @@ class _InternsListState extends State<InternsList> {
                 ),
               ),
               const Spacer(),
-              const SizedBox(height: 8),
               Container(
                 padding: const EdgeInsets.symmetric(horizontal: 15),
                 decoration: BoxDecoration(
@@ -457,17 +434,22 @@ class _InternsListState extends State<InternsList> {
                       ],
                     ),
                   )
-                : GridView.builder(
-                    itemCount: filteredInterns.length,
-                    gridDelegate:
-                        const SliverGridDelegateWithFixedCrossAxisCount(
-                      crossAxisCount: 5,
-                      crossAxisSpacing: 20,
-                      mainAxisSpacing: 20,
-                      childAspectRatio: 0.75,
-                    ),
-                    itemBuilder: (context, index) =>
-                        buildCard(filteredInterns[index]),
+                : LayoutBuilder(
+                    builder: (context, constraints) {
+                      final crossAxisCount =
+                          _getCrossAxisCount(constraints.maxWidth);
+                      return GridView.builder(
+                        itemCount: filteredInterns.length,
+                        gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
+                          crossAxisCount: crossAxisCount,
+                          crossAxisSpacing: 20,
+                          mainAxisSpacing: 20,
+                          mainAxisExtent: 370, // FIXED HEIGHT — no overflow
+                        ),
+                        itemBuilder: (context, index) =>
+                            buildCard(filteredInterns[index]),
+                      );
+                    },
                   ),
           ),
         ],
