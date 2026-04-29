@@ -223,11 +223,14 @@ class _InternDashboardPageState extends State<InternDashboardPage> {
       );
 
       if (res.statusCode == 200) {
+        final data = jsonDecode(res.body);
         setState(() {
           isClockedIn = true;
           clockInTime = DateTime.now();
           elapsedTime = '0 hr 0 min';
+          todayStatus = data['status'] ?? todayStatus;
         });
+        _fetchCoInterns();
         if (mounted) {
           ScaffoldMessenger.of(context).showSnackBar(
             const SnackBar(content: Text('Clocked in successfully!')),
@@ -267,6 +270,7 @@ class _InternDashboardPageState extends State<InternDashboardPage> {
           todayStatus = data['status'] ?? todayStatus;
         });
         _fetchWeeklyHours();
+        _fetchCoInterns();
 
         if (mounted) {
           ScaffoldMessenger.of(context).showSnackBar(

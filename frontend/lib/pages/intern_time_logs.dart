@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'dart:async';
 import 'dart:convert';
 import 'package:http/http.dart' as http;
 import '../theme/app_theme.dart';
@@ -14,11 +15,13 @@ class InternTimeLogsPage extends StatefulWidget {
   final String firstName;
   final String userId;
   final bool isDarkMode;
-  const InternTimeLogsPage(
-      {super.key,
-      required this.firstName,
-      required this.userId,
-      required this.isDarkMode});
+
+  const InternTimeLogsPage({
+    super.key,
+    required this.firstName,
+    required this.userId,
+    required this.isDarkMode,
+  });
 
   @override
   State<InternTimeLogsPage> createState() => _InternTimeLogsPageState();
@@ -46,11 +49,28 @@ class _InternTimeLogsPageState extends State<InternTimeLogsPage> {
   bool _isSpecificDate = false;
   DateTime? selectedDate;
 
+  late Timer _refreshTimer;
+  bool _isFetching = false;
+
   @override
   void initState() {
     super.initState();
     fetchTimeLogs();
     fetchTimeLogStats();
+
+    _refreshTimer = Timer.periodic(const Duration(seconds: 30), (_) async {
+      if (!mounted || _isFetching) return;
+      _isFetching = true;
+      await fetchTimeLogs();
+      await fetchTimeLogStats();
+      _isFetching = false;
+    });
+  }
+
+  @override
+  void dispose() {
+    _refreshTimer.cancel();
+    super.dispose();
   }
 
   Future<void> fetchTimeLogStats() async {
@@ -59,6 +79,7 @@ class _InternTimeLogsPageState extends State<InternTimeLogsPage> {
         Uri.parse(
             'http://127.0.0.1:8080/intern/timelogs/stats?user_id=${widget.userId}'),
       );
+      if (!mounted) return;
       if (response.statusCode == 200) {
         final data = jsonDecode(response.body);
         setState(() {
@@ -69,24 +90,14 @@ class _InternTimeLogsPageState extends State<InternTimeLogsPage> {
         });
       }
     } catch (e) {
-      print('Error fetching time log stats: $e');
+      debugPrint('Error fetching time log stats: $e');
     }
   }
 
   Future<void> fetchTimeLogs() async {
     final months = [
-      'January',
-      'February',
-      'March',
-      'April',
-      'May',
-      'June',
-      'July',
-      'August',
-      'September',
-      'October',
-      'November',
-      'December'
+      'January', 'February', 'March', 'April', 'May', 'June',
+      'July', 'August', 'September', 'October', 'November', 'December'
     ];
 
     String url;
@@ -104,6 +115,7 @@ class _InternTimeLogsPageState extends State<InternTimeLogsPage> {
 
     try {
       final response = await http.get(Uri.parse(url));
+      if (!mounted) return;
       if (response.statusCode == 200) {
         final List<dynamic> data = jsonDecode(response.body);
         setState(() {
@@ -119,7 +131,6 @@ class _InternTimeLogsPageState extends State<InternTimeLogsPage> {
   void applyFilters() {
     List<Map<String, dynamic>> result = List.from(allLogs);
 
-    // Status filter
     if (selectedStatus != 'All') {
       result = result.where((log) {
         final status = log['status']?.toString().toLowerCase() ?? '';
@@ -136,9 +147,6 @@ class _InternTimeLogsPageState extends State<InternTimeLogsPage> {
       }).toList();
     }
 
-    // Note: backend already filters by month range; no frontend month filter needed.
-
-    // Week filter
     if (selectedWeek != 'All Weeks') {
       final weekNumber = int.tryParse(selectedWeek.replaceAll('Week ', ''));
       if (weekNumber != null) {
@@ -170,7 +178,8 @@ class _InternTimeLogsPageState extends State<InternTimeLogsPage> {
     return filteredLogs.sublist(start, end);
   }
 
-  int get totalPages => (totalEntries / entriesPerPage).ceil();
+  int get totalPages =>
+      totalEntries == 0 ? 1 : (totalEntries / entriesPerPage).ceil();
 
   Future<void> handleLogout() async {
     final theme = AppTheme.of(isDarkMode);
@@ -187,9 +196,7 @@ class _InternTimeLogsPageState extends State<InternTimeLogsPage> {
         ),
         content: Text(
           'Are you sure you want to logout?',
-          style: TextStyle(
-            color: theme.textSecondary,
-          ),
+          style: TextStyle(color: theme.textSecondary),
         ),
         actions: [
           TextButton(
@@ -258,18 +265,8 @@ class _InternTimeLogsPageState extends State<InternTimeLogsPage> {
             onToggleMode: (val) {
               final now = DateTime.now();
               final months = [
-                'January',
-                'February',
-                'March',
-                'April',
-                'May',
-                'June',
-                'July',
-                'August',
-                'September',
-                'October',
-                'November',
-                'December'
+                'January', 'February', 'March', 'April', 'May', 'June',
+                'July', 'August', 'September', 'October', 'November', 'December'
               ];
               setState(() {
                 _isSpecificDate = val;
@@ -286,18 +283,8 @@ class _InternTimeLogsPageState extends State<InternTimeLogsPage> {
             },
             onMonthChanged: (DateTime picked) {
               final months = [
-                'January',
-                'February',
-                'March',
-                'April',
-                'May',
-                'June',
-                'July',
-                'August',
-                'September',
-                'October',
-                'November',
-                'December'
+                'January', 'February', 'March', 'April', 'May', 'June',
+                'July', 'August', 'September', 'October', 'November', 'December'
               ];
               setState(() {
                 selectedDate = picked;
@@ -305,7 +292,8 @@ class _InternTimeLogsPageState extends State<InternTimeLogsPage> {
                   selectedMonth =
                       '${months[picked.month - 1]} ${picked.day}, ${picked.year}';
                 } else {
-                  selectedMonth = '${months[picked.month - 1]} ${picked.year}';
+                  selectedMonth =
+                      '${months[picked.month - 1]} ${picked.year}';
                 }
               });
               fetchTimeLogs();

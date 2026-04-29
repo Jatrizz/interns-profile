@@ -30,6 +30,7 @@ class _DashboardOverviewPageState extends State<DashboardOverviewPage> {
   List<Map<String, dynamic>> chartYearlyStats = [];
   List<Map<String, dynamic>> recentActivities = [];
   late Timer _timer;
+  late Timer _internRefreshTimer;
   String _currentTimeString = "";
   DateTime _currentDate = DateTime.now();
   DateTime _calendarDate = DateTime.now();
@@ -44,11 +45,16 @@ class _DashboardOverviewPageState extends State<DashboardOverviewPage> {
     fetchInterns();
     fetchChartStats();
     fetchRecentActivity();
+    _internRefreshTimer = Timer.periodic(const Duration(seconds: 1), (_) {
+    fetchInterns();
+    fetchRecentActivity();
+  });
   }
 
   @override
   void dispose() {
     _timer.cancel();
+    _internRefreshTimer.cancel();
     super.dispose();
   }
 

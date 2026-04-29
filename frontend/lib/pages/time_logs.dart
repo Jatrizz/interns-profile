@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'dart:async';
 import 'dart:convert';
 import 'package:http/http.dart' as http;
 import '../widgets/TimeLogs-Widgets/time_logs_search_bar.dart';
@@ -48,16 +49,36 @@ class _TimeLogsPageState extends State<TimeLogsPage> {
   List<Map<String, dynamic>> allLogs = [];
   List<Map<String, dynamic>> filteredLogs = [];
 
+  late Timer _refreshTimer;
+  bool _isFetching = false;
+
   @override
   void initState() {
     super.initState();
-    // Initialize date fields properly
     selectedDate = _now;
-    selectedMonth = 'April ${_now.day}, ${_now.year}'; // or use dynamic month
+    selectedMonth = 'April ${_now.day}, ${_now.year}';
 
     fetchOverviewStats();
     fetchInterns();
     fetchTodayLogs();
+
+    _refreshTimer = Timer.periodic(const Duration(seconds: 30), (_) async {
+      if (!mounted || _isFetching) return;
+      _isFetching = true;
+      fetchOverviewStats();
+      if (_isDefaultView) {
+        await fetchTodayLogs();
+      } else if (selectedIntern != null && selectedIntern != 'All Interns') {
+        await fetchLogsForIntern(selectedIntern!);
+      }
+      _isFetching = false;
+    });
+  }
+
+  @override
+  void dispose() {
+    _refreshTimer.cancel();
+    super.dispose();
   }
 
   Future<void> fetchOverviewStats() async {
@@ -65,6 +86,7 @@ class _TimeLogsPageState extends State<TimeLogsPage> {
       final response = await http.get(
         Uri.parse('http://127.0.0.1:8080/timelogs/overview'),
       );
+      if (!mounted) return;
       if (response.statusCode == 200) {
         final data = jsonDecode(response.body);
         setState(() {
@@ -75,7 +97,7 @@ class _TimeLogsPageState extends State<TimeLogsPage> {
         });
       }
     } catch (e) {
-      print('Error fetching overview stats: $e');
+      debugPrint('Error fetching overview stats: $e');
     }
   }
 
@@ -84,15 +106,12 @@ class _TimeLogsPageState extends State<TimeLogsPage> {
       final response = await http.get(
         Uri.parse('http://127.0.0.1:8080/interns/names'),
       );
-      debugPrint('>>> interns/names status: ${response.statusCode}');
-      debugPrint('>>> interns/names body: ${response.body}');
-
+      if (!mounted) return;
       if (response.statusCode == 200) {
         final List<dynamic> data = jsonDecode(response.body);
         setState(() {
           internNames = data.map((e) => e.toString()).toList();
           totalInterns = internNames.length;
-          debugPrint('>>> internNames: $internNames');
         });
       }
     } catch (e) {
@@ -112,6 +131,7 @@ class _TimeLogsPageState extends State<TimeLogsPage> {
     }
     try {
       final response = await http.get(Uri.parse(url));
+      if (!mounted) return;
       if (response.statusCode == 200) {
         final List<dynamic> data = jsonDecode(response.body);
         setState(() {
@@ -138,6 +158,7 @@ class _TimeLogsPageState extends State<TimeLogsPage> {
     }
     try {
       final response = await http.get(Uri.parse(url));
+      if (!mounted) return;
       if (response.statusCode == 200) {
         final List<dynamic> data = jsonDecode(response.body);
         setState(() {
@@ -151,35 +172,32 @@ class _TimeLogsPageState extends State<TimeLogsPage> {
   }
 
   void applyFilters() {
-  List<Map<String, dynamic>> result = List.from(allLogs);
+    List<Map<String, dynamic>> result = List.from(allLogs);
 
-  if (selectedStatus != 'All') {
-    result = result.where((log) {
-      final status = log['status']?.toString().toLowerCase().trim() ?? '';
-      switch (selectedStatus) {
-        case 'Present':
-          return status == 'on-time' || status == 'late';
-        case 'On Time':
-          return status == 'on-time';
-        case 'Late':
-          return status == 'late';
-        case 'Absent':
-          return status == 'absent';
-        case 'Half Day':
-          return status == 'half-day' || 
-                 status == 'halfday' || 
-                 status == 'half day';
-        case 'Weekend':
-          return status == 'weekend';
-        default:
-          return status == selectedStatus.toLowerCase().trim();
-      }
-    }).toList();
-  }
+    if (selectedStatus != 'All') {
+      result = result.where((log) {
+        final status = log['status']?.toString().toLowerCase().trim() ?? '';
+        switch (selectedStatus) {
+          case 'Present':
+            return status == 'on-time' || status == 'late';
+          case 'On Time':
+            return status == 'on-time';
+          case 'Late':
+            return status == 'late';
+          case 'Absent':
+            return status == 'absent';
+          case 'Half Day':
+            return status == 'half-day' ||
+                status == 'halfday' ||
+                status == 'half day';
+          case 'Weekend':
+            return status == 'weekend';
+          default:
+            return status == selectedStatus.toLowerCase().trim();
+        }
+      }).toList();
+    }
 
-    // Note: backend already filters by month range; no frontend month filter needed.
-
-    // Week filter
     if (selectedWeek != 'All Weeks') {
       final weekNumber = int.tryParse(selectedWeek.replaceAll('Week ', ''));
       if (weekNumber != null) {
@@ -206,18 +224,8 @@ class _TimeLogsPageState extends State<TimeLogsPage> {
 
   Map<String, int> _parseSelectedMonth() {
     final months = [
-      'January',
-      'February',
-      'March',
-      'April',
-      'May',
-      'June',
-      'July',
-      'August',
-      'September',
-      'October',
-      'November',
-      'December'
+      'January', 'February', 'March', 'April', 'May', 'June',
+      'July', 'August', 'September', 'October', 'November', 'December'
     ];
     final parts = selectedMonth.split(' ');
     final monthIndex = months.indexOf(parts[0]) + 1;
@@ -261,8 +269,9 @@ class _TimeLogsPageState extends State<TimeLogsPage> {
                         Text(
                           'Time Logs',
                           style: TextStyle(
-                            color:
-                                widget.isDarkMode ? Colors.white : Colors.black,
+                            color: widget.isDarkMode
+                                ? Colors.white
+                                : Colors.black,
                             fontSize: 20,
                             fontWeight: FontWeight.bold,
                           ),
@@ -272,7 +281,8 @@ class _TimeLogsPageState extends State<TimeLogsPage> {
                           isDarkMode: widget.isDarkMode,
                           searchQuery: searchQuery,
                           suggestions: filteredInternNames,
-                          onChanged: (val) => setState(() => searchQuery = val),
+                          onChanged: (val) =>
+                              setState(() => searchQuery = val),
                           onSuggestionSelected: (name) {
                             setState(() {
                               selectedIntern = name;
@@ -295,7 +305,10 @@ class _TimeLogsPageState extends State<TimeLogsPage> {
                         const SizedBox(height: 6),
                         TimeLogsInternDropdown(
                           isDarkMode: widget.isDarkMode,
-                          internNames: ['All Interns', ...filteredInternNames],
+                          internNames: [
+                            'All Interns',
+                            ...filteredInternNames
+                          ],
                           selectedIntern: selectedIntern ?? 'All Interns',
                           onChanged: (val) {
                             if (val != null) {
@@ -327,18 +340,9 @@ class _TimeLogsPageState extends State<TimeLogsPage> {
                               _isSpecificDate = val;
                               final now = DateTime.now();
                               final months = [
-                                'January',
-                                'February',
-                                'March',
-                                'April',
-                                'May',
-                                'June',
-                                'July',
-                                'August',
-                                'September',
-                                'October',
-                                'November',
-                                'December'
+                                'January', 'February', 'March', 'April',
+                                'May', 'June', 'July', 'August',
+                                'September', 'October', 'November', 'December'
                               ];
                               if (val) {
                                 selectedDate = now;
@@ -354,18 +358,9 @@ class _TimeLogsPageState extends State<TimeLogsPage> {
                           },
                           onMonthChanged: (DateTime picked) {
                             final months = [
-                              'January',
-                              'February',
-                              'March',
-                              'April',
-                              'May',
-                              'June',
-                              'July',
-                              'August',
-                              'September',
-                              'October',
-                              'November',
-                              'December'
+                              'January', 'February', 'March', 'April',
+                              'May', 'June', 'July', 'August',
+                              'September', 'October', 'November', 'December'
                             ];
                             setState(() {
                               selectedDate = picked;
