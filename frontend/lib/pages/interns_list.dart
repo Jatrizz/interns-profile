@@ -4,6 +4,13 @@ import 'package:flutter/material.dart';
 
 import 'package:http/http.dart' as http;
 
+class SortOptions {
+  static const az = "A-Z";
+  static const za = "Z-A";
+  static const idAsc = "ID-ASC";
+  static const idDesc = "ID-DESC";
+  }
+
 class InternsList extends StatefulWidget {
   final bool isDarkMode;
   final Function(dynamic intern) onViewProfile;
@@ -21,7 +28,7 @@ class InternsList extends StatefulWidget {
 class _InternsListState extends State<InternsList> {
   List interns = [];
   List filteredInterns = [];
-  String sortType = "A-Z";
+  String sortType = SortOptions.idAsc;
   final searchController = TextEditingController();
   Timer? _refreshTimer;
 
@@ -35,7 +42,7 @@ class _InternsListState extends State<InternsList> {
   }
 
   void _startAutoRefresh() {
-    _refreshTimer = Timer.periodic(const Duration(seconds: 1), (timer) async {
+    _refreshTimer = Timer.periodic(const Duration(seconds: 3), (timer) async {
       if (!mounted) return;
       try {
         await fetchInterns();
@@ -65,7 +72,19 @@ class _InternsListState extends State<InternsList> {
         if (mounted) {
           setState(() {
             interns = data;
-            filteredInterns = data;
+
+            // preserve current filtered state if searching
+            if (searchController.text.isEmpty) {
+              filteredInterns = List.from(data);
+            } else {
+              filteredInterns = interns.where((intern) {
+                final fullName =
+                    "${intern['first_name']} ${intern['last_name']}".toLowerCase();
+                return fullName.contains(searchController.text.toLowerCase());
+              }).toList();
+            }
+
+            sortInterns(sortType, refresh: false);
           });
         }
       }
@@ -138,25 +157,56 @@ class _InternsListState extends State<InternsList> {
   }
 
   void searchIntern(String value) {
-    setState(() {
-      filteredInterns = interns.where((intern) {
-        final fullName =
-            "${intern['first_name']} ${intern['last_name']}".toLowerCase();
-        return fullName.contains(value.toLowerCase());
-      }).toList();
-      sortInterns(sortType, refresh: false);
-    });
-  }
+  final query = value.toLowerCase();
+
+  setState(() {
+    filteredInterns = interns.where((intern) {
+      final fullName =
+          "${intern['first_name']} ${intern['last_name']}"
+              .toLowerCase();
+
+      final idNumber =
+          intern['id_number'].toString().toLowerCase();
+
+      return fullName.contains(query) ||
+          idNumber.contains(query);
+    }).toList();
+
+    sortInterns(sortType, refresh: false);
+  });
+}
 
   void sortInterns(String type, {bool refresh = true}) {
-    if (refresh) sortType = type;
-    filteredInterns.sort((a, b) {
-      String nameA = "${a['first_name']} ${a['last_name']}".toLowerCase();
-      String nameB = "${b['first_name']} ${b['last_name']}".toLowerCase();
-      return type == "A-Z" ? nameA.compareTo(nameB) : nameB.compareTo(nameA);
-    });
-    if (refresh) setState(() {});
+  if (refresh) sortType = type;
+
+  int parseId(dynamic value) {
+    final cleaned = value.toString().replaceAll(RegExp(r'[^0-9]'), '');
+    return int.tryParse(cleaned) ?? 0;
   }
+
+  filteredInterns = List.from(filteredInterns)..sort((a, b) {
+    final nameA = "${a['first_name']} ${a['last_name']}".toLowerCase();
+    final nameB = "${b['first_name']} ${b['last_name']}".toLowerCase();
+
+    final idA = parseId(a['id_number']);
+    final idB = parseId(b['id_number']);
+
+    switch (type) {
+      case "A-Z":
+        return nameA.compareTo(nameB);
+      case "Z-A":
+        return nameB.compareTo(nameA);
+      case "ID-ASC":
+        return idA.compareTo(idB);
+      case "ID-DESC":
+        return idB.compareTo(idA);
+      default:
+        return 0;
+    }
+  });
+
+  if (refresh) setState(() {});
+}
 
   int _getCrossAxisCount(double width) {
     if (width < 600) return 2;
@@ -171,8 +221,11 @@ class _InternsListState extends State<InternsList> {
     return Container(
       padding: const EdgeInsets.all(15),
       decoration: BoxDecoration(
-        color: widget.isDarkMode ? Colors.black54 : Colors.white,
+        color: widget.isDarkMode ? const Color.fromARGB(255, 55, 54, 54) : Colors.white,
         borderRadius: BorderRadius.circular(15),
+        border: Border.all(
+          color: widget.isDarkMode ? const Color.fromARGB(255, 85, 85, 85) : const Color.fromARGB(255, 111, 111, 111),
+        ),
         boxShadow: [
           BoxShadow(
             color: Colors.black.withOpacity(.05),
@@ -241,37 +294,37 @@ class _InternsListState extends State<InternsList> {
             ),
           ),
           const SizedBox(height: 5),
-          Text(
-            intern['id_number'] ?? '',
-            textAlign: TextAlign.center,
-            style: const TextStyle(fontSize: 13, color: Colors.grey),
-          ),
-          const SizedBox(height: 4),
-          Row(
-            children: [
-              Icon(
-                Icons.school_outlined,
-                color: widget.isDarkMode ? Colors.white : Colors.black,
-                size: 15,
-              ),
-              const SizedBox(width: 5),
-              Expanded(
-                child: Text(
-                  intern['program'] ?? '',
-                  overflow: TextOverflow.ellipsis,
-                  style: const TextStyle(fontSize: 13, color: Colors.grey),
+            Text(
+              intern['id_number'] ?? '',
+              textAlign: TextAlign.center,
+              style: const TextStyle(fontSize: 13, color: Colors.grey),
+            ),
+            const SizedBox(height: 4),
+            Row(
+              children: [
+                Icon(
+                  Icons.school_outlined,
+                  color: widget.isDarkMode ? Colors.white : Colors.black,
+                  size: 15,
                 ),
-              ),
-            ],
-          ),
-          const SizedBox(height: 3),
-          Row(
-            children: [
-              Icon(
-                Icons.apartment_outlined,
-                color: widget.isDarkMode ? Colors.white : Colors.black,
-                size: 15,
-              ),
+                const SizedBox(width: 5),
+                Expanded(
+                  child: Text(
+                    intern['program'] ?? '',
+                    overflow: TextOverflow.ellipsis,
+                    style: const TextStyle(fontSize: 13, color: Colors.grey),
+                  ),
+                ),
+              ],
+            ),
+            const SizedBox(height: 3),
+            Row(
+              children: [
+                Icon(
+                  Icons.apartment_outlined,
+                  color: widget.isDarkMode ? Colors.white : Colors.black,
+                  size: 15,
+                ),
               const SizedBox(width: 5),
               Expanded(
                 child: Text(
@@ -425,6 +478,28 @@ class _InternsListState extends State<InternsList> {
                         value: "Z-A",
                         child: Text(
                           "Sort Z-A",
+                          style: TextStyle(
+                            color: widget.isDarkMode
+                                ? Colors.white
+                                : Colors.black54,
+                          ),
+                        ),
+                      ),
+                      DropdownMenuItem(
+                        value: "ID-ASC",
+                        child: Text(
+                          "ID (↑)",
+                          style: TextStyle(
+                            color: widget.isDarkMode
+                                ? Colors.white
+                                : const Color.fromARGB(137, 0, 0, 0),
+                          ),
+                        ),
+                      ),
+                      DropdownMenuItem(
+                        value: "ID-DESC",
+                        child: Text(
+                          "ID (↓)",
                           style: TextStyle(
                             color: widget.isDarkMode
                                 ? Colors.white
