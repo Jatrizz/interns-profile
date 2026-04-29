@@ -86,12 +86,18 @@ func InternTimeOut(w http.ResponseWriter, r *http.Request) {
 	onePM := time.Date(now.Year(), now.Month(), now.Day(), 13, 0, 0, 0, now.Location())
 	fivePM := time.Date(now.Year(), now.Month(), now.Day(), 17, 0, 0, 0, now.Location())
 
-	// CASE 1: 12PM time-in + clock out <= 1PM → ABSENT
+	// GENERAL RULE: Early timeout (before 1PM) = HALF DAY
+	// BUT only if time-in is BEFORE lunch
+	if timeIn.Before(noon) && now.Before(onePM) {
+		finalStatus = "half day"
+	}
+
+	// CASE 1: 12PM+ time-in + timeout < 1PM → ABSENT
 	if !timeIn.Before(noon) && now.Before(onePM) {
 		finalStatus = "absent"
 	}
 
-	// CASE 2: 12PM time-in + clock out 1PM–5PM → HALF DAY
+	// CASE 2: 12PM+ time-in + timeout 1PM–5PM → HALF DAY
 	if !timeIn.Before(noon) && (now.After(onePM) || now.Equal(onePM)) && now.Before(fivePM) {
 		finalStatus = "half day"
 	}
