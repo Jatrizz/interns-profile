@@ -72,12 +72,16 @@ func autoMarkAbsent(today time.Time) error {
 	_, err = db.Exec(`
 		UPDATE time_logs
 		SET status = 'absent',
-		    hours_rendered = 0
-		WHERE log_date = $1::date
-		AND time_in IS NOT NULL
-		AND time_out IS NULL
-		AND status != 'absent'
-	`, dateStr)
+			hours_rendered = 0
+		WHERE
+			log_date < CURRENT_DATE
+			AND time_in IS NOT NULL
+			AND time_out IS NULL
+			AND log_date NOT IN (
+				SELECT holiday_date FROM holidays
+			)
+			AND status IN ('in-progress', 'late', 'on-time')
+	`)
 
 	if err != nil {
 		return err

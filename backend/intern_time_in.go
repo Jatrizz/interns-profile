@@ -48,14 +48,11 @@ func InternTimeIn(w http.ResponseWriter, r *http.Request) {
 	}
 
 	grace := time.Date(now.Year(), now.Month(), now.Day(), 8, 15, 0, 0, now.Location())
-	lunchStart := time.Date(now.Year(), now.Month(), now.Day(), 12, 0, 0, 0, now.Location())
 
 	status := "on-time"
+	
 	if now.After(grace) {
 		status = "late"
-	}
-	if !now.Before(lunchStart) {
-		status = "half day"
 	}
 
 	_, err = db.Exec(`
