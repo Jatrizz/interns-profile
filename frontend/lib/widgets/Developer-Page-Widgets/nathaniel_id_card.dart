@@ -70,7 +70,7 @@ class _NathanielCardFace extends StatelessWidget {
 
   static const _gold = Color(0xFFc8a01e);
   static const _goldDim = Color(0xFFb8960c);
-  static const _navy = Color(0xFF08101e);
+  static const _navy = Color.fromARGB(255, 58, 5, 5);
 
   @override
   Widget build(BuildContext context) {
@@ -164,13 +164,13 @@ class _NathanielCardFace extends StatelessWidget {
                       Text(
                         'FDS ASYA PHILIPPINES INC.',
                         style: TextStyle(
-                          fontSize: 6, letterSpacing: 0.08,
+                          fontSize: 8, letterSpacing: 0.08,
                           color: Colors.white.withOpacity(0.45),
                           fontFamily: 'monospace',
                         ),
                       ),
                       Text(
-                        'INTERN · DEVELOPMENT DIVISION',
+                        'INTERN · DEVELOPMENT UNIT',
                         style: TextStyle(
                           fontSize: 5.5, letterSpacing: 0.06,
                           color: _gold.withOpacity(0.6),
@@ -278,7 +278,7 @@ class _NathanielCardFace extends StatelessWidget {
               bottom: 80, left: 16, right: 16,
               child: Column(
                 children: const [
-                  _InfoRow(label: 'DEPARTMENT', value: 'Nathaniel Velasco'),
+                  _InfoRow(label: 'DEPARTMENT', value: 'Information Technology'),
                   SizedBox(height: 5),
                   _InfoRow(label: 'MEMBER SINCE', value: 'February 2026'),
                   SizedBox(height: 5),
@@ -311,7 +311,7 @@ class _NathanielCardFace extends StatelessWidget {
                     ),
                     const CardBarcode(),
                     Text(
-                      'N. REYES',
+                      'N. VELASCO',
                       style: TextStyle(
                         fontSize: 7, fontFamily: 'monospace',
                         color: _gold.withOpacity(0.5), letterSpacing: 0.09,
@@ -351,9 +351,9 @@ class _InfoRow extends StatelessWidget {
 void showNathanielProfileModal(BuildContext context) {
   showDialog(
     context: context,
-    barrierColor: Colors.black.withOpacity(0.75),
+    barrierColor: const Color.fromARGB(255, 0, 0, 0).withOpacity(0.75),
     builder: (ctx) => Dialog(
-      backgroundColor: const Color(0xFF060d1a),
+      backgroundColor: const Color.fromARGB(255, 61, 13, 13),
       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
       insetPadding: const EdgeInsets.symmetric(horizontal: 40, vertical: 40),
       child: SizedBox(
@@ -426,7 +426,7 @@ void showNathanielProfileModal(BuildContext context) {
                     _nSec('About'),
                     _nBody('Backend developer focused on scalable backend systems and clean, maintainable code. Structured engineering mindset, values precision and well-tested software.'),
                     _nSec('Details'),
-                    _nGrid({'Email': 'nathanielvelasco0915@gmail.com', 'Member since': 'Jan 2026', 'ID': 'DEV-2026-180', 'Department': 'Development'}),
+                    _nGrid({'Email': 'nathanielvelasco0915@gmail.com', 'Member since': 'February 2026', 'ID': 'DEV-2026-180', 'Department': 'Development'}),
                     _nSec('Education'),
                     _nBody('BS Information Technology\nPamantasan ng Lungsod ng San Pablo'),
                     _nSec('Work Experience'),
