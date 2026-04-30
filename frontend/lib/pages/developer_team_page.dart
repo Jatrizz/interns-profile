@@ -10,7 +10,7 @@ class DeveloperTeamPage extends StatelessWidget {
     return Container(
       width: double.infinity,
       height: double.infinity,
-      color: const Color(0xFF0a1628),
+      color: const Color(0xFF1A1A1A),
       child: Stack(
         children: [
           // Background glow circles

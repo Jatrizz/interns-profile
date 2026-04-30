@@ -9,7 +9,7 @@ class SortOptions {
   static const za = "Z-A";
   static const idAsc = "ID-ASC";
   static const idDesc = "ID-DESC";
-  }
+}
 
 class InternsList extends StatefulWidget {
   final bool isDarkMode;
@@ -40,7 +40,6 @@ class _InternsListState extends State<InternsList> {
     fetchInterns();
   }
 
-
   ImageProvider? _photoProvider(dynamic intern) {
     final photo = intern['photo']?.toString() ?? '';
     if (photo.isEmpty) return null;
@@ -64,7 +63,8 @@ class _InternsListState extends State<InternsList> {
             } else {
               filteredInterns = interns.where((intern) {
                 final fullName =
-                    "${intern['first_name']} ${intern['last_name']}".toLowerCase();
+                    "${intern['first_name']} ${intern['last_name']}"
+                        .toLowerCase();
                 return fullName.contains(searchController.text.toLowerCase());
               }).toList();
             }
@@ -142,56 +142,54 @@ class _InternsListState extends State<InternsList> {
   }
 
   void searchIntern(String value) {
-  final query = value.toLowerCase();
+    final query = value.toLowerCase();
 
-  setState(() {
-    filteredInterns = interns.where((intern) {
-      final fullName =
-          "${intern['first_name']} ${intern['last_name']}"
-              .toLowerCase();
+    setState(() {
+      filteredInterns = interns.where((intern) {
+        final fullName =
+            "${intern['first_name']} ${intern['last_name']}".toLowerCase();
 
-      final idNumber =
-          intern['id_number'].toString().toLowerCase();
+        final idNumber = intern['id_number'].toString().toLowerCase();
 
-      return fullName.contains(query) ||
-          idNumber.contains(query);
-    }).toList();
+        return fullName.contains(query) || idNumber.contains(query);
+      }).toList();
 
-    sortInterns(sortType, refresh: false);
-  });
-}
-
-  void sortInterns(String type, {bool refresh = true}) {
-  if (refresh) sortType = type;
-
-  int parseId(dynamic value) {
-    final cleaned = value.toString().replaceAll(RegExp(r'[^0-9]'), '');
-    return int.tryParse(cleaned) ?? 0;
+      sortInterns(sortType, refresh: false);
+    });
   }
 
-  filteredInterns = List.from(filteredInterns)..sort((a, b) {
-    final nameA = "${a['first_name']} ${a['last_name']}".toLowerCase();
-    final nameB = "${b['first_name']} ${b['last_name']}".toLowerCase();
+  void sortInterns(String type, {bool refresh = true}) {
+    if (refresh) sortType = type;
 
-    final idA = parseId(a['id_number']);
-    final idB = parseId(b['id_number']);
-
-    switch (type) {
-      case "A-Z":
-        return nameA.compareTo(nameB);
-      case "Z-A":
-        return nameB.compareTo(nameA);
-      case "ID-ASC":
-        return idA.compareTo(idB);
-      case "ID-DESC":
-        return idB.compareTo(idA);
-      default:
-        return 0;
+    int parseId(dynamic value) {
+      final cleaned = value.toString().replaceAll(RegExp(r'[^0-9]'), '');
+      return int.tryParse(cleaned) ?? 0;
     }
-  });
 
-  if (refresh) setState(() {});
-}
+    filteredInterns = List.from(filteredInterns)
+      ..sort((a, b) {
+        final nameA = "${a['first_name']} ${a['last_name']}".toLowerCase();
+        final nameB = "${b['first_name']} ${b['last_name']}".toLowerCase();
+
+        final idA = parseId(a['id_number']);
+        final idB = parseId(b['id_number']);
+
+        switch (type) {
+          case "A-Z":
+            return nameA.compareTo(nameB);
+          case "Z-A":
+            return nameB.compareTo(nameA);
+          case "ID-ASC":
+            return idA.compareTo(idB);
+          case "ID-DESC":
+            return idB.compareTo(idA);
+          default:
+            return 0;
+        }
+      });
+
+    if (refresh) setState(() {});
+  }
 
   int _getCrossAxisCount(double width) {
     if (width < 600) return 2;
@@ -206,10 +204,14 @@ class _InternsListState extends State<InternsList> {
     return Container(
       padding: const EdgeInsets.all(15),
       decoration: BoxDecoration(
-        color: widget.isDarkMode ? const Color.fromARGB(255, 55, 54, 54) : Colors.white,
+        color: widget.isDarkMode
+            ? const Color.fromARGB(255, 55, 54, 54)
+            : Colors.white,
         borderRadius: BorderRadius.circular(15),
         border: Border.all(
-          color: widget.isDarkMode ? const Color.fromARGB(255, 85, 85, 85) : const Color.fromARGB(255, 111, 111, 111),
+          color: widget.isDarkMode
+              ? const Color.fromARGB(255, 85, 85, 85)
+              : const Color.fromARGB(255, 111, 111, 111),
         ),
         boxShadow: [
           BoxShadow(
@@ -279,37 +281,37 @@ class _InternsListState extends State<InternsList> {
             ),
           ),
           const SizedBox(height: 5),
-            Text(
-              intern['id_number'] ?? '',
-              textAlign: TextAlign.center,
-              style: const TextStyle(fontSize: 13, color: Colors.grey),
-            ),
-            const SizedBox(height: 4),
-            Row(
-              children: [
-                Icon(
-                  Icons.school_outlined,
-                  color: widget.isDarkMode ? Colors.white : Colors.black,
-                  size: 15,
+          Text(
+            intern['id_number'] ?? '',
+            textAlign: TextAlign.center,
+            style: const TextStyle(fontSize: 13, color: Colors.grey),
+          ),
+          const SizedBox(height: 4),
+          Row(
+            children: [
+              Icon(
+                Icons.school_outlined,
+                color: widget.isDarkMode ? Colors.white : Colors.black,
+                size: 15,
+              ),
+              const SizedBox(width: 5),
+              Expanded(
+                child: Text(
+                  intern['program'] ?? '',
+                  overflow: TextOverflow.ellipsis,
+                  style: const TextStyle(fontSize: 13, color: Colors.grey),
                 ),
-                const SizedBox(width: 5),
-                Expanded(
-                  child: Text(
-                    intern['program'] ?? '',
-                    overflow: TextOverflow.ellipsis,
-                    style: const TextStyle(fontSize: 13, color: Colors.grey),
-                  ),
-                ),
-              ],
-            ),
-            const SizedBox(height: 3),
-            Row(
-              children: [
-                Icon(
-                  Icons.apartment_outlined,
-                  color: widget.isDarkMode ? Colors.white : Colors.black,
-                  size: 15,
-                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: 3),
+          Row(
+            children: [
+              Icon(
+                Icons.apartment_outlined,
+                color: widget.isDarkMode ? Colors.white : Colors.black,
+                size: 15,
+              ),
               const SizedBox(width: 5),
               Expanded(
                 child: Text(
@@ -380,7 +382,7 @@ class _InternsListState extends State<InternsList> {
     return Container(
       padding: const EdgeInsets.all(25),
       color:
-          widget.isDarkMode ? const Color(0xFF1E1E1E) : const Color(0xFFF7F7F7),
+          widget.isDarkMode ? const Color(0xFF1A1A1A) : const Color(0xFFF7F7F7),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
