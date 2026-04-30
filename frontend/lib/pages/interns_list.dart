@@ -206,7 +206,7 @@ class _InternsListState extends State<InternsList> {
       decoration: BoxDecoration(
         color: widget.isDarkMode
             ? const Color.fromARGB(255, 55, 54, 54)
-            : Colors.white,
+            : const Color.fromARGB(255, 240, 240, 240),
         borderRadius: BorderRadius.circular(15),
         border: Border.all(
           color: widget.isDarkMode
@@ -381,8 +381,7 @@ class _InternsListState extends State<InternsList> {
   Widget build(BuildContext context) {
     return Container(
       padding: const EdgeInsets.all(25),
-      color:
-          widget.isDarkMode ? const Color(0xFF1A1A1A) : const Color(0xFFF7F7F7),
+      color: widget.isDarkMode ? const Color(0xFF1A1A1A) : Colors.white,
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
@@ -417,19 +416,43 @@ class _InternsListState extends State<InternsList> {
                   decoration: InputDecoration(
                     filled: true,
                     fillColor: widget.isDarkMode
-                        ? const Color.fromARGB(255, 68, 67, 67)
-                        : Colors.white,
+                        ? const Color(0xFF2C2C2C)
+                        : const Color(0xFFF0F0F0),
                     prefixIcon: Icon(
                       Icons.search,
-                      color: widget.isDarkMode ? Colors.white : Colors.black,
+                      color: widget.isDarkMode
+                          ? Colors.grey[500]
+                          : Colors.grey[400],
                     ),
                     hintText: "Search Intern...",
                     hintStyle: TextStyle(
-                      color: widget.isDarkMode ? Colors.grey : Colors.black54,
+                      color: widget.isDarkMode
+                          ? Colors.grey[500]
+                          : Colors.grey[400],
                     ),
                     border: OutlineInputBorder(
                       borderRadius: BorderRadius.circular(10),
-                      borderSide: BorderSide.none,
+                      borderSide: BorderSide(
+                        color: widget.isDarkMode
+                            ? const Color(0xFF3A3A3A)
+                            : const Color(0xFFDDDDDD),
+                      ),
+                    ),
+                    enabledBorder: OutlineInputBorder(
+                      borderRadius: BorderRadius.circular(10),
+                      borderSide: BorderSide(
+                        color: widget.isDarkMode
+                            ? const Color(0xFF3A3A3A)
+                            : const Color(0xFFDDDDDD),
+                      ),
+                    ),
+                    focusedBorder: OutlineInputBorder(
+                      borderRadius: BorderRadius.circular(10),
+                      borderSide: BorderSide(
+                        color: widget.isDarkMode
+                            ? const Color(0xFF3A3A3A)
+                            : const Color(0xFFDDDDDD),
+                      ),
                     ),
                   ),
                 ),
@@ -439,16 +462,21 @@ class _InternsListState extends State<InternsList> {
                 padding: const EdgeInsets.symmetric(horizontal: 15),
                 decoration: BoxDecoration(
                   color: widget.isDarkMode
-                      ? const Color.fromARGB(255, 64, 64, 64)
-                      : Colors.white,
-                  borderRadius: BorderRadius.circular(30),
+                      ? const Color(0xFF2C2C2C)
+                      : const Color(0xFFF0F0F0),
+                  borderRadius: BorderRadius.circular(10),
+                  border: Border.all(
+                    color: widget.isDarkMode
+                        ? const Color(0xFF3A3A3A)
+                        : const Color(0xFFDDDDDD),
+                  ),
                 ),
                 child: DropdownButtonHideUnderline(
                   child: DropdownButton<String>(
                     value: sortType,
                     dropdownColor: widget.isDarkMode
-                        ? const Color.fromARGB(255, 64, 64, 64)
-                        : Colors.white,
+                        ? const Color(0xFF2C2C2C)
+                        : const Color(0xFFF0F0F0),
                     items: [
                       DropdownMenuItem(
                         value: "A-Z",
