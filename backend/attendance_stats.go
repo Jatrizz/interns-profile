@@ -39,27 +39,27 @@ func HandleAttendanceStats(db *sql.DB) http.HandlerFunc {
 		var stats AttendanceStats
 
 		query := `
-			WITH today_attendance AS (
-				SELECT intern_id, status
-				FROM attendance
-				WHERE date = CURRENT_DATE
-			)
-			SELECT
-				(SELECT COUNT(*) FROM users WHERE role = 'intern'),
-				(SELECT COUNT(*) 
-				 FROM today_attendance 
-				 WHERE status IN ('present','late')
-				),
-				(SELECT COUNT(*) 
-				 FROM today_attendance 
-				 WHERE status = 'late'
-				),
-				(
-					(SELECT COUNT(*) FROM users WHERE role = 'intern')
-					-
-					(SELECT COUNT(*) FROM today_attendance)
-				)
-		`
+    	WITH today_attendance AS (
+        	SELECT user_id, status
+        	FROM time_logs
+        	WHERE log_date = CURRENT_DATE
+    	)
+    	SELECT
+        	(SELECT COUNT(*) FROM users WHERE role = 'intern'),
+        	(SELECT COUNT(*) 
+         	FROM today_attendance 
+         	WHERE status IN ('present','late')
+        ),
+        	(SELECT COUNT(*) 
+         	FROM today_attendance 
+         	WHERE status = 'late'
+        ),
+        (
+            	(SELECT COUNT(*) FROM users WHERE role = 'intern')
+            	-
+            	(SELECT COUNT(*) FROM today_attendance)
+        )
+`
 
 		err := db.QueryRow(query).Scan(
 			&stats.TotalInterns,

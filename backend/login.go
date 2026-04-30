@@ -117,10 +117,10 @@ func Login(w http.ResponseWriter, r *http.Request) {
 		log.Println("Attempting time-in for:", user.IDNumber)
 
 		res, err := db.Exec(`
-			INSERT INTO attendance (id_number, date, time_in, status)
-			VALUES ($1, CURRENT_DATE, $2, $3)
-			ON CONFLICT (id_number, date) DO NOTHING
-		`, user.IDNumber, now, status)
+    	INSERT INTO time_logs (user_id, log_date, time_in, status)
+    	VALUES ($1, CURRENT_DATE, $2, $3)
+    	ON CONFLICT (user_id, log_date) DO NOTHING
+		`, user.ID, now.Format("15:04:05"), status)
 
 		if err != nil {
 			log.Println("ATTENDANCE ERROR:", err)
@@ -162,6 +162,6 @@ func Login(w http.ResponseWriter, r *http.Request) {
 		"first_name": user.FirstName,
 		"token":      tokenString,
 		"role":       user.Role,
-		"user_id":    strconv.Itoa(user.ID), // ✅ FIXED (was wrong before)
+		"user_id":    strconv.Itoa(user.ID),
 	})
 }

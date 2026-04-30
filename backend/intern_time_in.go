@@ -44,7 +44,7 @@ func InternTimeIn(w http.ResponseWriter, r *http.Request) {
 		)
 	`, req.UserID).Scan(&alreadyClockedIn)
 	if err != nil {
-		jsonError(w, "Database error", http.StatusInternalServerError)
+		http.Error(w, err.Error(), http.StatusInternalServerError)
 		return
 	}
 
@@ -52,15 +52,10 @@ func InternTimeIn(w http.ResponseWriter, r *http.Request) {
 		jsonError(w, "Already timed in for today", http.StatusConflict)
 		return
 	}
-	if alreadyClockedIn {
-		jsonError(w, "Already timed in", http.StatusConflict)
-		return
-	}
-
 	grace := time.Date(now.Year(), now.Month(), now.Day(), 8, 15, 0, 0, now.Location())
 
 	status := "on-time"
-	
+
 	if now.After(grace) {
 		status = "late"
 	}
