@@ -28,7 +28,12 @@ func InternTimeIn(w http.ResponseWriter, r *http.Request) {
 
 	now := time.Now()
 
-	// Prevent double time-in
+	earliest := time.Date(now.Year(), now.Month(), now.Day(), 7, 45, 0, 0, now.Location())
+	if now.Before(earliest) {
+		jsonError(w, "Clock-in should be at least 7:45 AM", http.StatusBadRequest)
+		return
+	}
+
 	var alreadyClockedIn bool
 	err := db.QueryRow(`
 		SELECT EXISTS(
@@ -38,7 +43,6 @@ func InternTimeIn(w http.ResponseWriter, r *http.Request) {
 			AND time_in IS NOT NULL
 		)
 	`, req.UserID).Scan(&alreadyClockedIn)
-
 	if err != nil {
 		jsonError(w, "Database error", http.StatusInternalServerError)
 		return
@@ -48,20 +52,19 @@ func InternTimeIn(w http.ResponseWriter, r *http.Request) {
 		jsonError(w, "Already timed in for today", http.StatusConflict)
 		return
 	}
-
 	if alreadyClockedIn {
 		jsonError(w, "Already timed in", http.StatusConflict)
 		return
 	}
 
-	// Determine status
-	status := "on-time"
 	grace := time.Date(now.Year(), now.Month(), now.Day(), 8, 15, 0, 0, now.Location())
+
+	status := "on-time"
+	
 	if now.After(grace) {
 		status = "late"
 	}
 
-	// 🔥 IMPORTANT: UPDATE if exists, INSERT if not
 	_, err = db.Exec(`
 		INSERT INTO time_logs (user_id, log_date, time_in, status)
 		VALUES ($1, CURRENT_DATE, $2, $3)
@@ -70,7 +73,6 @@ func InternTimeIn(w http.ResponseWriter, r *http.Request) {
 			time_in = EXCLUDED.time_in,
 			status  = EXCLUDED.status
 	`, req.UserID, now.Format("15:04:05"), status)
-
 	if err != nil {
 		jsonError(w, "Failed to record time-in", http.StatusInternalServerError)
 		return

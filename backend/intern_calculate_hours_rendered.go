@@ -36,11 +36,12 @@ func calculateHoursRendered(timeIn, timeOut time.Time) float64 {
 	if timeIn.Before(workStart) {
 		timeIn = workStart
 	}
+	// If clocked in during lunch, start counting from 1PM
+	if !timeIn.Before(lunchStart) && timeIn.Before(lunchEnd) {
+		timeIn = lunchEnd
+	}
 	if timeOut.After(workEnd) {
 		timeOut = workEnd
-	}
-	if timeOut.Before(timeIn) || timeOut.Equal(timeIn) {
-		return 0
 	}
 
 	var totalHours float64
