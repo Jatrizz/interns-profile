@@ -48,51 +48,68 @@ func StartAttendanceCron() *cron.Cron {
 }
 
 func autoMarkAbsent(today time.Time) error {
-	dateStr := today.Format("2006-01-02")
+    dateStr := today.Format("2006-01-02")
 
-	// Skip weekends
-	if today.Weekday() == time.Saturday || today.Weekday() == time.Sunday {
-		log.Println("[attendance_cron] weekend skipped:", dateStr)
-		return nil
-	}
+    if today.Weekday() == time.Saturday || today.Weekday() == time.Sunday {
+        return nil
+    }
 
-	// Check holiday
-	var isHoliday bool
-	err := db.QueryRow(`
-		SELECT EXISTS(SELECT 1 FROM holidays WHERE holiday_date = $1)
-	`, dateStr).Scan(&isHoliday)
-	if err != nil {
-		return err
-	}
-	if isHoliday {
-		log.Println("[attendance_cron] holiday skipped:", dateStr)
-		return nil
-	}
+    var isHoliday bool
+    err := db.QueryRow(`
+        SELECT EXISTS(SELECT 1 FROM holidays WHERE holiday_date = $1)
+    `, dateStr).Scan(&isHoliday)
+    if err != nil || isHoliday {
+        return err
+    }
 
-	_, err = db.Exec(`
-		UPDATE time_logs
-		SET status = 'absent',
-			hours_rendered = 0
-		WHERE
-			log_date < CURRENT_DATE
-			AND time_in IS NOT NULL
-			AND time_out IS NULL
-			AND log_date NOT IN (
-				SELECT holiday_date FROM holidays
-			)
-			AND status IN ('in-progress', 'late', 'on-time')
-	`)
+    // Interns who timed in but never timed out on past days → mark absent
+    _, err = db.Exec(`
+        UPDATE time_logs
+        SET status = 'absent',
+            hours_rendered = 0
+        WHERE log_date < CURRENT_DATE
+          AND time_in IS NOT NULL
+          AND time_out IS NULL
+          AND log_date NOT IN (SELECT holiday_date FROM holidays)
+          AND status IN ('on-time', 'late')
+    `)
+    if err != nil {
+        return err
+    }
 
-	if err != nil {
-		return err
-	}
-
-	log.Println("[attendance_cron] absents inserted for:", dateStr)
-	return nil
+    // Insert absent rows for interns with no log at all today
+    _, err = db.Exec(`
+        INSERT INTO time_logs (user_id, log_date, status)
+        SELECT u.id, $1::date, 'absent'
+        FROM users u
+        WHERE u.role = 'intern'
+          AND NOT EXISTS (
+              SELECT 1 FROM time_logs tl
+              WHERE tl.user_id = u.id AND tl.log_date = $1::date
+          )
+        ON CONFLICT DO NOTHING
+    `, dateStr)
+    return err
 }
 
 func backfillAbsent() error {
 	log.Println("[attendance_cron] running backfill...")
+
+	// Fix any past rows where intern timed in but never timed out
+	_, err := db.Exec(`
+		UPDATE time_logs
+		SET status = 'absent',
+		    hours_rendered = 0
+		WHERE log_date < CURRENT_DATE
+		  AND time_in IS NOT NULL
+		  AND time_out IS NULL
+		  AND log_date NOT IN (SELECT holiday_date FROM holidays)
+		  AND status IN ('on-time', 'late')
+		  AND EXTRACT(DOW FROM log_date) NOT IN (0, 6)
+	`)
+	if err != nil {
+		log.Printf("[attendance_cron] backfill fix-no-timeout error: %v", err)
+	}
 
 	today := time.Now().Truncate(24 * time.Hour)
 
@@ -148,7 +165,7 @@ func backfillAbsent() error {
 				continue
 			}
 
-			// Insert if missing
+			// Insert absent if no log exists at all for this day
 			db.Exec(`
 				INSERT INTO time_logs (user_id, log_date, status)
 				SELECT $1, $2::date, 'absent'
