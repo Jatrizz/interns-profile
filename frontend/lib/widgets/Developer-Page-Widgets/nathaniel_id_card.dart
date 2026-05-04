@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
+import 'package:url_launcher/url_launcher.dart';
+import 'package:barcode_widget/barcode_widget.dart';
 import 'lanyard.dart';
-import 'card_helpers.dart';
 
 class NathanielIDCard extends StatefulWidget {
   const NathanielIDCard({super.key});
@@ -10,52 +11,83 @@ class NathanielIDCard extends StatefulWidget {
 }
 
 class _NathanielIDCardState extends State<NathanielIDCard> {
-  double _rotateX = 0;
-  double _rotateY = 0;
+  bool _isHovered = false;
 
-  void _onHover(PointerEvent event) {
-    const w = 260.0;
-    const h = 390.0;
-    final dx = (event.localPosition.dx - w / 2) / (w / 2);
-    final dy = (event.localPosition.dy - h / 2) / (h / 2);
-    setState(() {
-      _rotateY = dx * 0.28;
-      _rotateX = -dy * 0.22;
-    });
+  final String portfolioUrl = 'https://neyytann.github.io/portfolio/';
+
+  Future<void> _openWebsite() async {
+    await launchUrl(
+      Uri.parse(portfolioUrl),
+      webOnlyWindowName: '_blank',
+    );
   }
-
-  void _onExit() => setState(() { _rotateX = 0; _rotateY = 0; });
 
   @override
   Widget build(BuildContext context) {
     return Column(
       mainAxisSize: MainAxisSize.min,
       children: [
-        const LanyardWidget(color: Color(0xFFb8960c), height: 90),
+        const LanyardWidget(
+          color: Color(0xFF64FFDA),
+          height: 90,
+        ),
         MouseRegion(
-          onHover: _onHover,
-          onExit: (_) => _onExit(),
+          cursor: SystemMouseCursors.click,
+          onEnter: (_) => setState(() => _isHovered = true),
+          onExit: (_) => setState(() => _isHovered = false),
           child: GestureDetector(
-            onTap: () => showNathanielProfileModal(context),
-            child: AnimatedContainer(
-              duration: const Duration(milliseconds: 80),
-              curve: Curves.easeOut,
-              transformAlignment: Alignment.center,
-              transform: Matrix4.identity()
-                ..setEntry(3, 2, 0.001)
-                ..rotateX(_rotateX)
-                ..rotateY(_rotateY),
-              child: const _NathanielCardFace(),
+            onTap: _openWebsite,
+            child: Stack(
+              alignment: Alignment.center,
+              children: [
+                const _NathanielCardFace(),
+                AnimatedOpacity(
+                  duration: const Duration(milliseconds: 180),
+                  opacity: _isHovered ? 1 : 0,
+                  child: Container(
+                    width: 260,
+                    height: 390,
+                    decoration: BoxDecoration(
+                      color: const Color(0xFF64FFDA).withOpacity(0.08),
+                      borderRadius: BorderRadius.circular(20),
+                      border: Border.all(
+                        color: const Color(0xFF64FFDA).withOpacity(0.5),
+                        width: 0.5,
+                      ),
+                    ),
+                    child: const Center(
+                      child: Row(
+                        mainAxisAlignment: MainAxisAlignment.center,
+                        children: [
+                          Icon(Icons.open_in_new,
+                              color: Color(0xFF64FFDA), size: 14),
+                          SizedBox(width: 6),
+                          Text(
+                            'VIEW PORTFOLIO',
+                            style: TextStyle(
+                              color: Color(0xFF64FFDA),
+                              fontSize: 11,
+                              letterSpacing: 2,
+                              fontWeight: FontWeight.w600,
+                              fontFamily: 'monospace',
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                  ),
+                ),
+              ],
             ),
           ),
         ),
         const SizedBox(height: 14),
         Text(
-          'TAP TO VIEW PROFILE',
+          'TAP TO VIEW PORTFOLIO',
           style: TextStyle(
             fontSize: 10,
-            letterSpacing: 0.12,
-            color: Colors.white.withOpacity(0.18),
+            letterSpacing: 1.5,
+            color: Colors.white.withOpacity(0.20),
             fontFamily: 'monospace',
           ),
         ),
@@ -65,12 +97,20 @@ class _NathanielIDCardState extends State<NathanielIDCard> {
 }
 
 // ── Card face ─────────────────────────────────────────────────────────────────
+
 class _NathanielCardFace extends StatelessWidget {
   const _NathanielCardFace();
 
-  static const _gold = Color(0xFFc8a01e);
-  static const _goldDim = Color(0xFFb8960c);
-  static const _navy = Color.fromARGB(255, 58, 5, 5);
+  // Portfolio palette
+  static const _bg        = Color(0xFF0A0E1A); // deep navy
+  static const _bgCard    = Color(0xFF112240); // card navy
+  static const _accent    = Color(0xFF64FFDA); // cyan-green
+  static const _accentDim = Color(0xFF1A3A3A); // dark cyan tint
+  static const _textLight = Color(0xFFE6F1FF);
+  static const _textMuted = Color(0xFF8892B0);
+  static const _border    = Color(0xFF1E3A5F);
+
+  final String portfolioUrl = 'https://neyytann.github.io/portfolio/';
 
   @override
   Widget build(BuildContext context) {
@@ -78,27 +118,32 @@ class _NathanielCardFace extends StatelessWidget {
       width: 260,
       height: 390,
       decoration: BoxDecoration(
-        color: _navy,
-        borderRadius: BorderRadius.circular(18),
-        border: Border.all(color: _gold.withOpacity(0.18), width: 0.5),
+        color: _bgCard,
+        borderRadius: BorderRadius.circular(20),
+        border: Border.all(color: _border),
         boxShadow: [
           BoxShadow(
-            color: _goldDim.withOpacity(0.18),
-            offset: const Offset(0, 18),
-            blurRadius: 44,
+            color: _accent.withOpacity(0.08),
+            blurRadius: 32,
+            spreadRadius: 2,
+            offset: const Offset(0, 10),
           ),
           BoxShadow(
             color: Colors.black.withOpacity(0.6),
-            offset: const Offset(0, 6),
-            blurRadius: 18,
+            blurRadius: 24,
+            offset: const Offset(0, 12),
           ),
         ],
       ),
       child: ClipRRect(
-        borderRadius: BorderRadius.circular(18),
+        borderRadius: BorderRadius.circular(20),
         child: Stack(
-          clipBehavior: Clip.none,
           children: [
+            // Subtle grid texture overlay
+            Positioned.fill(
+              child: CustomPaint(painter: _GridPainter()),
+            ),
+
             // Ghost circle watermarks
             Positioned(
               bottom: -50, right: -50,
@@ -106,393 +151,302 @@ class _NathanielCardFace extends StatelessWidget {
                 width: 180, height: 180,
                 decoration: BoxDecoration(
                   shape: BoxShape.circle,
-                  border: Border.all(color: _gold.withOpacity(0.07), width: 0.5),
+                  border: Border.all(
+                      color: _accent.withOpacity(0.05), width: 0.5),
                 ),
               ),
             ),
             Positioned(
               bottom: -20, right: -20,
               child: Container(
-                width: 120, height: 120,
+                width: 110, height: 110,
                 decoration: BoxDecoration(
                   shape: BoxShape.circle,
-                  border: Border.all(color: _gold.withOpacity(0.04), width: 0.5),
+                  border: Border.all(
+                      color: _accent.withOpacity(0.03), width: 0.5),
                 ),
               ),
             ),
 
-            // Gold top stripe
+            // Cyan top stripe
             Positioned(
               top: 0, left: 0, right: 0,
               child: Container(
-                height: 3,
+                height: 2,
                 decoration: const BoxDecoration(
                   gradient: LinearGradient(
-                    colors: [Color(0xFF6b4e00), Color(0xFFf0c040), Color(0xFF6b4e00)],
+                    colors: [
+                      Colors.transparent,
+                      _accent,
+                      Colors.transparent,
+                    ],
                   ),
                 ),
               ),
             ),
 
-            // Org strip
-            Positioned(
-              top: 14, left: 14, right: 14,
-              child: Row(
+            Padding(
+              padding: const EdgeInsets.fromLTRB(16, 14, 16, 14),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  Container(
-                    width: 24, height: 24,
-                    decoration: BoxDecoration(
-                      color: _gold.withOpacity(0.08),
-                      borderRadius: BorderRadius.circular(5),
-                      border: Border.all(color: _gold.withOpacity(0.45), width: 0.5),
-                    ),
-                    child: const Center(
-                      child: Text(
-                        'FDS',
-                        style: TextStyle(
-                          fontSize: 5.5, fontWeight: FontWeight.w700,
-                          color: Color(0xFFe8be38), letterSpacing: 0.4,
-                          fontFamily: 'monospace',
-                        ),
-                      ),
-                    ),
-                  ),
-                  const SizedBox(width: 7),
-                  Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
+                  // Org row
+                  Row(
                     children: [
-                      Text(
-                        'FDS ASYA PHILIPPINES INC.',
-                        style: TextStyle(
-                          fontSize: 8, letterSpacing: 0.08,
-                          color: Colors.white.withOpacity(0.45),
-                          fontFamily: 'monospace',
+                      Container(
+                        width: 24, height: 24,
+                        decoration: BoxDecoration(
+                          color: _accentDim,
+                          borderRadius: BorderRadius.circular(5),
+                          border: Border.all(
+                              color: _accent.withOpacity(0.4), width: 0.5),
+                        ),
+                        child: const Center(
+                          child: Text(
+                            'FDS',
+                            style: TextStyle(
+                              fontSize: 5.5,
+                              fontWeight: FontWeight.w700,
+                              color: _accent,
+                              letterSpacing: 0.4,
+                              fontFamily: 'monospace',
+                            ),
+                          ),
                         ),
                       ),
-                      Text(
-                        'INTERN · DEVELOPMENT UNIT',
-                        style: TextStyle(
-                          fontSize: 5.5, letterSpacing: 0.06,
-                          color: _gold.withOpacity(0.6),
-                          fontFamily: 'monospace',
-                        ),
+                      const SizedBox(width: 7),
+                      Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text(
+                            'FDS ASYA PHILIPPINES INC.',
+                            style: TextStyle(
+                              fontSize: 7.5,
+                              letterSpacing: 0.08,
+                              color: _textMuted.withOpacity(0.7),
+                              fontFamily: 'monospace',
+                            ),
+                          ),
+                          Text(
+                            'INTERN · BACKEND DEVELOPER',
+                            style: TextStyle(
+                              fontSize: 5.5,
+                              letterSpacing: 0.06,
+                              color: _accent.withOpacity(0.6),
+                              fontFamily: 'monospace',
+                            ),
+                          ),
+                        ],
                       ),
                     ],
                   ),
-                ],
-              ),
-            ),
 
-            // ── Floating photo — oversized, upper half, no background ────
-            // Adjust `top` to reposition, `width`/`height` to resize freely.
-            Positioned(
-              top: 60,
-              left: 0, right: 0,
-              child: Center(
-                child: SizedBox(
-                  width: 220,
-                  height: 120,
-                  child: Align(
-                    alignment: Alignment.bottomCenter,
-                    child: Image.asset(
-                      'assets/images/nathan.png',
-                      width: 220,
-                      fit: BoxFit.contain,
-                      alignment: Alignment.bottomCenter,
-                      errorBuilder: (_, __, ___) => Container(
-                        width: 110,
-                        height: 200,
-                        decoration: BoxDecoration(
-                          color: _gold.withOpacity(0.08),
-                          borderRadius: const BorderRadius.vertical(
-                            top: Radius.circular(60),
+                  const SizedBox(height: 14),
+
+                  // Avatar
+                  Center(
+                    child: Container(
+                      width: 85,
+                      height: 85,
+                      clipBehavior: Clip.antiAlias,
+                      decoration: BoxDecoration(
+                        color: _accentDim,
+                        shape: BoxShape.circle,
+                        border: Border.all(
+                            color: _accent.withOpacity(0.35), width: 1.5),
+                        boxShadow: [
+                          BoxShadow(
+                            color: _accent.withOpacity(0.12),
+                            blurRadius: 16,
+                            spreadRadius: 2,
                           ),
-                        ),
-                        child: Center(
+                        ],
+                      ),
+                      child: Image.asset(
+                        'assets/images/nathan.png',
+                        fit: BoxFit.cover,
+                        errorBuilder: (_, __, ___) => Center(
                           child: Text(
-                            'NR',
+                            'NV',
                             style: TextStyle(
-                              fontSize: 28, fontWeight: FontWeight.w500,
-                              color: _gold.withOpacity(0.5),
+                              fontSize: 24,
+                              fontWeight: FontWeight.w600,
+                              color: _accent.withOpacity(0.7),
+                              fontFamily: 'monospace',
                             ),
                           ),
                         ),
                       ),
                     ),
                   ),
-                ),
-              ),
-            ),
 
-            // Thin rule under photo zone
-            Positioned(
-              bottom: 135, left: 14, right: 14,
-              child: Row(
-                children: [
-                  Expanded(child: Container(height: 0.5, color: _gold.withOpacity(0.18))),
-                  Container(
-                    width: 4, height: 4,
-                    margin: const EdgeInsets.symmetric(horizontal: 8),
-                    decoration: const BoxDecoration(shape: BoxShape.circle, color: _gold),
-                  ),
-                  Expanded(child: Container(height: 0.5, color: _gold.withOpacity(0.18))),
-                ],
-              ),
-            ),
+                  const SizedBox(height: 10),
 
-            // Name + role
-            Positioned(
-              bottom: 155, left: 0, right: 0,
-              child: Column(
-                children: [
-                  const Text(
-                    'Nathaniel Velasco',
-                    style: TextStyle(
-                      fontSize: 18, fontWeight: FontWeight.w500,
-                      color: Colors.white, letterSpacing: 0.15,
-                    ),
-                  ),
-                  const SizedBox(height: 2),
-                  Container(
-                    padding: const EdgeInsets.symmetric(horizontal: 11, vertical: 3),
-                    decoration: BoxDecoration(
-                      gradient: const LinearGradient(
-                        colors: [Color(0xFF8a6a00), Color(0xFFc8961a)],
-                      ),
-                      borderRadius: BorderRadius.circular(20),
-                    ),
-                    child: const Text(
-                      'Backend Developer',
-                      style: TextStyle(
-                        fontSize: 8, fontWeight: FontWeight.w600,
-                        color: Color(0xFF08101e), letterSpacing: 0.5,
+                  // Name
+                  Center(
+                    child: Text(
+                      'NATHANIEL VELASCO',
+                      style: const TextStyle(
+                        color: _textLight,
+                        fontSize: 14,
+                        fontWeight: FontWeight.w600,
+                        letterSpacing: 1.1,
+                        fontFamily: 'monospace',
                       ),
                     ),
                   ),
-                ],
-              ),
-            ),
+                  const SizedBox(height: 6),
 
-            // Info rows
-            Positioned(
-              bottom: 80, left: 16, right: 16,
-              child: Column(
-                children: const [
-                  _InfoRow(label: 'DEPARTMENT', value: 'Information Technology'),
-                  SizedBox(height: 5),
-                  _InfoRow(label: 'MEMBER SINCE', value: 'February 2026'),
-                  SizedBox(height: 5),
-                  _InfoRow(label: 'STATUS', value: '● ACTIVE', valueColor: Color(0xFF7fff90)),
-                ],
-              ),
-            ),
-
-            // Bottom ID strip
-            Positioned(
-              bottom: 0, left: 0, right: 0,
-              child: Container(
-                height: 36,
-                decoration: BoxDecoration(
-                  color: _gold.withOpacity(0.05),
-                  border: Border(
-                    top: BorderSide(color: _gold.withOpacity(0.15), width: 0.5),
+                  // Role chip
+                  Center(
+                    child: Container(
+                      padding: const EdgeInsets.symmetric(
+                          vertical: 4, horizontal: 12),
+                      decoration: BoxDecoration(
+                        color: _accentDim,
+                        borderRadius: BorderRadius.circular(20),
+                        border: Border.all(
+                            color: _accent.withOpacity(0.4), width: 0.5),
+                      ),
+                      child: Text(
+                        'BACKEND DEVELOPER',
+                        style: TextStyle(
+                          fontSize: 8.5,
+                          color: _accent,
+                          letterSpacing: 1.2,
+                          fontFamily: 'monospace',
+                          fontWeight: FontWeight.w600,
+                        ),
+                      ),
+                    ),
                   ),
-                ),
-                padding: const EdgeInsets.symmetric(horizontal: 14),
-                child: Row(
-                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                  children: [
-                    Text(
+
+                  const SizedBox(height: 12),
+                  Divider(color: _border, height: 0.5),
+                  const SizedBox(height: 10),
+
+                  // Info rows
+                  _infoRow('School', 'PLSP', _textMuted, _textLight),
+                  _infoRow('Program', 'Information Technology', _textMuted, _textLight),
+                  _infoRow('Since', 'Sep 2022', _textMuted, _textLight),
+                  _statusRow(),
+
+                  const Spacer(),
+                  Divider(color: _border, height: 0.5),
+                  const SizedBox(height: 8),
+
+                  // QR + ID
+                  Center(
+                    child: BarcodeWidget(
+                      barcode: Barcode.qrCode(),
+                      data: 'https://neyytann.github.io/portfolio/',
+                      width: 48,
+                      height: 48,
+                      color: _accent,
+                      backgroundColor: Colors.transparent,
+                    ),
+                  ),
+                  const SizedBox(height: 5),
+                  Center(
+                    child: Text(
                       'DEV-2026-180',
                       style: TextStyle(
-                        fontSize: 7, fontFamily: 'monospace',
-                        color: _gold.withOpacity(0.5), letterSpacing: 0.09,
+                        fontSize: 8,
+                        color: _textMuted.withOpacity(0.45),
+                        letterSpacing: 1.2,
+                        fontFamily: 'monospace',
                       ),
                     ),
-                    const CardBarcode(),
-                    Text(
-                      'N. VELASCO',
-                      style: TextStyle(
-                        fontSize: 7, fontFamily: 'monospace',
-                        color: _gold.withOpacity(0.5), letterSpacing: 0.09,
-                      ),
-                    ),
-                  ],
-                ),
-              ),
-            ),
-          ],
-        ),
-      ),
-    );
-  }
-}
-
-// ── Info row ──────────────────────────────────────────────────────────────────
-class _InfoRow extends StatelessWidget {
-  final String label;
-  final String value;
-  final Color? valueColor;
-  const _InfoRow({required this.label, required this.value, this.valueColor});
-
-  @override
-  Widget build(BuildContext context) {
-    return Row(
-      mainAxisAlignment: MainAxisAlignment.spaceBetween,
-      children: [
-        Text(label, style: TextStyle(fontSize: 6.5, letterSpacing: 0.09, color: Colors.white.withOpacity(0.25), fontFamily: 'monospace')),
-        Text(value, style: TextStyle(fontSize: 7.5, fontFamily: 'monospace', fontWeight: FontWeight.w500, color: valueColor ?? Colors.white.withOpacity(0.65))),
-      ],
-    );
-  }
-}
-
-// ── Profile modal ─────────────────────────────────────────────────────────────
-void showNathanielProfileModal(BuildContext context) {
-  showDialog(
-    context: context,
-    barrierColor: const Color.fromARGB(255, 0, 0, 0).withOpacity(0.75),
-    builder: (ctx) => Dialog(
-      backgroundColor: const Color.fromARGB(255, 61, 13, 13),
-      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
-      insetPadding: const EdgeInsets.symmetric(horizontal: 40, vertical: 40),
-      child: SizedBox(
-        width: 680,
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            Container(
-              height: 3,
-              decoration: const BoxDecoration(
-                gradient: LinearGradient(colors: [Color(0xFF6b4e00), Color(0xFFf0c040), Color(0xFF6b4e00)]),
-                borderRadius: BorderRadius.only(topLeft: Radius.circular(20), topRight: Radius.circular(20)),
-              ),
-            ),
-            Padding(
-              padding: const EdgeInsets.fromLTRB(28, 22, 20, 18),
-              child: Row(
-                children: [
-                  Container(
-                    width: 68, height: 68,
-                    decoration: BoxDecoration(
-                      shape: BoxShape.circle,
-                      border: Border.all(color: const Color(0xFFb8960c).withOpacity(0.45), width: 1),
-                    ),
-                    child: ClipOval(
-                      child: Image.asset(
-                        'assets/images/nathaniel.webp',
-                        fit: BoxFit.cover,
-                        errorBuilder: (_, __, ___) => Container(
-                          color: const Color(0xFF0e1e38),
-                          child: const Center(child: Text('NV', style: TextStyle(fontSize: 22, fontWeight: FontWeight.w500, color: Color(0xFFf0c040)))),
-                        ),
-                      ),
-                    ),
-                  ),
-                  const SizedBox(width: 18),
-                  Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      const Text('Nathaniel Velasco', style: TextStyle(fontSize: 20, fontWeight: FontWeight.w500, color: Colors.white)),
-                      const SizedBox(height: 3),
-                      Text('Backend Developer · Information Technology', style: TextStyle(fontSize: 13, color: Colors.white.withOpacity(0.38))),
-                      const SizedBox(height: 8),
-                      Container(
-                        padding: const EdgeInsets.symmetric(horizontal: 11, vertical: 3),
-                        decoration: BoxDecoration(
-                          color: const Color(0xFFb8960c).withOpacity(0.1),
-                          borderRadius: BorderRadius.circular(20),
-                          border: Border.all(color: const Color(0xFFb8960c).withOpacity(0.3), width: 0.5),
-                        ),
-                        child: const Text('● Active', style: TextStyle(fontSize: 12, color: Color(0xFF7fff90))),
-                      ),
-                    ],
-                  ),
-                  const Spacer(),
-                  IconButton(
-                    onPressed: () => Navigator.pop(ctx),
-                    icon: Icon(Icons.close, color: Colors.white.withOpacity(0.25), size: 20),
                   ),
                 ],
               ),
             ),
-            Divider(color: Colors.white.withOpacity(0.05), height: 0.5),
-            Flexible(
-              child: SingleChildScrollView(
-                padding: const EdgeInsets.fromLTRB(28, 18, 28, 28),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    _nSec('About'),
-                    _nBody('Backend developer focused on scalable backend systems and clean, maintainable code. Structured engineering mindset, values precision and well-tested software.'),
-                    _nSec('Details'),
-                    _nGrid({'Email': 'nathanielvelasco0915@gmail.com', 'Member since': 'February 2026', 'ID': 'DEV-2026-180', 'Department': 'Development'}),
-                    _nSec('Education'),
-                    _nBody('BS Information Technology\nPamantasan ng Lungsod ng San Pablo'),
-                    _nSec('Work Experience'),
-                    _nWork('FDS ASYA PHILIPPINES INC.', 'Solutions Dev Intern — Backend Developer', 'Jan 2026 – Present'),
-                    _nSec('Skills'),
-                    Wrap(
-                      spacing: 8, runSpacing: 8,
-                      children: ['Flutter', 'Dart', 'Go', 'PostgreSQL', 'Docker', 'Git', 'REST APIs', 'System Design']
-                          .map((s) => Container(
-                                padding: const EdgeInsets.symmetric(horizontal: 13, vertical: 5),
-                                decoration: BoxDecoration(
-                                  color: const Color(0xFFb8960c).withOpacity(0.08),
-                                  borderRadius: BorderRadius.circular(20),
-                                  border: Border.all(color: const Color(0xFFb8960c).withOpacity(0.25), width: 0.5),
-                                ),
-                                child: Text(s, style: const TextStyle(fontSize: 12, color: Color(0xFFe8be38))),
-                              )).toList(),
-                    ),
-                  ],
-                ),
-              ),
-            ),
           ],
         ),
       ),
-    ),
-  );
+    );
+  }
+
+  Widget _infoRow(String label, String value, Color labelColor, Color valueColor) {
+    return Padding(
+      padding: const EdgeInsets.only(bottom: 5),
+      child: Row(
+        children: [
+          Text(
+            label.toUpperCase(),
+            style: TextStyle(
+              fontSize: 9,
+              color: labelColor.withOpacity(0.5),
+              fontFamily: 'monospace',
+            ),
+          ),
+          const Spacer(),
+          Text(
+            value,
+            style: TextStyle(
+              fontSize: 10,
+              color: valueColor.withOpacity(0.75),
+              fontWeight: FontWeight.w500,
+              fontFamily: 'monospace',
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _statusRow() {
+    return Padding(
+      padding: const EdgeInsets.only(bottom: 5),
+      child: Row(
+        children: [
+          Text(
+            'STATUS',
+            style: TextStyle(
+              fontSize: 9,
+              color: const Color.fromARGB(255, 136, 176, 147).withOpacity(0.5),
+              fontFamily: 'monospace',
+            ),
+          ),
+          const Spacer(),
+          const Text(
+            '●',
+            style: TextStyle(fontSize: 8, color: Color.fromARGB(255, 0, 255, 21)),
+          ),
+          const SizedBox(width: 4),
+          const Text(
+            'Active',
+            style: TextStyle(
+              fontSize: 10,
+              color: Color.fromARGB(255, 0, 255, 21),
+              fontWeight: FontWeight.w600,
+              fontFamily: 'monospace',
+            ),
+          ),
+        ],
+      ),
+    );
+  }
 }
 
-Widget _nSec(String t) => Padding(
-  padding: const EdgeInsets.only(top: 18, bottom: 9),
-  child: Text(t.toUpperCase(), style: TextStyle(fontSize: 10, letterSpacing: 0.12, fontWeight: FontWeight.w600, color: const Color(0xFFb8960c).withOpacity(0.55))),
-);
+// ── Subtle grid texture painter ───────────────────────────────────────────────
 
-Widget _nBody(String t) => Text(t, style: TextStyle(fontSize: 14, color: Colors.white.withOpacity(0.55), height: 1.7));
+class _GridPainter extends CustomPainter {
+  @override
+  void paint(Canvas canvas, Size size) {
+    final paint = Paint()
+      ..color = const Color(0xFF64FFDA).withOpacity(0.025)
+      ..strokeWidth = 0.5;
 
-Widget _nGrid(Map<String, String> items) => GridView.count(
-  crossAxisCount: 2, shrinkWrap: true, physics: const NeverScrollableScrollPhysics(),
-  crossAxisSpacing: 8, mainAxisSpacing: 8, childAspectRatio: 3.5,
-  children: items.entries.map((e) => Container(
-    padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 9),
-    decoration: BoxDecoration(
-      color: const Color(0xFFb8960c).withOpacity(0.04),
-      borderRadius: BorderRadius.circular(8),
-      border: Border.all(color: const Color(0xFFb8960c).withOpacity(0.12), width: 0.5),
-    ),
-    child: Column(crossAxisAlignment: CrossAxisAlignment.start, mainAxisAlignment: MainAxisAlignment.center, children: [
-      Text(e.key, style: TextStyle(fontSize: 10, color: Colors.white.withOpacity(0.28))),
-      const SizedBox(height: 2),
-      Text(e.value, style: TextStyle(fontSize: 12, color: Colors.white.withOpacity(0.7), fontFamily: 'monospace')),
-    ]),
-  )).toList(),
-);
+    const step = 20.0;
+    for (double x = 0; x < size.width; x += step) {
+      canvas.drawLine(Offset(x, 0), Offset(x, size.height), paint);
+    }
+    for (double y = 0; y < size.height; y += step) {
+      canvas.drawLine(Offset(0, y), Offset(size.width, y), paint);
+    }
+  }
 
-Widget _nWork(String co, String pos, String period) => Container(
-  padding: const EdgeInsets.all(14),
-  decoration: BoxDecoration(
-    color: const Color(0xFFb8960c).withOpacity(0.04),
-    borderRadius: BorderRadius.circular(8),
-    border: Border.all(color: const Color(0xFFb8960c).withOpacity(0.12), width: 0.5),
-  ),
-  child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
-    Text(co, style: const TextStyle(fontSize: 14, fontWeight: FontWeight.w500, color: Colors.white)),
-    const SizedBox(height: 3),
-    Text(pos, style: TextStyle(fontSize: 12, color: Colors.white.withOpacity(0.42))),
-    const SizedBox(height: 5),
-    Text(period, style: TextStyle(fontSize: 11, fontFamily: 'monospace', color: const Color(0xFFb8960c).withOpacity(0.5))),
-  ]),
-);
+  @override
+  bool shouldRepaint(_GridPainter old) => false;
+}
