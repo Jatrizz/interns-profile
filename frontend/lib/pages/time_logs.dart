@@ -55,8 +55,12 @@ class _TimeLogsPageState extends State<TimeLogsPage> {
   @override
   void initState() {
     super.initState();
+    const months = [
+      'January', 'February', 'March', 'April', 'May', 'June',
+      'July', 'August', 'September', 'October', 'November', 'December'
+    ];
     selectedDate = _now;
-    selectedMonth = 'April ${_now.day}, ${_now.year}';
+    selectedMonth = '${months[_now.month - 1]} ${_now.day}, ${_now.year}';
 
     fetchOverviewStats();
     fetchInterns();
