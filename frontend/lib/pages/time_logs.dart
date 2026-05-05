@@ -53,8 +53,18 @@ class _TimeLogsPageState extends State<TimeLogsPage> {
   bool _isFetching = false;
 
   static const List<String> _months = [
-    'January', 'February', 'March', 'April', 'May', 'June',
-    'July', 'August', 'September', 'October', 'November', 'December'
+    'January',
+    'February',
+    'March',
+    'April',
+    'May',
+    'June',
+    'July',
+    'August',
+    'September',
+    'October',
+    'November',
+    'December'
   ];
 
   @override
@@ -144,6 +154,7 @@ class _TimeLogsPageState extends State<TimeLogsPage> {
           _isDefaultView = true;
           applyFilters(resetPage: resetPage);
         });
+        await fetchOverviewStats(); // ← refresh stats immediately after
       }
     } catch (e) {
       debugPrint('>>> Error fetching today logs: $e');
@@ -170,6 +181,7 @@ class _TimeLogsPageState extends State<TimeLogsPage> {
           allLogs = data.map((e) => Map<String, dynamic>.from(e)).toList();
           applyFilters(resetPage: resetPage);
         });
+        await fetchOverviewStats(); // ← refresh stats immediately after
       }
     } catch (e) {
       debugPrint('>>> Error fetching logs: $e');
@@ -270,9 +282,8 @@ class _TimeLogsPageState extends State<TimeLogsPage> {
                         Text(
                           'Time Logs',
                           style: TextStyle(
-                            color: widget.isDarkMode
-                                ? Colors.white
-                                : Colors.black,
+                            color:
+                                widget.isDarkMode ? Colors.white : Colors.black,
                             fontSize: 20,
                             fontWeight: FontWeight.bold,
                           ),
@@ -282,8 +293,7 @@ class _TimeLogsPageState extends State<TimeLogsPage> {
                           isDarkMode: widget.isDarkMode,
                           searchQuery: searchQuery,
                           suggestions: filteredInternNames,
-                          onChanged: (val) =>
-                              setState(() => searchQuery = val),
+                          onChanged: (val) => setState(() => searchQuery = val),
                           onSuggestionSelected: (name) {
                             setState(() {
                               selectedIntern = name;
@@ -306,10 +316,7 @@ class _TimeLogsPageState extends State<TimeLogsPage> {
                         const SizedBox(height: 6),
                         TimeLogsInternDropdown(
                           isDarkMode: widget.isDarkMode,
-                          internNames: [
-                            'All Interns',
-                            ...filteredInternNames
-                          ],
+                          internNames: ['All Interns', ...filteredInternNames],
                           selectedIntern: selectedIntern ?? 'All Interns',
                           onChanged: (val) {
                             if (val != null) {
@@ -403,13 +410,22 @@ class _TimeLogsPageState extends State<TimeLogsPage> {
           ),
           const SizedBox(height: 12),
           TimeLogsPagination(
-            isDarkMode: widget.isDarkMode,
-            currentPage: currentPage,
-            totalPages: totalPages,
-            totalEntries: filteredLogs.length,
-            shownCount: paginatedLogs.length,
-            onPageChanged: (page) => setState(() => currentPage = page),
-          ),
+              isDarkMode: widget.isDarkMode,
+              currentPage: currentPage,
+              totalPages: totalPages,
+              totalEntries: filteredLogs.length,
+              shownCount: paginatedLogs.length,
+              onPageChanged: (page) async {
+                setState(() => currentPage = page);
+                await fetchOverviewStats(); // refresh stats on page turn
+                if (_isDefaultView) {
+                  await fetchTodayLogs();
+                } else if (selectedIntern != null &&
+                    selectedIntern != 'All Interns') {
+                  await fetchLogsForIntern(selectedIntern!);
+                }
+              },
+            ),
           const SizedBox(height: 16),
           TimeLogsLegend(isDarkMode: widget.isDarkMode),
         ],
