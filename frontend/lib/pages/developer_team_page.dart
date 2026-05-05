@@ -1,5 +1,4 @@
 import 'package:flutter/material.dart';
-import '../widgets/Developer-Page-Widgets/placeholder_card.dart';
 import '../widgets/Developer-Page-Widgets/janna_id_card.dart';
 import '../widgets/Developer-Page-Widgets/nathaniel_id_card.dart';
 import '../widgets/Developer-Page-Widgets/lester_card.dart';

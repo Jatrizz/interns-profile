@@ -102,7 +102,6 @@ class _NathanielCardFace extends StatelessWidget {
   const _NathanielCardFace();
 
   // Portfolio palette
-  static const _bg        = Color(0xFF0A0E1A); // deep navy
   static const _bgCard    = Color(0xFF112240); // card navy
   static const _accent    = Color(0xFF64FFDA); // cyan-green
   static const _accentDim = Color(0xFF1A3A3A); // dark cyan tint
