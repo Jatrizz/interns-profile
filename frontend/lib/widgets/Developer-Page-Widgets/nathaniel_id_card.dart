@@ -48,7 +48,7 @@ class _NathanielIDCardState extends State<NathanielIDCard> {
                     width: 260,
                     height: 390,
                     decoration: BoxDecoration(
-                      color: const Color(0xFF64FFDA).withOpacity(0.08),
+                      color: const Color.fromARGB(255, 0, 0, 0).withOpacity(0.55),
                       borderRadius: BorderRadius.circular(20),
                       border: Border.all(
                         color: const Color(0xFF64FFDA).withOpacity(0.5),
