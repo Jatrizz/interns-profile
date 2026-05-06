@@ -9,7 +9,8 @@ import 'package:interfaces/pages/intern_main.dart';
 class Login extends StatefulWidget {
   final bool isDarkMode;
   final VoidCallback onToggleTheme;
-  const Login({super.key, required this.isDarkMode, required this.onToggleTheme});
+  const Login(
+      {super.key, required this.isDarkMode, required this.onToggleTheme});
 
   @override
   State<Login> createState() => _LoginState();
@@ -477,8 +478,7 @@ class _LoginState extends State<Login> {
       : [const Color(0xFFE8E8E8), const Color(0xFFD0D0D0)];
 
   Color get _textColor => widget.isDarkMode ? Colors.white : Colors.black87;
-  Color get _labelColor =>
-      widget.isDarkMode ? Colors.white70 : Colors.black54;
+  Color get _labelColor => widget.isDarkMode ? Colors.white70 : Colors.black54;
   Color get _iconColor => widget.isDarkMode ? Colors.white : Colors.black54;
   Color get _cursorColor => widget.isDarkMode ? Colors.white : Colors.black87;
   Color get _focusedBorderColor =>
@@ -493,19 +493,10 @@ class _LoginState extends State<Login> {
           child: SizedBox(
             height: 700,
             child: widget.isDarkMode
-                ? Image.asset('assets/images/logo.png', fit: BoxFit.contain)
-                : ColorFiltered(
-                    colorFilter: const ColorFilter.matrix(<double>[
-                      -1, 0, 0, 0, 255,
-                       0,-1, 0, 0, 255,
-                       0, 0,-1, 0, 255,
-                       0, 0, 0, 1,   0,
-                    ]),
-                    child: Image.asset(
-                      'assets/images/logo.png',
-                      fit: BoxFit.contain,
-                    ),
-                  ),
+                ? Image.asset('assets/images/logo_dark.png',
+                    fit: BoxFit.contain)
+                : Image.asset('assets/images/logo_light.png',
+                    fit: BoxFit.contain),
           ),
         ),
 
@@ -515,7 +506,7 @@ class _LoginState extends State<Login> {
             crossAxisAlignment: CrossAxisAlignment.center,
             children: [
               Text(
-                'Welcome to Orbis',
+                'Welcome to InTurn',
                 style: TextStyle(
                   color: _textColor,
                   fontSize: 40,
@@ -541,7 +532,7 @@ class _LoginState extends State<Login> {
                   controller: _emailController,
                   style: TextStyle(color: _textColor),
                   textInputAction: TextInputAction.next,
-                  onFieldSubmitted: (_) => FocusScope.of(context).nextFocus(), 
+                  onFieldSubmitted: (_) => FocusScope.of(context).nextFocus(),
                   decoration: InputDecoration(
                     focusedBorder: OutlineInputBorder(
                       borderSide: BorderSide(color: _focusedBorderColor),
@@ -559,8 +550,7 @@ class _LoginState extends State<Login> {
                     padding: const EdgeInsets.only(top: 5),
                     child: Text(
                       _emailError!,
-                      style:
-                          const TextStyle(color: Colors.red, fontSize: 12),
+                      style: const TextStyle(color: Colors.red, fontSize: 12),
                     ),
                   ),
                 ),
@@ -578,20 +568,17 @@ class _LoginState extends State<Login> {
                   obscureText: !_showPassword,
                   style: TextStyle(color: _textColor),
                   textInputAction: TextInputAction.done,
-                  onFieldSubmitted: (_) => _login(), 
+                  onFieldSubmitted: (_) => _login(),
                   decoration: InputDecoration(
                     focusedBorder: OutlineInputBorder(
                       borderSide: BorderSide(color: _focusedBorderColor),
                     ),
-                    prefixIcon:
-                        Icon(Icons.lock_outline, color: _iconColor),
-                    label: Text('Password',
-                        style: TextStyle(color: _labelColor)),
+                    prefixIcon: Icon(Icons.lock_outline, color: _iconColor),
+                    label:
+                        Text('Password', style: TextStyle(color: _labelColor)),
                     suffixIcon: IconButton(
                       icon: Icon(
-                        _showPassword
-                            ? Icons.visibility
-                            : Icons.visibility_off,
+                        _showPassword ? Icons.visibility : Icons.visibility_off,
                         color: _iconColor,
                       ),
                       onPressed: () =>
@@ -608,12 +595,10 @@ class _LoginState extends State<Login> {
                     padding: const EdgeInsets.only(top: 5),
                     child: Text(
                       _passwordError!,
-                      style:
-                          const TextStyle(color: Colors.red, fontSize: 12),
+                      style: const TextStyle(color: Colors.red, fontSize: 12),
                     ),
                   ),
                 ),
-              
 
               // Forgot password
               SizedBox(
@@ -624,7 +609,8 @@ class _LoginState extends State<Login> {
                     onPressed: _showForgotPasswordDialog,
                     child: Text(
                       "Forgot Password?",
-                      style: TextStyle(color: _textColor.withOpacity(0.5), fontSize: 12),
+                      style: TextStyle(
+                          color: _textColor.withOpacity(0.5), fontSize: 12),
                     ),
                   ),
                 ),
@@ -648,7 +634,8 @@ class _LoginState extends State<Login> {
                     child: Center(
                       child: _isLoading
                           ? const CircularProgressIndicator(color: Colors.white)
-                          : const Text('Login', style: TextStyle(color: Colors.white)),
+                          : const Text('Login',
+                              style: TextStyle(color: Colors.white)),
                     ),
                   ),
                 ),

@@ -14,7 +14,7 @@ class AboutIntro extends StatelessWidget {
             Padding(
               padding: EdgeInsetsGeometry.only(right: 140),
               child: Text(
-                'What is Orbis?',
+                'What is InTurn?',
                 textAlign: TextAlign.start,
                 style: TextStyle(
                   fontSize: 30,
@@ -24,7 +24,7 @@ class AboutIntro extends StatelessWidget {
               ),
             ),
             Text(
-              'Orbis is a web-based intern profile management\nsystem designed to help companies efficiently track,\norganize, and manage their interns in one centralized\nplatform. Gone are the days of scattered spreadsheets\nand disorganized records. Orbis provides a simple,\nsecure, and intuitive solution for managing intern\ninformation from registration to completion.',
+              'InTurn is a web-based intern profile management\nsystem designed to help companies efficiently track,\norganize, and manage their interns in one centralized\nplatform. Gone are the days of scattered spreadsheets\nand disorganized records. InTurn provides a simple,\nsecure, and intuitive solution for managing intern\ninformation from registration to completion.',
               style: TextStyle(
                 height: 1.7,
                 fontSize: 15,

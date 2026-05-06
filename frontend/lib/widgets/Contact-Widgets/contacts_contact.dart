@@ -131,7 +131,7 @@ class _ContactsContactState extends State<ContactsContact> {
                     Icon(Icons.mark_email_read, size: 20, color: textColor),
                     const SizedBox(width: 5),
                     Text(
-                      'Email Us support@orbis.com',
+                      'Email Us support@inturn.com',
                       style: TextStyle(color: textColor),
                     ),
                   ],
@@ -158,9 +158,8 @@ class _ContactsContactState extends State<ContactsContact> {
               width: 400,
               height: 400,
               decoration: BoxDecoration(
-                color: widget.isDarkMode
-                    ? const Color(0xFF1E1E1E)
-                    : Colors.white,
+                color:
+                    widget.isDarkMode ? const Color(0xFF1E1E1E) : Colors.white,
                 boxShadow: [
                   // ambient shadow
                   BoxShadow(

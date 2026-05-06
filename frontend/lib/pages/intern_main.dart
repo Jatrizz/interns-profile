@@ -109,7 +109,7 @@ class _InternMainPageState extends State<InternMainPage> {
           isDarkMode: isDarkMode,
         );
       case 3:
-        return const DeveloperTeamPage();
+        return DeveloperTeamPage(isDarkMode: isDarkMode);
       default:
         return InternDashboardPage(
           firstName: widget.firstName,

@@ -5,17 +5,33 @@ import '../widgets/Developer-Page-Widgets/nathaniel_id_card.dart';
 import '../widgets/Developer-Page-Widgets/lester_card.dart';
 
 class DeveloperTeamPage extends StatelessWidget {
-  const DeveloperTeamPage({super.key});
+  final bool isDarkMode;
+  const DeveloperTeamPage({super.key, required this.isDarkMode});
 
   @override
   Widget build(BuildContext context) {
+    final textColor = isDarkMode ? Colors.white : Colors.black87;
+    final subTextColor =
+        isDarkMode ? Colors.white.withOpacity(0.35) : Colors.black45;
+    final labelColor =
+        isDarkMode ? Colors.white.withOpacity(0.30) : Colors.black38;
+    final dividerColor =
+        isDarkMode ? Colors.white.withOpacity(0.08) : Colors.black12;
+    final dotColor =
+        isDarkMode ? const Color(0xFF3b82f6) : const Color(0xFF3b82f6);
+    final lineColor = isDarkMode
+        ? const Color(0xFF3b82f6).withOpacity(0.4)
+        : const Color(0xFF3b82f6).withOpacity(0.4);
+    final footerColor =
+        isDarkMode ? Colors.white.withOpacity(0.15) : Colors.black26;
+
     return Container(
       width: double.infinity,
       height: double.infinity,
-      color: const Color(0xFF1A1A1A),
+      color: isDarkMode ? const Color(0xFF1A1A1A) : Colors.white,
       child: Stack(
         children: [
-          // Background glow circles
+          // Background glow circles — softer in light mode
           Positioned(
             top: -100,
             left: -80,
@@ -24,7 +40,8 @@ class DeveloperTeamPage extends StatelessWidget {
               height: 350,
               decoration: BoxDecoration(
                 shape: BoxShape.circle,
-                color: const Color(0xFF1d4ed8).withOpacity(0.08),
+                color: const Color(0xFF1d4ed8)
+                    .withOpacity(isDarkMode ? 0.08 : 0.05),
               ),
             ),
           ),
@@ -36,7 +53,8 @@ class DeveloperTeamPage extends StatelessWidget {
               height: 450,
               decoration: BoxDecoration(
                 shape: BoxShape.circle,
-                color: const Color(0xFF3b82f6).withOpacity(0.06),
+                color: const Color(0xFF3b82f6)
+                    .withOpacity(isDarkMode ? 0.06 : 0.04),
               ),
             ),
           ),
@@ -48,7 +66,8 @@ class DeveloperTeamPage extends StatelessWidget {
               height: 180,
               decoration: BoxDecoration(
                 shape: BoxShape.circle,
-                color: const Color(0xFF60a5fa).withOpacity(0.04),
+                color: const Color(0xFF60a5fa)
+                    .withOpacity(isDarkMode ? 0.04 : 0.03),
               ),
             ),
           ),
@@ -67,7 +86,7 @@ class DeveloperTeamPage extends StatelessWidget {
                         Container(
                           width: 40,
                           height: 1,
-                          color: const Color(0xFF3b82f6).withOpacity(0.4),
+                          color: lineColor,
                         ),
                         const SizedBox(width: 14),
                         Text(
@@ -75,7 +94,7 @@ class DeveloperTeamPage extends StatelessWidget {
                           style: TextStyle(
                             fontSize: 11,
                             letterSpacing: 0.15,
-                            color: Colors.white.withOpacity(0.3),
+                            color: labelColor,
                             fontFamily: 'monospace',
                           ),
                         ),
@@ -83,17 +102,17 @@ class DeveloperTeamPage extends StatelessWidget {
                         Container(
                           width: 40,
                           height: 1,
-                          color: const Color(0xFF3b82f6).withOpacity(0.4),
+                          color: lineColor,
                         ),
                       ],
                     ),
                     const SizedBox(height: 14),
-                    const Text(
+                    Text(
                       'Meet the Dev Team',
                       style: TextStyle(
                         fontSize: 34,
                         fontWeight: FontWeight.w500,
-                        color: Colors.white,
+                        color: textColor,
                         letterSpacing: -0.5,
                       ),
                     ),
@@ -102,7 +121,7 @@ class DeveloperTeamPage extends StatelessWidget {
                       'The people who designed and built this system',
                       style: TextStyle(
                         fontSize: 14,
-                        color: Colors.white.withOpacity(0.35),
+                        color: subTextColor,
                         height: 1.5,
                       ),
                     ),
@@ -113,22 +132,22 @@ class DeveloperTeamPage extends StatelessWidget {
                         Container(
                           width: 70,
                           height: 0.5,
-                          color: Colors.white.withOpacity(0.08),
+                          color: dividerColor,
                         ),
                         const SizedBox(width: 10),
                         Container(
                           width: 5,
                           height: 5,
-                          decoration: const BoxDecoration(
+                          decoration: BoxDecoration(
                             shape: BoxShape.circle,
-                            color: Color(0xFF3b82f6),
+                            color: dotColor,
                           ),
                         ),
                         const SizedBox(width: 10),
                         Container(
                           width: 70,
                           height: 0.5,
-                          color: Colors.white.withOpacity(0.08),
+                          color: dividerColor,
                         ),
                       ],
                     ),
@@ -136,7 +155,7 @@ class DeveloperTeamPage extends StatelessWidget {
                 ),
               ),
 
-              // Cards — use Expanded + ScrollView to prevent overflow
+              // Cards
               Expanded(
                 child: SingleChildScrollView(
                   child: Padding(
@@ -164,7 +183,7 @@ class DeveloperTeamPage extends StatelessWidget {
                   'Hover over a card to interact  ·  Click to view full profile',
                   style: TextStyle(
                     fontSize: 11,
-                    color: Colors.white.withOpacity(0.15),
+                    color: footerColor,
                     letterSpacing: 0.05,
                   ),
                 ),

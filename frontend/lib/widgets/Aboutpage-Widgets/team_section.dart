@@ -21,7 +21,7 @@ class TeamSection extends StatelessWidget {
               ),
             ),
             Text(
-              'The people behind Orbis.',
+              'The people behind InTurn.',
               style: TextStyle(
                 color: isDarkMode ? Colors.white : Colors.black,
                 fontSize: 15,
@@ -55,7 +55,9 @@ class TeamSection extends StatelessWidget {
                   ),
                   Text(
                     'Pogi lang',
-                    style: TextStyle(color: isDarkMode ? Colors.white : Colors.black, fontSize: 14),
+                    style: TextStyle(
+                        color: isDarkMode ? Colors.white : Colors.black,
+                        fontSize: 14),
                   )
                 ]),
                 Column(
@@ -80,7 +82,9 @@ class TeamSection extends StatelessWidget {
                     ),
                     Text(
                       'Fullstack Developer',
-                      style: TextStyle(color: isDarkMode ? Colors.white : Colors.black, fontSize: 14),
+                      style: TextStyle(
+                          color: isDarkMode ? Colors.white : Colors.black,
+                          fontSize: 14),
                     )
                   ],
                 ),

@@ -122,7 +122,7 @@ class _AdminMainPageState extends State<AdminMainPage> {
           isDarkMode: isDarkMode,
         );
       case 3:
-        return const DeveloperTeamPage();
+        return DeveloperTeamPage(isDarkMode: isDarkMode);
       default:
         return DashboardOverviewPage(
           firstName: widget.firstName,

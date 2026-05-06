@@ -16,22 +16,11 @@ class HeroSection extends StatelessWidget {
         Expanded(
           child: SizedBox(
             height: 700,
-            // In light mode the logo (assumed white-on-transparent) would be
-            // invisible against the light background, so we invert it.
             child: isDarkMode
-                ? Image.asset('assets/images/logo.png', fit: BoxFit.contain)
-                : ColorFiltered(
-                    colorFilter: const ColorFilter.matrix(<double>[
-                      -1, 0, 0, 0, 255,
-                       0,-1, 0, 0, 255,
-                       0, 0,-1, 0, 255,
-                       0, 0, 0, 1,   0,
-                    ]),
-                    child: Image.asset(
-                      'assets/images/logo.png',
-                      fit: BoxFit.contain,
-                    ),
-                  ),
+                ? Image.asset('assets/images/logo_dark.png',
+                    fit: BoxFit.contain)
+                : Image.asset('assets/images/logo_light.png',
+                    fit: BoxFit.contain),
           ),
         ),
 
@@ -43,7 +32,7 @@ class HeroSection extends StatelessWidget {
               mainAxisAlignment: MainAxisAlignment.center,
               children: [
                 Text(
-                  'Orbis - Intern Profile\nManagement System',
+                  'InTurn - Intern Profile\nManagement System',
                   textAlign: TextAlign.center,
                   style: TextStyle(
                     color: isDarkMode ? Colors.white : Colors.black,
@@ -57,8 +46,7 @@ class HeroSection extends StatelessWidget {
                     'Stay on top of your internship journey by easily tracking your daily\nhours, monitoring your remaining OJT hours, and keeping your\nprofile up to date. All in one simple and organized platform.',
                     textAlign: TextAlign.center,
                     style: TextStyle(
-                        color:
-                            isDarkMode ? Colors.white : Colors.black87,
+                        color: isDarkMode ? Colors.white : Colors.black87,
                         fontSize: 15),
                   ),
                 ),
@@ -137,16 +125,14 @@ class HeroSection extends StatelessWidget {
                             Text(
                               'Learn More',
                               style: TextStyle(
-                                color: isDarkMode
-                                    ? Colors.grey
-                                    : Colors.black54,
+                                color:
+                                    isDarkMode ? Colors.grey : Colors.black54,
                                 fontSize: 15,
                               ),
                             ),
                             Icon(Icons.arrow_forward,
-                                color: isDarkMode
-                                    ? Colors.grey
-                                    : Colors.black54),
+                                color:
+                                    isDarkMode ? Colors.grey : Colors.black54),
                           ],
                         ),
                       ),

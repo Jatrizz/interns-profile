@@ -27,13 +27,15 @@ class PreFooter extends StatelessWidget {
                         children: [
                           // Logo: no color tint — just let it render naturally.
                           Image.asset(
-                            'assets/images/logo.png',
+                            isDarkMode
+                                ? 'assets/images/logo_dark.png'
+                                : 'assets/images/logo_light.png',
                             height: 50,
                             width: 50,
                             fit: BoxFit.cover,
                           ),
                           Text(
-                            'Orbis',
+                            'InTurn',
                             style: TextStyle(
                               fontSize: 15,
                               fontWeight: FontWeight.w500,
@@ -116,27 +118,24 @@ class PreFooter extends StatelessWidget {
                           mainAxisAlignment: MainAxisAlignment.spaceBetween,
                           children: [
                             Text(
-                              'Orbis',
+                              'InTurn',
                               style: TextStyle(
                                 fontSize: 12,
-                                color:
-                                    isDarkMode ? Colors.white : Colors.black,
+                                color: isDarkMode ? Colors.white : Colors.black,
                               ),
                             ),
                             Text(
-                              'Orbis',
+                              'InTurn',
                               style: TextStyle(
                                 fontSize: 12,
-                                color:
-                                    isDarkMode ? Colors.white : Colors.black,
+                                color: isDarkMode ? Colors.white : Colors.black,
                               ),
                             ),
                             Text(
-                              'Orbis',
+                              'InTurn',
                               style: TextStyle(
                                 fontSize: 12,
-                                color:
-                                    isDarkMode ? Colors.white : Colors.black,
+                                color: isDarkMode ? Colors.white : Colors.black,
                               ),
                             ),
                           ],

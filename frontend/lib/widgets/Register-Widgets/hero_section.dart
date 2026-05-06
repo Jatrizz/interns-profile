@@ -273,20 +273,11 @@ class _HeroSectionState extends State<HeroSection> {
         Expanded(
           child: SizedBox(
             height: 700,
-            child: _dark
-                ? Image.asset('assets/images/logo.png', fit: BoxFit.contain)
-                : ColorFiltered(
-                    colorFilter: const ColorFilter.matrix(<double>[
-                      -1, 0, 0, 0, 255,
-                       0,-1, 0, 0, 255,
-                       0, 0,-1, 0, 255,
-                       0, 0, 0, 1,   0,
-                    ]),
-                    child: Image.asset(
-                      'assets/images/logo.png',
-                      fit: BoxFit.contain,
-                    ),
-                  ),
+            child: widget.isDarkMode
+                ? Image.asset('assets/images/logo_dark.png',
+                    fit: BoxFit.contain)
+                : Image.asset('assets/images/logo_light.png',
+                    fit: BoxFit.contain),
           ),
         ),
 
@@ -399,8 +390,8 @@ class _HeroSectionState extends State<HeroSection> {
                       _passwordChecks['uppercase'] ?? false),
                   _buildCheck("At least 1 lowercase",
                       _passwordChecks['lowercase'] ?? false),
-                  _buildCheck("At least 1 number",
-                      _passwordChecks['number'] ?? false),
+                  _buildCheck(
+                      "At least 1 number", _passwordChecks['number'] ?? false),
                   const SizedBox(height: 15),
 
                   // Register button
@@ -451,19 +442,20 @@ class _HeroSectionState extends State<HeroSection> {
                               decoration: TextDecoration.underline,
                             ),
                             recognizer: TapGestureRecognizer()
-                            ..onTap = () {
-                              Navigator.push(
-                                context,
-                                PageRouteBuilder(
-                                  pageBuilder: (_, __, ___) => TermsOfServicePage(
-                                    isDarkMode: widget.isDarkMode,
-                                    onToggleTheme: widget.onToggleTheme,
+                              ..onTap = () {
+                                Navigator.push(
+                                  context,
+                                  PageRouteBuilder(
+                                    pageBuilder: (_, __, ___) =>
+                                        TermsOfServicePage(
+                                      isDarkMode: widget.isDarkMode,
+                                      onToggleTheme: widget.onToggleTheme,
+                                    ),
+                                    transitionDuration: Duration.zero,
+                                    reverseTransitionDuration: Duration.zero,
                                   ),
-                                  transitionDuration: Duration.zero,
-                                  reverseTransitionDuration: Duration.zero,
-                                ),
-                              );
-                            },
+                                );
+                              },
                           ),
                           const TextSpan(text: ' and '),
                           TextSpan(
@@ -473,19 +465,20 @@ class _HeroSectionState extends State<HeroSection> {
                               decoration: TextDecoration.underline,
                             ),
                             recognizer: TapGestureRecognizer()
-                            ..onTap = () {
-                              Navigator.push(
-                                context,
-                                PageRouteBuilder(
-                                  pageBuilder: (_, __, ___) => PrivacyPolicyPage(
-                                    isDarkMode: widget.isDarkMode,
-                                    onToggleTheme: widget.onToggleTheme,
+                              ..onTap = () {
+                                Navigator.push(
+                                  context,
+                                  PageRouteBuilder(
+                                    pageBuilder: (_, __, ___) =>
+                                        PrivacyPolicyPage(
+                                      isDarkMode: widget.isDarkMode,
+                                      onToggleTheme: widget.onToggleTheme,
+                                    ),
+                                    transitionDuration: Duration.zero,
+                                    reverseTransitionDuration: Duration.zero,
                                   ),
-                                  transitionDuration: Duration.zero,
-                                  reverseTransitionDuration: Duration.zero,
-                                ),
-                              );
-                            },
+                                );
+                              },
                           ),
                         ],
                       ),
@@ -536,8 +529,7 @@ class _HeroSectionState extends State<HeroSection> {
               focusedBorder: OutlineInputBorder(
                 borderSide: BorderSide(color: _focusedBorderColor),
               ),
-              prefixIcon:
-                  icon != null ? Icon(icon, color: _iconColor) : null,
+              prefixIcon: icon != null ? Icon(icon, color: _iconColor) : null,
               labelText: label,
               labelStyle: TextStyle(color: _labelColor, fontSize: 12),
               suffixIcon: suffixIcon,

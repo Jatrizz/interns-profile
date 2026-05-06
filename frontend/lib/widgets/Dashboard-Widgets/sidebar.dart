@@ -22,67 +22,22 @@ class Sidebar extends StatelessWidget {
       child: Column(
         children: [
           const SizedBox(height: 5),
-          isDarkMode
-              ? Image.asset(
-                  'assets/images/logo.png',
-                  width: 60,
-                  height: 60,
-                  errorBuilder: (c, e, s) => Container(
-                    width: 60,
-                    height: 60,
-                    decoration: const BoxDecoration(
-                      color: Color(0xFF00BFFF),
-                      shape: BoxShape.circle,
-                    ),
-                    child: const Icon(
-                      Icons.circle,
-                      color: Colors.white,
-                      size: 18,
-                    ),
-                  ),
-                )
-              : ColorFiltered(
-                  colorFilter: const ColorFilter.matrix([
-                    -1,
-                    0,
-                    0,
-                    0,
-                    255,
-                    0,
-                    -1,
-                    0,
-                    0,
-                    255,
-                    0,
-                    0,
-                    -1,
-                    0,
-                    255,
-                    0,
-                    0,
-                    0,
-                    1,
-                    0,
-                  ]),
-                  child: Image.asset(
-                    'assets/images/logo.png',
-                    width: 60,
-                    height: 60,
-                    errorBuilder: (c, e, s) => Container(
-                      width: 60,
-                      height: 60,
-                      decoration: const BoxDecoration(
-                        color: Color(0xFF00BFFF),
-                        shape: BoxShape.circle,
-                      ),
-                      child: const Icon(
-                        Icons.circle,
-                        color: Colors.white,
-                        size: 18,
-                      ),
-                    ),
-                  ),
-                ),
+          Image.asset(
+            isDarkMode
+                ? 'assets/images/logo_dark.png'
+                : 'assets/images/logo_light.png',
+            width: 60,
+            height: 60,
+            errorBuilder: (c, e, s) => Container(
+              width: 60,
+              height: 60,
+              decoration: const BoxDecoration(
+                color: Color(0xFF00BFFF),
+                shape: BoxShape.circle,
+              ),
+              child: const Icon(Icons.circle, color: Colors.white, size: 18),
+            ),
+          ),
           const SizedBox(height: 15),
           _buildIcon(
             icon: Icons.grid_view,

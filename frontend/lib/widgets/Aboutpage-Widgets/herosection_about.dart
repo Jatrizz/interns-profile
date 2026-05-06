@@ -13,22 +13,10 @@ class HerosectionAbout extends StatelessWidget {
           child: SizedBox(
             height: 700,
             child: isDarkMode
-                ? Image.asset(
-                    '../../../assets/images/logo.png',
-                    fit: BoxFit.contain,
-                  )
-                : ColorFiltered(
-                    colorFilter: const ColorFilter.matrix(<double>[
-                      -1, 0, 0, 0, 255,
-                       0,-1, 0, 0, 255,
-                       0, 0,-1, 0, 255,
-                       0, 0, 0, 1,   0,
-                    ]),
-                    child: Image.asset(
-                      '../../../assets/images/logo.png',
-                      fit: BoxFit.contain,
-                    ),
-                  ),
+                ? Image.asset('assets/images/logo_dark.png',
+                    fit: BoxFit.contain)
+                : Image.asset('assets/images/logo_light.png',
+                    fit: BoxFit.contain),
           ),
         ),
 
