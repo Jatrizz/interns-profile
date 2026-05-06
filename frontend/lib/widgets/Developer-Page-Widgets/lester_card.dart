@@ -169,7 +169,7 @@ class _ProfessionalCard extends StatelessWidget {
             Divider(color: Colors.white.withOpacity(0.08)),
             const SizedBox(height: 8),
             _infoRow('School', 'PLSP'),
-            _infoRow('Department', 'Computer Engineering'),
+            _infoRow('Program', 'Computer Engineering'),
             _infoRow('Since', 'Aug 2022'),
             Row(
               children: [

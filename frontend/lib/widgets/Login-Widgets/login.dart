@@ -1,9 +1,7 @@
 import 'dart:convert';
 import 'package:flutter/material.dart';
-import 'package:flutter/gestures.dart';
 import 'package:http/http.dart' as http;
 import 'package:interfaces/pages/admin_main.dart';
-import 'package:interfaces/pages/register_page.dart';
 import 'package:interfaces/pages/intern_main.dart';
 
 class Login extends StatefulWidget {

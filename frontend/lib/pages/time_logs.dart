@@ -52,15 +52,30 @@ class _TimeLogsPageState extends State<TimeLogsPage> {
   late Timer _refreshTimer;
   bool _isFetching = false;
 
+  static const List<String> _months = [
+    'January',
+    'February',
+    'March',
+    'April',
+    'May',
+    'June',
+    'July',
+    'August',
+    'September',
+    'October',
+    'November',
+    'December'
+  ];
+
   @override
   void initState() {
     super.initState();
     selectedDate = _now;
-    selectedMonth = 'April ${_now.day}, ${_now.year}';
+    selectedMonth = '${_months[_now.month - 1]} ${_now.day}, ${_now.year}';
 
     fetchOverviewStats();
     fetchInterns();
-    fetchTodayLogs();
+    fetchTodayLogs(resetPage: true);
 
     _refreshTimer = Timer.periodic(const Duration(seconds: 30), (_) async {
       if (!mounted || _isFetching) return;
@@ -119,7 +134,7 @@ class _TimeLogsPageState extends State<TimeLogsPage> {
     }
   }
 
-  Future<void> fetchTodayLogs() async {
+  Future<void> fetchTodayLogs({bool resetPage = false}) async {
     String url;
     if (_isSpecificDate && selectedDate != null) {
       final date = selectedDate!.toIso8601String().split('T')[0];
@@ -137,15 +152,16 @@ class _TimeLogsPageState extends State<TimeLogsPage> {
         setState(() {
           allLogs = data.map((e) => Map<String, dynamic>.from(e)).toList();
           _isDefaultView = true;
-          applyFilters();
+          applyFilters(resetPage: resetPage);
         });
+        await fetchOverviewStats(); // ← refresh stats immediately after
       }
     } catch (e) {
       debugPrint('>>> Error fetching today logs: $e');
     }
   }
 
-  Future<void> fetchLogsForIntern(String name) async {
+  Future<void> fetchLogsForIntern(String name, {bool resetPage = false}) async {
     String url;
     if (_isSpecificDate && selectedDate != null) {
       final date = selectedDate!.toIso8601String().split('T')[0];
@@ -163,15 +179,16 @@ class _TimeLogsPageState extends State<TimeLogsPage> {
         final List<dynamic> data = jsonDecode(response.body);
         setState(() {
           allLogs = data.map((e) => Map<String, dynamic>.from(e)).toList();
-          applyFilters();
+          applyFilters(resetPage: resetPage);
         });
+        await fetchOverviewStats(); // ← refresh stats immediately after
       }
     } catch (e) {
       debugPrint('>>> Error fetching logs: $e');
     }
   }
 
-  void applyFilters() {
+  void applyFilters({bool resetPage = false}) {
     List<Map<String, dynamic>> result = List.from(allLogs);
 
     if (selectedStatus != 'All') {
@@ -218,17 +235,13 @@ class _TimeLogsPageState extends State<TimeLogsPage> {
 
     setState(() {
       filteredLogs = result;
-      currentPage = 1;
+      if (resetPage) currentPage = 1;
     });
   }
 
   Map<String, int> _parseSelectedMonth() {
-    final months = [
-      'January', 'February', 'March', 'April', 'May', 'June',
-      'July', 'August', 'September', 'October', 'November', 'December'
-    ];
     final parts = selectedMonth.split(' ');
-    final monthIndex = months.indexOf(parts[0]) + 1;
+    final monthIndex = _months.indexOf(parts[0]) + 1;
     final year = int.tryParse(parts[1]) ?? DateTime.now().year;
     return {'month': monthIndex, 'year': year};
   }
@@ -269,9 +282,8 @@ class _TimeLogsPageState extends State<TimeLogsPage> {
                         Text(
                           'Time Logs',
                           style: TextStyle(
-                            color: widget.isDarkMode
-                                ? Colors.white
-                                : Colors.black,
+                            color:
+                                widget.isDarkMode ? Colors.white : Colors.black,
                             fontSize: 20,
                             fontWeight: FontWeight.bold,
                           ),
@@ -281,15 +293,14 @@ class _TimeLogsPageState extends State<TimeLogsPage> {
                           isDarkMode: widget.isDarkMode,
                           searchQuery: searchQuery,
                           suggestions: filteredInternNames,
-                          onChanged: (val) =>
-                              setState(() => searchQuery = val),
+                          onChanged: (val) => setState(() => searchQuery = val),
                           onSuggestionSelected: (name) {
                             setState(() {
                               selectedIntern = name;
                               searchQuery = '';
                               _isDefaultView = false;
                             });
-                            fetchLogsForIntern(name);
+                            fetchLogsForIntern(name, resetPage: true);
                           },
                         ),
                         const SizedBox(height: 12),
@@ -305,10 +316,7 @@ class _TimeLogsPageState extends State<TimeLogsPage> {
                         const SizedBox(height: 6),
                         TimeLogsInternDropdown(
                           isDarkMode: widget.isDarkMode,
-                          internNames: [
-                            'All Interns',
-                            ...filteredInternNames
-                          ],
+                          internNames: ['All Interns', ...filteredInternNames],
                           selectedIntern: selectedIntern ?? 'All Interns',
                           onChanged: (val) {
                             if (val != null) {
@@ -317,13 +325,13 @@ class _TimeLogsPageState extends State<TimeLogsPage> {
                                   selectedIntern = 'All Interns';
                                   _isDefaultView = true;
                                 });
-                                fetchTodayLogs();
+                                fetchTodayLogs(resetPage: true);
                               } else {
                                 setState(() {
                                   selectedIntern = val;
                                   _isDefaultView = false;
                                 });
-                                fetchLogsForIntern(val);
+                                fetchLogsForIntern(val, resetPage: true);
                               }
                             }
                           },
@@ -339,53 +347,44 @@ class _TimeLogsPageState extends State<TimeLogsPage> {
                             setState(() {
                               _isSpecificDate = val;
                               final now = DateTime.now();
-                              final months = [
-                                'January', 'February', 'March', 'April',
-                                'May', 'June', 'July', 'August',
-                                'September', 'October', 'November', 'December'
-                              ];
                               if (val) {
                                 selectedDate = now;
                                 selectedMonth =
-                                    '${months[now.month - 1]} ${now.day}, ${now.year}';
+                                    '${_months[now.month - 1]} ${now.day}, ${now.year}';
                               } else {
                                 selectedDate = null;
                                 selectedMonth =
-                                    '${months[now.month - 1]} ${now.year}';
+                                    '${_months[now.month - 1]} ${now.year}';
                               }
                             });
-                            fetchTodayLogs();
+                            fetchTodayLogs(resetPage: true);
                           },
                           onMonthChanged: (DateTime picked) {
-                            final months = [
-                              'January', 'February', 'March', 'April',
-                              'May', 'June', 'July', 'August',
-                              'September', 'October', 'November', 'December'
-                            ];
                             setState(() {
                               selectedDate = picked;
                               if (_isSpecificDate) {
                                 selectedMonth =
-                                    '${months[picked.month - 1]} ${picked.day}, ${picked.year}';
+                                    '${_months[picked.month - 1]} ${picked.day}, ${picked.year}';
                               } else {
                                 selectedMonth =
-                                    '${months[picked.month - 1]} ${picked.year}';
+                                    '${_months[picked.month - 1]} ${picked.year}';
                               }
                             });
                             if (_isDefaultView) {
-                              fetchTodayLogs();
+                              fetchTodayLogs(resetPage: true);
                             } else if (selectedIntern != null &&
                                 selectedIntern != 'All Interns') {
-                              fetchLogsForIntern(selectedIntern!);
+                              fetchLogsForIntern(selectedIntern!,
+                                  resetPage: true);
                             }
                           },
                           onStatusChanged: (val) {
                             setState(() => selectedStatus = val);
-                            applyFilters();
+                            applyFilters(resetPage: true);
                           },
                           onWeekChanged: (val) {
                             setState(() => selectedWeek = val);
-                            applyFilters();
+                            applyFilters(resetPage: true);
                           },
                         ),
                       ],
@@ -411,13 +410,22 @@ class _TimeLogsPageState extends State<TimeLogsPage> {
           ),
           const SizedBox(height: 12),
           TimeLogsPagination(
-            isDarkMode: widget.isDarkMode,
-            currentPage: currentPage,
-            totalPages: totalPages,
-            totalEntries: filteredLogs.length,
-            shownCount: paginatedLogs.length,
-            onPageChanged: (page) => setState(() => currentPage = page),
-          ),
+              isDarkMode: widget.isDarkMode,
+              currentPage: currentPage,
+              totalPages: totalPages,
+              totalEntries: filteredLogs.length,
+              shownCount: paginatedLogs.length,
+              onPageChanged: (page) async {
+                setState(() => currentPage = page);
+                await fetchOverviewStats(); // refresh stats on page turn
+                if (_isDefaultView) {
+                  await fetchTodayLogs();
+                } else if (selectedIntern != null &&
+                    selectedIntern != 'All Interns') {
+                  await fetchLogsForIntern(selectedIntern!);
+                }
+              },
+            ),
           const SizedBox(height: 16),
           TimeLogsLegend(isDarkMode: widget.isDarkMode),
         ],
