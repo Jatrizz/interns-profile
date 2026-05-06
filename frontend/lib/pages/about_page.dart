@@ -9,7 +9,8 @@ import '../widgets/Homepage-Widgets/footer.dart';
 class AboutPage extends StatefulWidget {
   final bool isDarkMode;
   final VoidCallback onToggleTheme;
-  const AboutPage({super.key, required this.isDarkMode, required this.onToggleTheme});
+  const AboutPage(
+      {super.key, required this.isDarkMode, required this.onToggleTheme});
 
   @override
   State<AboutPage> createState() => _AboutPageState();
@@ -30,7 +31,8 @@ class _AboutPageState extends State<AboutPage> {
   Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: isDarkMode ? Colors.black : const Color(0xFFF5F6FA),
-      appBar: NavBar(isDarkMode: isDarkMode, onToggleTheme: _toggle),
+      appBar: NavBar(
+          isDarkMode: isDarkMode, onToggleTheme: _toggle, activePage: 'About'),
       body: ListView(
         children: [
           HerosectionAbout(isDarkMode: isDarkMode),

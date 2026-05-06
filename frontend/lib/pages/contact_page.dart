@@ -6,7 +6,8 @@ import 'package:interfaces/widgets/Homepage-Widgets/navbar.dart';
 class ContactPage extends StatefulWidget {
   final bool isDarkMode;
   final VoidCallback onToggleTheme;
-  const ContactPage({super.key, required this.isDarkMode, required this.onToggleTheme});
+  const ContactPage(
+      {super.key, required this.isDarkMode, required this.onToggleTheme});
 
   @override
   State<ContactPage> createState() => _ContactPageState();
@@ -27,7 +28,10 @@ class _ContactPageState extends State<ContactPage> {
   Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: isDarkMode ? Colors.black : const Color(0xFFF5F6FA),
-      appBar: NavBar(isDarkMode: isDarkMode, onToggleTheme: _toggle),
+      appBar: NavBar(
+          isDarkMode: isDarkMode,
+          onToggleTheme: _toggle,
+          activePage: 'Contact'),
       body: ListView(
         children: [
           ContactsContact(isDarkMode: isDarkMode),

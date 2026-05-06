@@ -38,7 +38,7 @@ class TeamSection extends StatelessWidget {
                   ClipRRect(
                     borderRadius: BorderRadiusGeometry.circular(10),
                     child: Image.asset(
-                      '../../../assets/images/profile_placeholder.webp',
+                      '../../../assets/images/lester.png',
                       height: 200,
                     ),
                   ),
@@ -65,7 +65,7 @@ class TeamSection extends StatelessWidget {
                     ClipRRect(
                       borderRadius: BorderRadiusGeometry.circular(10),
                       child: Image.asset(
-                        '../../../assets/images/profile_placeholder.webp',
+                        '../../../assets/images/janna.webp',
                         height: 200,
                       ),
                     ),
@@ -81,7 +81,7 @@ class TeamSection extends StatelessWidget {
                       ),
                     ),
                     Text(
-                      'Fullstack Developer',
+                      'Full-stack Developer',
                       style: TextStyle(
                           color: isDarkMode ? Colors.white : Colors.black,
                           fontSize: 14),
@@ -93,7 +93,7 @@ class TeamSection extends StatelessWidget {
                     ClipRRect(
                       borderRadius: BorderRadiusGeometry.circular(10),
                       child: Image.asset(
-                        '../../../assets/images/profile_placeholder.webp',
+                        '../../../assets/images/nathaniel.webp',
                         height: 200,
                       ),
                     ),
