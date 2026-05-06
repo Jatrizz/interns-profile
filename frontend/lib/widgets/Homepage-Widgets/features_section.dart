@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import '../../utils/responsive.dart';
 
 class FeaturesSection extends StatelessWidget {
   final bool isDarkMode;
@@ -12,13 +13,18 @@ class FeaturesSection extends StatelessWidget {
         mainAxisAlignment: MainAxisAlignment.center,
         crossAxisAlignment: CrossAxisAlignment.center,
         children: [
-          Icon(icon,
-              size: 60, color: isDarkMode ? Colors.white : Colors.black87),
+          Icon(
+            icon,
+            size: 60,
+            color: isDarkMode ? Colors.white : Colors.black87,
+          ),
           Text(
             label,
             textAlign: TextAlign.center,
             style: TextStyle(
-                fontSize: 15, color: isDarkMode ? Colors.white : Colors.black),
+              fontSize: 15,
+              color: isDarkMode ? Colors.white : Colors.black,
+            ),
           ),
         ],
       ),
@@ -27,43 +33,57 @@ class FeaturesSection extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Row(
-      crossAxisAlignment: CrossAxisAlignment.center,
-      mainAxisAlignment: MainAxisAlignment.center,
-      children: [
-        SizedBox(
-          height: 350,
-          child: Column(
-            mainAxisAlignment: MainAxisAlignment.center,
-            crossAxisAlignment: CrossAxisAlignment.center,
-            children: [
-              Text(
-                'Our Features',
-                style: TextStyle(
-                  fontSize: 30,
-                  color: isDarkMode ? Colors.white : Colors.black,
+    return SizedBox(
+      // shrinks on mobile, stays 350 on desktop
+      height: Responsive.isMobile(context) ? null : 350,
+      child: Column(
+        mainAxisAlignment: MainAxisAlignment.center,
+        crossAxisAlignment: CrossAxisAlignment.center,
+        children: [
+          Padding(
+            padding: EdgeInsets.symmetric(
+              vertical: 20,
+              horizontal: Responsive.value(
+                context,
+                mobile: 16.0,
+                tablet: 32.0,
+                desktop: 50.0,
+              ),
+            ),
+            child: Text(
+              'Our Features',
+              style: TextStyle(
+                fontSize: Responsive.value(
+                  context,
+                  mobile: 22.0,
+                  tablet: 26.0,
+                  desktop: 30.0,
                 ),
+                color: isDarkMode ? Colors.white : Colors.black,
               ),
-              const SizedBox(height: 20),
-              Row(
-                mainAxisAlignment: MainAxisAlignment.center,
-                children: [
-                  _feature(Icons.manage_accounts, 'Profile Management'),
-                  const SizedBox(
-                      width: 70), // change this value to adjust all gaps
-                  _feature(Icons.search, 'Search and Filter'),
-                  const SizedBox(width: 70),
-                  _feature(Icons.dashboard, 'Dashboard Overview'),
-                  const SizedBox(width: 70),
-                  _feature(Icons.sort, 'Sort and Organize'),
-                  const SizedBox(width: 70),
-                  _feature(Icons.contact_page, 'Contact Management'),
-                ],
-              ),
+            ),
+          ),
+          // Wrap automatically flows to next line on smaller screens
+          Wrap(
+            spacing: Responsive.value(
+              context,
+              mobile: 20.0,
+              tablet: 40.0,
+              desktop: 60.0,
+            ),
+            runSpacing: 20,
+            alignment: WrapAlignment.center,
+            children: [
+              _feature(Icons.manage_accounts, 'Profile Management'),
+              _feature(Icons.search, 'Search and Filter'),
+              _feature(Icons.dashboard, 'Dashboard Overview'),
+              _feature(Icons.sort, 'Sort and Organize'),
+              _feature(Icons.contact_page, 'Contact Management'),
             ],
           ),
-        ),
-      ],
+          const SizedBox(height: 20),
+        ],
+      ),
     );
   }
 }

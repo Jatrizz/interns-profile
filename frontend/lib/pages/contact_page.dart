@@ -32,6 +32,8 @@ class _ContactPageState extends State<ContactPage> {
           isDarkMode: isDarkMode,
           onToggleTheme: _toggle,
           activePage: 'Contact'),
+      endDrawer: NavDrawer(
+          isDarkMode: isDarkMode, onToggleTheme: _toggle, activePage: 'Home'),
       body: ListView(
         children: [
           ContactsContact(isDarkMode: isDarkMode),

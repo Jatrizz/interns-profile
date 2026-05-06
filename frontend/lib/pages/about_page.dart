@@ -33,6 +33,8 @@ class _AboutPageState extends State<AboutPage> {
       backgroundColor: isDarkMode ? Colors.black : const Color(0xFFF5F6FA),
       appBar: NavBar(
           isDarkMode: isDarkMode, onToggleTheme: _toggle, activePage: 'About'),
+      endDrawer: NavDrawer(
+          isDarkMode: isDarkMode, onToggleTheme: _toggle, activePage: 'Home'),
       body: ListView(
         children: [
           HerosectionAbout(isDarkMode: isDarkMode),

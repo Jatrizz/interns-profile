@@ -3,7 +3,6 @@ import 'package:interfaces/widgets/Homepage-Widgets/stats_section.dart';
 import '../widgets/Homepage-Widgets/navbar.dart';
 import '../widgets/Homepage-Widgets/hero_section.dart';
 import '../widgets/Homepage-Widgets/features_section.dart';
-// import '../widgets/Homepage-Widgets/stats_section.dart';
 import '../widgets/Homepage-Widgets/footer.dart';
 import '../widgets/Homepage-Widgets/prefooter.dart';
 
@@ -33,6 +32,8 @@ class _HomePageState extends State<HomePage> {
     return Scaffold(
       backgroundColor: isDarkMode ? Colors.black : const Color(0xFFF5F6FA),
       appBar: NavBar(
+          isDarkMode: isDarkMode, onToggleTheme: _toggle, activePage: 'Home'),
+      endDrawer: NavDrawer(
           isDarkMode: isDarkMode, onToggleTheme: _toggle, activePage: 'Home'),
       body: ListView(
         children: [
