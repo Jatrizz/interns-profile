@@ -120,19 +120,7 @@ class _NathanielCardFace extends StatelessWidget {
         color: _bgCard,
         borderRadius: BorderRadius.circular(20),
         border: Border.all(color: _border),
-        boxShadow: [
-          BoxShadow(
-            color: _accent.withOpacity(0.08),
-            blurRadius: 32,
-            spreadRadius: 2,
-            offset: const Offset(0, 10),
-          ),
-          BoxShadow(
-            color: Colors.black.withOpacity(0.6),
-            blurRadius: 24,
-            offset: const Offset(0, 12),
-          ),
-        ],
+        boxShadow: [],
       ),
       child: ClipRRect(
         borderRadius: BorderRadius.circular(20),
