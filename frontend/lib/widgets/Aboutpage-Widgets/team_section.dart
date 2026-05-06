@@ -38,7 +38,7 @@ class TeamSection extends StatelessWidget {
                   ClipRRect(
                     borderRadius: BorderRadiusGeometry.circular(10),
                     child: Image.asset(
-                      '../../../assets/images/lester.png',
+                      'assets/images/lester.png',
                       height: 200,
                     ),
                   ),
@@ -54,7 +54,7 @@ class TeamSection extends StatelessWidget {
                     ),
                   ),
                   Text(
-                    'Pogi lang',
+                    'Frontend Developer',
                     style: TextStyle(
                         color: isDarkMode ? Colors.white : Colors.black,
                         fontSize: 14),
@@ -65,7 +65,7 @@ class TeamSection extends StatelessWidget {
                     ClipRRect(
                       borderRadius: BorderRadiusGeometry.circular(10),
                       child: Image.asset(
-                        '../../../assets/images/janna.webp',
+                        'assets/images/janna.png',
                         height: 200,
                       ),
                     ),
@@ -93,7 +93,7 @@ class TeamSection extends StatelessWidget {
                     ClipRRect(
                       borderRadius: BorderRadiusGeometry.circular(10),
                       child: Image.asset(
-                        '../../../assets/images/nathaniel.webp',
+                        'assets/images/nathan.png',
                         height: 200,
                       ),
                     ),
