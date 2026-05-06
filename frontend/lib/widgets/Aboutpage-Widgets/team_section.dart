@@ -65,7 +65,7 @@ class TeamSection extends StatelessWidget {
                     ClipRRect(
                       borderRadius: BorderRadiusGeometry.circular(10),
                       child: Image.asset(
-                        'assets/images/janna.png',
+                        'assets/images/janna.webp',
                         height: 200,
                       ),
                     ),
@@ -93,7 +93,7 @@ class TeamSection extends StatelessWidget {
                     ClipRRect(
                       borderRadius: BorderRadiusGeometry.circular(10),
                       child: Image.asset(
-                        'assets/images/nathan.png',
+                        'assets/images/nathaniel.webp',
                         height: 200,
                       ),
                     ),
