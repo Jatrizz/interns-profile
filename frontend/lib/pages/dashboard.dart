@@ -2,11 +2,14 @@ import 'package:flutter/material.dart';
 import 'dart:async';
 import 'dart:convert';
 import 'package:http/http.dart' as http;
+import '../utils/responsive.dart';
 import '../widgets/Dashboard-Widgets/welcome_card.dart';
 import '../widgets/Dashboard-Widgets/stats_cards.dart';
 import '../widgets/Dashboard-Widgets/bar_chart.dart';
 import '../widgets/Dashboard-Widgets/recent_activity.dart';
 import '../widgets/Dashboard-Widgets/right_panel.dart';
+import '../widgets/Dashboard-Widgets/calendar.dart';
+import '../widgets/Dashboard-Widgets/dahsboard_intern_list.dart';
 
 class DashboardOverviewPage extends StatefulWidget {
   final String firstName;
@@ -46,9 +49,9 @@ class _DashboardOverviewPageState extends State<DashboardOverviewPage> {
     fetchChartStats();
     fetchRecentActivity();
     _internRefreshTimer = Timer.periodic(const Duration(seconds: 1), (_) {
-    fetchInterns();
-    fetchRecentActivity();
-  });
+      fetchInterns();
+      fetchRecentActivity();
+    });
   }
 
   @override
@@ -113,13 +116,12 @@ class _DashboardOverviewPageState extends State<DashboardOverviewPage> {
         Uri.parse('http://127.0.0.1:8080/interns-list'),
       );
       if (response.statusCode == 200) {
-        debugPrint('>>> interns-list body: ${response.body}');
         setState(() {
           interns = jsonDecode(response.body);
         });
       }
     } catch (e) {
-      debugPrint('Error fetching admins: $e');
+      debugPrint('Error fetching interns: $e');
     }
   }
 
@@ -191,63 +193,103 @@ class _DashboardOverviewPageState extends State<DashboardOverviewPage> {
     }
   }
 
+  // ── calendar callbacks ──
+  void _previousMonth() => setState(() {
+        _calendarDate = DateTime(
+          _calendarDate.year,
+          _calendarDate.month - 1,
+          1,
+        );
+      });
+
+  void _nextMonth() => setState(() {
+        _calendarDate = DateTime(
+          _calendarDate.year,
+          _calendarDate.month + 1,
+          1,
+        );
+      });
+
   @override
   Widget build(BuildContext context) {
-    return Row(
-      children: [
-        Expanded(
-          child: SingleChildScrollView(
-            padding: const EdgeInsets.all(20),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                WelcomeCard(
-                  isDarkMode: widget.isDarkMode,
-                  firstName: widget.firstName,
-                  currentTime: _currentTimeString,
-                ),
-                const SizedBox(height: 20),
-                StatsCards(
-                  isDarkMode: widget.isDarkMode,
-                  newInterns: newInterns,
-                  totalInterns: totalInterns,
-                  totalSchools: totalSchools,
-                ),
-                const SizedBox(height: 20),
-                BarChart(
-                  isDarkMode: widget.isDarkMode,
-                  yearlyStats: chartYearlyStats,
-                ),
-                const SizedBox(height: 20),
-                RecentActivity(
-                  isDarkMode: widget.isDarkMode,
-                  activities: recentActivities,
-                ),
-              ],
-            ),
+    final isMobile = Responsive.isMobile(context);
+
+    // ── main scrollable content ──
+    final mainContent = SingleChildScrollView(
+      padding: const EdgeInsets.all(20),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          WelcomeCard(
+            isDarkMode: widget.isDarkMode,
+            firstName: widget.firstName,
+            currentTime: _currentTimeString,
           ),
-        ),
-        RightPanel(
-          isDarkMode: widget.isDarkMode,
-          interns: interns,
-          currentDate: _currentDate,
-          calendarDate: _calendarDate,
-          onPreviousMonth: () => setState(() {
-            _calendarDate = DateTime(
-              _calendarDate.year,
-              _calendarDate.month - 1,
-              1,
-            );
-          }),
-          onNextMonth: () => setState(() {
-            _calendarDate = DateTime(
-              _calendarDate.year,
-              _calendarDate.month + 1,
-              1,
-            );
-          }),
-        ),
-      ],
+          const SizedBox(height: 20),
+          StatsCards(
+            isDarkMode: widget.isDarkMode,
+            newInterns: newInterns,
+            totalInterns: totalInterns,
+            totalSchools: totalSchools,
+          ),
+          const SizedBox(height: 20),
+          BarChart(
+            isDarkMode: widget.isDarkMode,
+            yearlyStats: chartYearlyStats,
+          ),
+          const SizedBox(height: 20),
+          RecentActivity(
+            isDarkMode: widget.isDarkMode,
+            activities: recentActivities,
+          ),
+
+          // on mobile: show calendar + intern list below
+          if (isMobile) ...[
+            const SizedBox(height: 20),
+            Container(
+              padding: const EdgeInsets.all(15),
+              decoration: BoxDecoration(
+                color: isDarkMode
+                    ? const Color(0xFF242424)
+                    : const Color(0xFFF5F5F5),
+                borderRadius: BorderRadius.circular(12),
+              ),
+              child: CalendarWidget(
+                isDarkMode: widget.isDarkMode,
+                currentDate: _currentDate,
+                calendarDate: _calendarDate,
+                onPreviousMonth: _previousMonth,
+                onNextMonth: _nextMonth,
+              ),
+            ),
+            const SizedBox(height: 20),
+            DahsboardInternList(
+              isDarkMode: widget.isDarkMode,
+              interns: interns,
+            ),
+          ],
+        ],
+      ),
     );
+
+    // ── desktop: Row with RightPanel on the side ──
+    // ── mobile: just the main content, RightPanel hidden ──
+    return isMobile
+        ? mainContent
+        : Row(
+            children: [
+              Expanded(child: mainContent),
+              RightPanel(
+                isDarkMode: widget.isDarkMode,
+                interns: interns,
+                currentDate: _currentDate,
+                calendarDate: _calendarDate,
+                onPreviousMonth: _previousMonth,
+                onNextMonth: _nextMonth,
+              ),
+            ],
+          );
   }
+
+  bool get isDarkMode => widget.isDarkMode;
 }

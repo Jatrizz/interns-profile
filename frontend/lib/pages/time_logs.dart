@@ -9,6 +9,7 @@ import '../widgets/TimeLogs-Widgets/time_logs_filters.dart';
 import '../widgets/TimeLogs-Widgets/time_logs_table.dart';
 import '../widgets/TimeLogs-Widgets/time_logs_pagination.dart';
 import '../widgets/TimeLogs-Widgets/time_logs_legend.dart';
+import '../utils/responsive.dart';
 
 class TimeLogsPage extends StatefulWidget {
   final String firstName;
@@ -154,7 +155,7 @@ class _TimeLogsPageState extends State<TimeLogsPage> {
           _isDefaultView = true;
           applyFilters(resetPage: resetPage);
         });
-        await fetchOverviewStats(); // ← refresh stats immediately after
+        await fetchOverviewStats();
       }
     } catch (e) {
       debugPrint('>>> Error fetching today logs: $e');
@@ -181,7 +182,7 @@ class _TimeLogsPageState extends State<TimeLogsPage> {
           allLogs = data.map((e) => Map<String, dynamic>.from(e)).toList();
           applyFilters(resetPage: resetPage);
         });
-        await fetchOverviewStats(); // ← refresh stats immediately after
+        await fetchOverviewStats();
       }
     } catch (e) {
       debugPrint('>>> Error fetching logs: $e');
@@ -262,146 +263,160 @@ class _TimeLogsPageState extends State<TimeLogsPage> {
         .toList();
   }
 
+  // ── shared filters column ─────────────────────────────────────────────
+  Widget _buildFiltersColumn() {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Text(
+          'Time Logs',
+          style: TextStyle(
+            color: widget.isDarkMode ? Colors.white : Colors.black,
+            fontSize: 20,
+            fontWeight: FontWeight.bold,
+          ),
+        ),
+        const SizedBox(height: 12),
+        TimeLogsSearchBar(
+          isDarkMode: widget.isDarkMode,
+          searchQuery: searchQuery,
+          suggestions: filteredInternNames,
+          onChanged: (val) => setState(() => searchQuery = val),
+          onSuggestionSelected: (name) {
+            setState(() {
+              selectedIntern = name;
+              searchQuery = '';
+              _isDefaultView = false;
+            });
+            fetchLogsForIntern(name, resetPage: true);
+          },
+        ),
+        const SizedBox(height: 12),
+        Text(
+          'Intern Name',
+          style: TextStyle(
+            color: widget.isDarkMode ? Colors.grey[400] : Colors.grey[600],
+            fontSize: 13,
+          ),
+        ),
+        const SizedBox(height: 6),
+        TimeLogsInternDropdown(
+          isDarkMode: widget.isDarkMode,
+          internNames: ['All Interns', ...filteredInternNames],
+          selectedIntern: selectedIntern ?? 'All Interns',
+          onChanged: (val) {
+            if (val != null) {
+              if (val == 'All Interns') {
+                setState(() {
+                  selectedIntern = 'All Interns';
+                  _isDefaultView = true;
+                });
+                fetchTodayLogs(resetPage: true);
+              } else {
+                setState(() {
+                  selectedIntern = val;
+                  _isDefaultView = false;
+                });
+                fetchLogsForIntern(val, resetPage: true);
+              }
+            }
+          },
+        ),
+        const SizedBox(height: 16),
+        TimeLogsFilters(
+          isDarkMode: widget.isDarkMode,
+          selectedMonth: selectedMonth,
+          selectedStatus: selectedStatus,
+          selectedWeek: selectedWeek,
+          isSpecificDate: _isSpecificDate,
+          onToggleMode: (val) {
+            setState(() {
+              _isSpecificDate = val;
+              final now = DateTime.now();
+              if (val) {
+                selectedDate = now;
+                selectedMonth =
+                    '${_months[now.month - 1]} ${now.day}, ${now.year}';
+              } else {
+                selectedDate = null;
+                selectedMonth = '${_months[now.month - 1]} ${now.year}';
+              }
+            });
+            fetchTodayLogs(resetPage: true);
+          },
+          onMonthChanged: (DateTime picked) {
+            setState(() {
+              selectedDate = picked;
+              if (_isSpecificDate) {
+                selectedMonth =
+                    '${_months[picked.month - 1]} ${picked.day}, ${picked.year}';
+              } else {
+                selectedMonth = '${_months[picked.month - 1]} ${picked.year}';
+              }
+            });
+            if (_isDefaultView) {
+              fetchTodayLogs(resetPage: true);
+            } else if (selectedIntern != null &&
+                selectedIntern != 'All Interns') {
+              fetchLogsForIntern(selectedIntern!, resetPage: true);
+            }
+          },
+          onStatusChanged: (val) {
+            setState(() => selectedStatus = val);
+            applyFilters(resetPage: true);
+          },
+          onWeekChanged: (val) {
+            setState(() => selectedWeek = val);
+            applyFilters(resetPage: true);
+          },
+        ),
+      ],
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
+    final isMobile = Responsive.isMobile(context);
+
     return SingleChildScrollView(
       padding: const EdgeInsets.all(24),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Row(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Expanded(
-                child: Stack(
-                  clipBehavior: Clip.none,
+          // Top section — side by side on desktop, stacked on mobile
+          isMobile
+              ? Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Text(
-                          'Time Logs',
-                          style: TextStyle(
-                            color:
-                                widget.isDarkMode ? Colors.white : Colors.black,
-                            fontSize: 20,
-                            fontWeight: FontWeight.bold,
-                          ),
-                        ),
-                        const SizedBox(height: 12),
-                        TimeLogsSearchBar(
-                          isDarkMode: widget.isDarkMode,
-                          searchQuery: searchQuery,
-                          suggestions: filteredInternNames,
-                          onChanged: (val) => setState(() => searchQuery = val),
-                          onSuggestionSelected: (name) {
-                            setState(() {
-                              selectedIntern = name;
-                              searchQuery = '';
-                              _isDefaultView = false;
-                            });
-                            fetchLogsForIntern(name, resetPage: true);
-                          },
-                        ),
-                        const SizedBox(height: 12),
-                        Text(
-                          'Intern Name',
-                          style: TextStyle(
-                            color: widget.isDarkMode
-                                ? Colors.grey[400]
-                                : Colors.grey[600],
-                            fontSize: 13,
-                          ),
-                        ),
-                        const SizedBox(height: 6),
-                        TimeLogsInternDropdown(
-                          isDarkMode: widget.isDarkMode,
-                          internNames: ['All Interns', ...filteredInternNames],
-                          selectedIntern: selectedIntern ?? 'All Interns',
-                          onChanged: (val) {
-                            if (val != null) {
-                              if (val == 'All Interns') {
-                                setState(() {
-                                  selectedIntern = 'All Interns';
-                                  _isDefaultView = true;
-                                });
-                                fetchTodayLogs(resetPage: true);
-                              } else {
-                                setState(() {
-                                  selectedIntern = val;
-                                  _isDefaultView = false;
-                                });
-                                fetchLogsForIntern(val, resetPage: true);
-                              }
-                            }
-                          },
-                        ),
-                        const SizedBox(height: 16),
-                        TimeLogsFilters(
-                          isDarkMode: widget.isDarkMode,
-                          selectedMonth: selectedMonth,
-                          selectedStatus: selectedStatus,
-                          selectedWeek: selectedWeek,
-                          isSpecificDate: _isSpecificDate,
-                          onToggleMode: (val) {
-                            setState(() {
-                              _isSpecificDate = val;
-                              final now = DateTime.now();
-                              if (val) {
-                                selectedDate = now;
-                                selectedMonth =
-                                    '${_months[now.month - 1]} ${now.day}, ${now.year}';
-                              } else {
-                                selectedDate = null;
-                                selectedMonth =
-                                    '${_months[now.month - 1]} ${now.year}';
-                              }
-                            });
-                            fetchTodayLogs(resetPage: true);
-                          },
-                          onMonthChanged: (DateTime picked) {
-                            setState(() {
-                              selectedDate = picked;
-                              if (_isSpecificDate) {
-                                selectedMonth =
-                                    '${_months[picked.month - 1]} ${picked.day}, ${picked.year}';
-                              } else {
-                                selectedMonth =
-                                    '${_months[picked.month - 1]} ${picked.year}';
-                              }
-                            });
-                            if (_isDefaultView) {
-                              fetchTodayLogs(resetPage: true);
-                            } else if (selectedIntern != null &&
-                                selectedIntern != 'All Interns') {
-                              fetchLogsForIntern(selectedIntern!,
-                                  resetPage: true);
-                            }
-                          },
-                          onStatusChanged: (val) {
-                            setState(() => selectedStatus = val);
-                            applyFilters(resetPage: true);
-                          },
-                          onWeekChanged: (val) {
-                            setState(() => selectedWeek = val);
-                            applyFilters(resetPage: true);
-                          },
-                        ),
-                      ],
+                    _buildFiltersColumn(),
+                    const SizedBox(height: 20),
+                    TimeLogsOverviewCards(
+                      isDarkMode: widget.isDarkMode,
+                      totalInterns: totalInterns,
+                      presentToday: presentToday,
+                      lateToday: lateToday,
+                      absentToday: absentToday,
+                    ),
+                  ],
+                )
+              : Row(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Expanded(child: _buildFiltersColumn()),
+                    const SizedBox(width: 24),
+                    SizedBox(
+                      width: 320,
+                      child: TimeLogsOverviewCards(
+                        isDarkMode: widget.isDarkMode,
+                        totalInterns: totalInterns,
+                        presentToday: presentToday,
+                        lateToday: lateToday,
+                        absentToday: absentToday,
+                      ),
                     ),
                   ],
                 ),
-              ),
-              const SizedBox(width: 24),
-              TimeLogsOverviewCards(
-                isDarkMode: widget.isDarkMode,
-                totalInterns: totalInterns,
-                presentToday: presentToday,
-                lateToday: lateToday,
-                absentToday: absentToday,
-              ),
-            ],
-          ),
+
           const SizedBox(height: 20),
           TimeLogsTable(
             isDarkMode: widget.isDarkMode,
@@ -410,22 +425,22 @@ class _TimeLogsPageState extends State<TimeLogsPage> {
           ),
           const SizedBox(height: 12),
           TimeLogsPagination(
-              isDarkMode: widget.isDarkMode,
-              currentPage: currentPage,
-              totalPages: totalPages,
-              totalEntries: filteredLogs.length,
-              shownCount: paginatedLogs.length,
-              onPageChanged: (page) async {
-                setState(() => currentPage = page);
-                await fetchOverviewStats(); // refresh stats on page turn
-                if (_isDefaultView) {
-                  await fetchTodayLogs();
-                } else if (selectedIntern != null &&
-                    selectedIntern != 'All Interns') {
-                  await fetchLogsForIntern(selectedIntern!);
-                }
-              },
-            ),
+            isDarkMode: widget.isDarkMode,
+            currentPage: currentPage,
+            totalPages: totalPages,
+            totalEntries: filteredLogs.length,
+            shownCount: paginatedLogs.length,
+            onPageChanged: (page) async {
+              setState(() => currentPage = page);
+              await fetchOverviewStats();
+              if (_isDefaultView) {
+                await fetchTodayLogs();
+              } else if (selectedIntern != null &&
+                  selectedIntern != 'All Interns') {
+                await fetchLogsForIntern(selectedIntern!);
+              }
+            },
+          ),
           const SizedBox(height: 16),
           TimeLogsLegend(isDarkMode: widget.isDarkMode),
         ],

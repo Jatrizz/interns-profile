@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import '../../utils/responsive.dart';
 
 class TimeLogsTable extends StatelessWidget {
   final bool isDarkMode;
@@ -43,6 +44,8 @@ class TimeLogsTable extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final isMobile = Responsive.isMobile(context);
+
     final headerColor = isDarkMode ? Colors.grey[400]! : Colors.grey[700]!;
     final borderColor =
         isDarkMode ? const Color(0xFF333333) : const Color(0xFFE0E0E0);
@@ -50,7 +53,7 @@ class TimeLogsTable extends StatelessWidget {
         isDarkMode ? const Color(0xFF242424) : const Color(0xFFF9F9F9);
     final textColor = isDarkMode ? Colors.white : Colors.black;
 
-    return Container(
+    final tableContent = Container(
       decoration: BoxDecoration(
         color: isDarkMode ? const Color(0xFF1E1E1E) : Colors.white,
         borderRadius: BorderRadius.circular(12),
@@ -60,6 +63,7 @@ class TimeLogsTable extends StatelessWidget {
         children: [
           // Header
           Container(
+            width: isMobile ? 700 : null,
             padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
             decoration: BoxDecoration(
               color: rowBg,
@@ -79,6 +83,7 @@ class TimeLogsTable extends StatelessWidget {
               ],
             ),
           ),
+
           // Rows
           if (logs.isEmpty)
             Padding(
@@ -100,6 +105,7 @@ class TimeLogsTable extends StatelessWidget {
               final isLast = index == logs.length - 1;
 
               return Container(
+                width: isMobile ? 700 : null,
                 padding:
                     const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
                 decoration: BoxDecoration(
@@ -147,6 +153,13 @@ class TimeLogsTable extends StatelessWidget {
         ],
       ),
     );
+
+    return isMobile
+        ? SingleChildScrollView(
+            scrollDirection: Axis.horizontal,
+            child: tableContent,
+          )
+        : tableContent;
   }
 
   Widget _headerCell(String text, {required int flex, required Color color}) {

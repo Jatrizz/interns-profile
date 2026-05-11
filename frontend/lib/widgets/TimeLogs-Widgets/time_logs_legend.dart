@@ -15,7 +15,10 @@ class TimeLogsLegend extends StatelessWidget {
       {'label': 'Weekend', 'color': const Color(0xFFAB47BC)},
     ];
 
-    return Row(
+    return Wrap(
+      spacing: 8,
+      runSpacing: 8,
+      crossAxisAlignment: WrapCrossAlignment.center,
       children: [
         Text(
           'Legend:',
@@ -25,11 +28,7 @@ class TimeLogsLegend extends StatelessWidget {
             fontWeight: FontWeight.w500,
           ),
         ),
-        const SizedBox(width: 12),
-        ...legends.map((item) {
-          return Padding(
-            padding: const EdgeInsets.only(right: 10),
-            child: Container(
+        ...legends.map((item) => Container(
               padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 6),
               decoration: BoxDecoration(
                 color: item['color'] as Color,
@@ -43,9 +42,7 @@ class TimeLogsLegend extends StatelessWidget {
                   fontWeight: FontWeight.w600,
                 ),
               ),
-            ),
-          );
-        }),
+            )),
       ],
     );
   }

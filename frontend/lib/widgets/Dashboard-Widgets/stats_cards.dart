@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import '../../utils/responsive.dart';
 
 class StatsCards extends StatelessWidget {
   final bool isDarkMode;
@@ -16,19 +17,33 @@ class StatsCards extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Row(
-      children: [
-        Expanded(
-          child: _buildCard("No. of New Interns", newInterns.toString()),
-        ),
-        const SizedBox(width: 15),
-        Expanded(
-          child: _buildCard("Total No. of Interns", totalInterns.toString()),
-        ),
-        const SizedBox(width: 15),
-        Expanded(child: _buildCard("No. of Schools", totalSchools.toString())),
-      ],
-    );
+    final isMobile = Responsive.isMobile(context);
+
+    final cards = [
+      _buildCard("No. of New Interns", newInterns.toString()),
+      _buildCard("Total No. of Interns", totalInterns.toString()),
+      _buildCard("No. of Schools", totalSchools.toString()),
+    ];
+
+    return isMobile
+        ? Column(
+            children: [
+              cards[0],
+              const SizedBox(height: 15),
+              cards[1],
+              const SizedBox(height: 15),
+              cards[2],
+            ],
+          )
+        : Row(
+            children: [
+              Expanded(child: cards[0]),
+              const SizedBox(width: 15),
+              Expanded(child: cards[1]),
+              const SizedBox(width: 15),
+              Expanded(child: cards[2]),
+            ],
+          );
   }
 
   Widget _buildCard(String title, String value) {

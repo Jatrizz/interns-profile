@@ -18,27 +18,24 @@ class TimeLogsOverviewCards extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return SizedBox(
-      width: 320,
-      child: Column(
-        children: [
-          Row(
-            children: [
-              _buildCard('Total Interns', totalInterns),
-              const SizedBox(width: 12),
-              _buildCard('Present Today', presentToday),
-            ],
-          ),
-          const SizedBox(height: 12),
-          Row(
-            children: [
-              _buildCard('Late Today', lateToday),
-              const SizedBox(width: 12),
-              _buildCard('Absent Today', absentToday),
-            ],
-          ),
-        ],
-      ),
+    return Column(
+      children: [
+        Row(
+          children: [
+            _buildCard('Total Interns', totalInterns),
+            const SizedBox(width: 12),
+            _buildCard('Present Today', presentToday),
+          ],
+        ),
+        const SizedBox(height: 12),
+        Row(
+          children: [
+            _buildCard('Late Today', lateToday),
+            const SizedBox(width: 12),
+            _buildCard('Absent Today', absentToday),
+          ],
+        ),
+      ],
     );
   }
 

@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import '../../utils/responsive.dart';
 
 class TimeLogsPagination extends StatelessWidget {
   final bool isDarkMode;
@@ -20,16 +21,11 @@ class TimeLogsPagination extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Row(
+    final isMobile = Responsive.isMobile(context);
+
+    final pageButtons = Row(
+      mainAxisSize: MainAxisSize.min,
       children: [
-        Text(
-          'Showing $shownCount of $totalEntries entries',
-          style: TextStyle(
-            color: isDarkMode ? Colors.grey[400] : Colors.grey[600],
-            fontSize: 13,
-          ),
-        ),
-        const Spacer(),
         _navButton('Prev',
             currentPage > 1 ? () => onPageChanged(currentPage - 1) : null),
         const SizedBox(width: 6),
@@ -73,6 +69,34 @@ class TimeLogsPagination extends StatelessWidget {
                 : null),
       ],
     );
+
+    final entryText = Text(
+      'Showing $shownCount of $totalEntries entries',
+      style: TextStyle(
+        color: isDarkMode ? Colors.grey[400] : Colors.grey[600],
+        fontSize: 13,
+      ),
+    );
+
+    return isMobile
+        ? Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              entryText,
+              const SizedBox(height: 10),
+              SingleChildScrollView(
+                scrollDirection: Axis.horizontal,
+                child: pageButtons,
+              ),
+            ],
+          )
+        : Row(
+            children: [
+              entryText,
+              const Spacer(),
+              pageButtons,
+            ],
+          );
   }
 
   Widget _navButton(String label, VoidCallback? onTap) {
