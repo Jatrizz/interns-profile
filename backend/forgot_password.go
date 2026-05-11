@@ -94,7 +94,7 @@ func sendResetOTP(toEmail, otp string) error {
           <!-- Header -->
           <tr>
             <td align="center" style="
-              background: linear-gradient(135deg, #DC2626 0%%, #B91C1C 100%%);
+              background: linear-gradient(135deg, #2563EB 0%%, #0237E6 100%%);
               padding: 36px 40px 28px;
             ">
               <table cellpadding="0" cellspacing="0">
