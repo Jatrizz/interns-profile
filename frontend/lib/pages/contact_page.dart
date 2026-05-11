@@ -15,6 +15,7 @@ class ContactPage extends StatefulWidget {
 
 class _ContactPageState extends State<ContactPage> {
   late bool isDarkMode;
+  final _scaffoldKey = GlobalKey<ScaffoldState>();
 
   @override
   void initState() {
@@ -27,13 +28,17 @@ class _ContactPageState extends State<ContactPage> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
+      key: _scaffoldKey,
       backgroundColor: isDarkMode ? Colors.black : const Color(0xFFF5F6FA),
       appBar: NavBar(
           isDarkMode: isDarkMode,
           onToggleTheme: _toggle,
-          activePage: 'Contact'),
+          activePage: 'Contact',
+          scaffoldKey: _scaffoldKey),
       endDrawer: NavDrawer(
-          isDarkMode: isDarkMode, onToggleTheme: _toggle, activePage: 'Home'),
+          isDarkMode: isDarkMode,
+          onToggleTheme: _toggle,
+          activePage: 'Contact'),
       body: ListView(
         children: [
           ContactsContact(isDarkMode: isDarkMode),

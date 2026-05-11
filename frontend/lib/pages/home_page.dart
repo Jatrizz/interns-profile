@@ -18,6 +18,7 @@ class HomePage extends StatefulWidget {
 
 class _HomePageState extends State<HomePage> {
   late bool isDarkMode;
+  final _scaffoldKey = GlobalKey<ScaffoldState>();
 
   @override
   void initState() {
@@ -30,9 +31,13 @@ class _HomePageState extends State<HomePage> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
+      key: _scaffoldKey,
       backgroundColor: isDarkMode ? Colors.black : const Color(0xFFF5F6FA),
       appBar: NavBar(
-          isDarkMode: isDarkMode, onToggleTheme: _toggle, activePage: 'Home'),
+          isDarkMode: isDarkMode,
+          onToggleTheme: _toggle,
+          activePage: 'Home',
+          scaffoldKey: _scaffoldKey),
       endDrawer: NavDrawer(
           isDarkMode: isDarkMode, onToggleTheme: _toggle, activePage: 'Home'),
       body: ListView(

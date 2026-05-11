@@ -13,6 +13,7 @@ class LoginPage extends StatefulWidget {
 
 class _LoginPageState extends State<LoginPage> {
   late bool isDarkMode;
+  final _scaffoldKey = GlobalKey<ScaffoldState>();
 
   @override
   void initState() {
@@ -25,10 +26,15 @@ class _LoginPageState extends State<LoginPage> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
+      key: _scaffoldKey,
       backgroundColor: isDarkMode ? Colors.black : const Color(0xFFF5F6FA),
-      appBar: NavBar(isDarkMode: isDarkMode, onToggleTheme: _toggle),
+      appBar: NavBar(
+          isDarkMode: isDarkMode,
+          onToggleTheme: _toggle,
+          activePage: 'Login',
+          scaffoldKey: _scaffoldKey),
       endDrawer: NavDrawer(
-          isDarkMode: isDarkMode, onToggleTheme: _toggle, activePage: 'Home'),
+          isDarkMode: isDarkMode, onToggleTheme: _toggle, activePage: 'Login'),
       body: ListView(
           children: [Login(isDarkMode: isDarkMode, onToggleTheme: _toggle)]),
     );

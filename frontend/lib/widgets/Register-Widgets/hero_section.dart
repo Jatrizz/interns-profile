@@ -5,6 +5,7 @@ import 'package:flutter/services.dart';
 import 'package:interfaces/pages/login_page.dart';
 import 'package:flutter/gestures.dart';
 import 'package:interfaces/pages/privacy_policy_page.dart';
+import '../../utils/responsive.dart';
 
 class HeroSection extends StatefulWidget {
   final bool isDarkMode;
@@ -41,30 +42,22 @@ class _HeroSectionState extends State<HeroSection> {
     'number': false,
   };
 
-  // ── Theme helpers ────────────────────────────────────────────────────────
-
   bool get _dark => widget.isDarkMode;
-
   Color get _textColor => _dark ? Colors.white : Colors.black87;
   Color get _labelColor => _dark ? Colors.white70 : Colors.black54;
   Color get _iconColor => _dark ? Colors.white : Colors.black54;
   Color get _cursorColor => _dark ? Colors.white : Colors.black87;
   Color get _focusedBorderColor => _dark ? Colors.white : Colors.black54;
-
-  /// Gradient for input containers.
   List<Color> get _fieldGradient => _dark
       ? [Colors.black, const Color.fromARGB(131, 158, 158, 158)]
       : [const Color(0xFFE8E8E8), const Color(0xFFD0D0D0)];
-
-  // ────────────────────────────────────────────────────────────────────────
 
   @override
   void initState() {
     super.initState();
     _checkPassword(_passwordController.text);
-    _passwordController.addListener(() {
-      _checkPassword(_passwordController.text);
-    });
+    _passwordController
+        .addListener(() => _checkPassword(_passwordController.text));
   }
 
   @override
@@ -80,10 +73,8 @@ class _HeroSectionState extends State<HeroSection> {
     super.dispose();
   }
 
-  bool _isPasswordValid(String password) {
-    final regex = RegExp(r'^(?=.*[a-z])(?=.*[A-Z])(?=.*\d).{8,}$');
-    return regex.hasMatch(password);
-  }
+  bool _isPasswordValid(String password) =>
+      RegExp(r'^(?=.*[a-z])(?=.*[A-Z])(?=.*\d).{8,}$').hasMatch(password);
 
   void _checkPassword(String password) {
     setState(() {
@@ -98,13 +89,10 @@ class _HeroSectionState extends State<HeroSection> {
     setState(() {
       _errors['firstName'] =
           _firstNameController.text.isEmpty ? 'First name is required' : null;
-
       _errors['lastName'] =
           _lastNameController.text.isEmpty ? 'Last name is required' : null;
-
       _errors['school'] =
           _schoolController.text.isEmpty ? 'School is required' : null;
-
       _errors['program'] =
           _programController.text.isEmpty ? 'Program is required' : null;
 
@@ -146,9 +134,7 @@ class _HeroSectionState extends State<HeroSection> {
   Future<void> _submitForm() async {
     _validateForm();
     if (_errors.values.any((e) => e != null)) return;
-
     setState(() => _isSubmitting = true);
-
     try {
       final response = await http.post(
         Uri.parse('http://localhost:8080/register'),
@@ -163,7 +149,6 @@ class _HeroSectionState extends State<HeroSection> {
           'phone_number': _numberController.text.trim(),
         }),
       );
-
       if (response.statusCode == 200) {
         ScaffoldMessenger.of(context).showSnackBar(
           const SnackBar(content: Text('OTP sent to your email')),
@@ -186,45 +171,38 @@ class _HeroSectionState extends State<HeroSection> {
 
   void _showOtpDialog() {
     final otpController = TextEditingController();
-
     showDialog(
       context: context,
       barrierDismissible: false,
-      builder: (_) {
-        return AlertDialog(
-          title: const Text("Email Verification"),
-          content: Column(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              Text(
-                "OTP sent to ${_emailController.text}",
-                textAlign: TextAlign.center,
+      builder: (_) => AlertDialog(
+        title: const Text("Email Verification"),
+        content: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Text("OTP sent to ${_emailController.text}",
+                textAlign: TextAlign.center),
+            const SizedBox(height: 15),
+            TextField(
+              controller: otpController,
+              keyboardType: TextInputType.number,
+              decoration: const InputDecoration(
+                border: OutlineInputBorder(),
+                hintText: "Enter OTP",
               ),
-              const SizedBox(height: 15),
-              TextField(
-                controller: otpController,
-                keyboardType: TextInputType.number,
-                decoration: const InputDecoration(
-                  border: OutlineInputBorder(),
-                  hintText: "Enter OTP",
-                ),
-              ),
-            ],
-          ),
-          actions: [
-            TextButton(
-              onPressed: () => Navigator.pop(context),
-              child: const Text("Cancel"),
-            ),
-            ElevatedButton(
-              onPressed: () async {
-                await _verifyOtp(otpController.text);
-              },
-              child: const Text("Verify"),
             ),
           ],
-        );
-      },
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context),
+            child: const Text("Cancel"),
+          ),
+          ElevatedButton(
+            onPressed: () async => await _verifyOtp(otpController.text),
+            child: const Text("Verify"),
+          ),
+        ],
+      ),
     );
   }
 
@@ -233,12 +211,8 @@ class _HeroSectionState extends State<HeroSection> {
       final response = await http.post(
         Uri.parse('http://localhost:8080/verify-otp'),
         headers: {'Content-Type': 'application/json'},
-        body: jsonEncode({
-          'email': _emailController.text.trim(),
-          'otp': otp,
-        }),
+        body: jsonEncode({'email': _emailController.text.trim(), 'otp': otp}),
       );
-
       if (response.statusCode == 200) {
         Navigator.pop(context);
         ScaffoldMessenger.of(context).showSnackBar(
@@ -267,85 +241,89 @@ class _HeroSectionState extends State<HeroSection> {
 
   @override
   Widget build(BuildContext context) {
-    return Row(
-      children: [
-        // ── Left: Logo ──────────────────────────────────────────────────
-        Expanded(
-          child: SizedBox(
-            height: 700,
-            child: widget.isDarkMode
-                ? Image.asset('assets/images/logo_dark.png',
-                    fit: BoxFit.contain)
-                : Image.asset('assets/images/logo_light.png',
-                    fit: BoxFit.contain),
-          ),
-        ),
+    final isMobile = Responsive.isMobile(context);
+    final fieldWidth = isMobile ? double.infinity : 400.0;
+    final hPad = isMobile ? 24.0 : 0.0;
 
-        // ── Right: Form ─────────────────────────────────────────────────
-        Expanded(
-          child: SingleChildScrollView(
-            child: Form(
-              key: _formKey,
-              child: Column(
-                children: [
-                  Text(
-                    "Create your Account",
-                    style: TextStyle(
-                      color: _textColor,
-                      fontSize: 40,
-                      fontWeight: FontWeight.w600,
+    final form = SingleChildScrollView(
+      child: Form(
+        key: _formKey,
+        child: Padding(
+          padding: EdgeInsets.symmetric(horizontal: hPad),
+          child: Column(
+            children: [
+              const SizedBox(height: 20),
+              Text(
+                "Create your Account",
+                textAlign: TextAlign.center,
+                style: TextStyle(
+                  color: _textColor,
+                  fontSize: isMobile ? 26 : 40,
+                  fontWeight: FontWeight.w600,
+                ),
+              ),
+              const SizedBox(height: 20),
+
+              // First + Last name row
+              SizedBox(
+                width: fieldWidth,
+                child: Row(
+                  children: [
+                    Expanded(
+                      child: _buildField(
+                        _firstNameController,
+                        "First Name",
+                        "firstName",
+                        icon: Icons.person_outline,
+                        fullWidth: true,
+                      ),
                     ),
-                  ),
-                  const SizedBox(height: 20),
-
-                  // First + Last name
-                  SizedBox(
-                    width: 400,
-                    child: Row(
-                      children: [
-                        Expanded(
-                            child: _buildField(
-                                _firstNameController, "First Name", "firstName",
-                                icon: Icons.person_outline)),
-                        const SizedBox(width: 10),
-                        Expanded(
-                            child: _buildField(
-                                _lastNameController, "Last Name", "lastName",
-                                icon: Icons.person_outline)),
-                      ],
+                    const SizedBox(width: 10),
+                    Expanded(
+                      child: _buildField(
+                        _lastNameController,
+                        "Last Name",
+                        "lastName",
+                        icon: Icons.person_outline,
+                        fullWidth: true,
+                      ),
                     ),
-                  ),
-                  const SizedBox(height: 10),
-                  _buildField(_schoolController, "School", "school",
-                      icon: Icons.apartment),
-                  const SizedBox(height: 10),
-                  _buildField(_programController, "Program", "program",
-                      icon: Icons.school),
-                  const SizedBox(height: 10),
-                  _buildField(_emailController, "Email", "email",
-                      icon: Icons.email_outlined),
-                  const SizedBox(height: 10),
-                  _buildField(
-                    _numberController,
-                    "Phone Number",
-                    "phonenum",
-                    icon: Icons.phone,
-                    inputFormatters: [FilteringTextInputFormatter.digitsOnly],
-                  ),
-                  const SizedBox(height: 10),
+                  ],
+                ),
+              ),
+              const SizedBox(height: 10),
+              _buildField(_schoolController, "School", "school",
+                  icon: Icons.apartment),
+              const SizedBox(height: 10),
+              _buildField(_programController, "Program", "program",
+                  icon: Icons.school),
+              const SizedBox(height: 10),
+              _buildField(_emailController, "Email", "email",
+                  icon: Icons.email_outlined),
+              const SizedBox(height: 10),
+              _buildField(
+                _numberController,
+                "Phone Number",
+                "phonenum",
+                icon: Icons.phone,
+                inputFormatters: [FilteringTextInputFormatter.digitsOnly],
+              ),
+              const SizedBox(height: 10),
 
-                  // Password + Confirm
-                  SizedBox(
-                    width: 400,
-                    child: Row(
-                      children: [
-                        Expanded(
-                          child: _buildField(
+              // Password + Confirm row
+              SizedBox(
+                width: fieldWidth,
+                child: isMobile
+                    // On mobile: stack password fields vertically
+                    ? Column(
+                        children: [
+                          _buildField(
                             _passwordController,
                             "Password",
                             "password",
                             icon: Icons.lock_outline,
                             obscureText: !_showPassword,
+                            fullWidth: true,
                             suffixIcon: IconButton(
                               icon: Icon(
                                 _showPassword
@@ -357,15 +335,14 @@ class _HeroSectionState extends State<HeroSection> {
                                   () => _showPassword = !_showPassword),
                             ),
                           ),
-                        ),
-                        const SizedBox(width: 10),
-                        Expanded(
-                          child: _buildField(
+                          const SizedBox(height: 10),
+                          _buildField(
                             _confirmpassController,
                             "Confirm Password",
                             "confirmpass",
                             icon: Icons.lock_outline,
                             obscureText: !_showConfirmPassword,
+                            fullWidth: true,
                             suffixIcon: IconButton(
                               icon: Icon(
                                 _showConfirmPassword
@@ -377,124 +354,177 @@ class _HeroSectionState extends State<HeroSection> {
                                   _showConfirmPassword = !_showConfirmPassword),
                             ),
                           ),
-                        ),
-                      ],
-                    ),
-                  ),
-                  const SizedBox(height: 8),
-
-                  // Password strength indicators
-                  _buildCheck("At least 8 characters",
-                      _passwordChecks['minLength'] ?? false),
-                  _buildCheck("At least 1 uppercase",
-                      _passwordChecks['uppercase'] ?? false),
-                  _buildCheck("At least 1 lowercase",
-                      _passwordChecks['lowercase'] ?? false),
-                  _buildCheck(
-                      "At least 1 number", _passwordChecks['number'] ?? false),
-                  const SizedBox(height: 15),
-
-                  // Register button
-                  Container(
-                    width: 400,
-                    decoration: const BoxDecoration(
-                      gradient: LinearGradient(
-                        colors: [
-                          Colors.blue,
-                          Color.fromARGB(255, 2, 55, 230),
                         ],
-                      ),
-                    ),
-                    child: InkWell(
-                      onTap: _isSubmitting ? null : _submitForm,
-                      child: Padding(
-                        padding: const EdgeInsets.symmetric(vertical: 14),
-                        child: Center(
-                          child: _isSubmitting
-                              ? const CircularProgressIndicator(
-                                  color: Colors.white)
-                              : const Text("Register",
-                                  style: TextStyle(color: Colors.white)),
-                        ),
-                      ),
-                    ),
-                  ),
-                  const SizedBox(height: 6),
-
-                  // Terms & Privacy
-                  SizedBox(
-                    width: 400,
-                    child: RichText(
-                      textAlign: TextAlign.center,
-                      text: TextSpan(
-                        style: TextStyle(
-                          color: _textColor,
-                          fontSize: 12,
-                        ),
+                      )
+                    // On desktop: side by side
+                    : Row(
                         children: [
-                          const TextSpan(
-                              text:
-                                  'By creating an account, you agree to our '),
-                          TextSpan(
-                            text: 'Terms and Conditions',
-                            style: const TextStyle(
-                              color: Colors.blue,
-                              decoration: TextDecoration.underline,
+                          Expanded(
+                            child: _buildField(
+                              _passwordController,
+                              "Password",
+                              "password",
+                              icon: Icons.lock_outline,
+                              obscureText: !_showPassword,
+                              fullWidth: true,
+                              suffixIcon: IconButton(
+                                icon: Icon(
+                                  _showPassword
+                                      ? Icons.visibility
+                                      : Icons.visibility_off,
+                                  color: _iconColor,
+                                ),
+                                onPressed: () => setState(
+                                    () => _showPassword = !_showPassword),
+                              ),
                             ),
-                            recognizer: TapGestureRecognizer()
-                              ..onTap = () {
-                                Navigator.push(
-                                  context,
-                                  PageRouteBuilder(
-                                    pageBuilder: (_, __, ___) =>
-                                        TermsOfServicePage(
-                                      isDarkMode: widget.isDarkMode,
-                                      onToggleTheme: widget.onToggleTheme,
-                                    ),
-                                    transitionDuration: Duration.zero,
-                                    reverseTransitionDuration: Duration.zero,
-                                  ),
-                                );
-                              },
                           ),
-                          const TextSpan(text: ' and '),
-                          TextSpan(
-                            text: 'Privacy Policy',
-                            style: const TextStyle(
-                              color: Colors.blue,
-                              decoration: TextDecoration.underline,
+                          const SizedBox(width: 10),
+                          Expanded(
+                            child: _buildField(
+                              _confirmpassController,
+                              "Confirm Password",
+                              "confirmpass",
+                              icon: Icons.lock_outline,
+                              obscureText: !_showConfirmPassword,
+                              fullWidth: true,
+                              suffixIcon: IconButton(
+                                icon: Icon(
+                                  _showConfirmPassword
+                                      ? Icons.visibility
+                                      : Icons.visibility_off,
+                                  color: _iconColor,
+                                ),
+                                onPressed: () => setState(() =>
+                                    _showConfirmPassword =
+                                        !_showConfirmPassword),
+                              ),
                             ),
-                            recognizer: TapGestureRecognizer()
-                              ..onTap = () {
-                                Navigator.push(
-                                  context,
-                                  PageRouteBuilder(
-                                    pageBuilder: (_, __, ___) =>
-                                        PrivacyPolicyPage(
-                                      isDarkMode: widget.isDarkMode,
-                                      onToggleTheme: widget.onToggleTheme,
-                                    ),
-                                    transitionDuration: Duration.zero,
-                                    reverseTransitionDuration: Duration.zero,
-                                  ),
-                                );
-                              },
                           ),
                         ],
                       ),
+              ),
+              const SizedBox(height: 8),
+
+              // Password strength
+              SizedBox(
+                width: fieldWidth,
+                child: Column(
+                  children: [
+                    _buildCheck("At least 8 characters",
+                        _passwordChecks['minLength'] ?? false),
+                    _buildCheck("At least 1 uppercase",
+                        _passwordChecks['uppercase'] ?? false),
+                    _buildCheck("At least 1 lowercase",
+                        _passwordChecks['lowercase'] ?? false),
+                    _buildCheck("At least 1 number",
+                        _passwordChecks['number'] ?? false),
+                  ],
+                ),
+              ),
+              const SizedBox(height: 15),
+
+              // Register button
+              Container(
+                width: fieldWidth,
+                decoration: const BoxDecoration(
+                  gradient: LinearGradient(
+                    colors: [Colors.blue, Color.fromARGB(255, 2, 55, 230)],
+                  ),
+                ),
+                child: InkWell(
+                  onTap: _isSubmitting ? null : _submitForm,
+                  child: Padding(
+                    padding: const EdgeInsets.symmetric(vertical: 14),
+                    child: Center(
+                      child: _isSubmitting
+                          ? const CircularProgressIndicator(color: Colors.white)
+                          : const Text("Register",
+                              style: TextStyle(color: Colors.white)),
                     ),
                   ),
-                  const SizedBox(height: 20),
-                ],
+                ),
               ),
-            ),
+              const SizedBox(height: 6),
+
+              // Terms & Privacy
+              SizedBox(
+                width: fieldWidth,
+                child: RichText(
+                  textAlign: TextAlign.center,
+                  text: TextSpan(
+                    style: TextStyle(color: _textColor, fontSize: 12),
+                    children: [
+                      const TextSpan(
+                          text: 'By creating an account, you agree to our '),
+                      TextSpan(
+                        text: 'Terms and Conditions',
+                        style: const TextStyle(
+                          color: Colors.blue,
+                          decoration: TextDecoration.underline,
+                        ),
+                        recognizer: TapGestureRecognizer()
+                          ..onTap = () => Navigator.push(
+                                context,
+                                PageRouteBuilder(
+                                  pageBuilder: (_, __, ___) =>
+                                      TermsOfServicePage(
+                                    isDarkMode: widget.isDarkMode,
+                                    onToggleTheme: widget.onToggleTheme,
+                                  ),
+                                  transitionDuration: Duration.zero,
+                                  reverseTransitionDuration: Duration.zero,
+                                ),
+                              ),
+                      ),
+                      const TextSpan(text: ' and '),
+                      TextSpan(
+                        text: 'Privacy Policy',
+                        style: const TextStyle(
+                          color: Colors.blue,
+                          decoration: TextDecoration.underline,
+                        ),
+                        recognizer: TapGestureRecognizer()
+                          ..onTap = () => Navigator.push(
+                                context,
+                                PageRouteBuilder(
+                                  pageBuilder: (_, __, ___) =>
+                                      PrivacyPolicyPage(
+                                    isDarkMode: widget.isDarkMode,
+                                    onToggleTheme: widget.onToggleTheme,
+                                  ),
+                                  transitionDuration: Duration.zero,
+                                  reverseTransitionDuration: Duration.zero,
+                                ),
+                              ),
+                      ),
+                    ],
+                  ),
+                ),
+              ),
+              const SizedBox(height: 30),
+            ],
           ),
         ),
-      ],
+      ),
     );
-  }
 
-  // ── Field builder ──────────────────────────────────────────────────────
+    final logo = SizedBox(
+      height: isMobile ? 200 : 700,
+      child: widget.isDarkMode
+          ? Image.asset('assets/images/logo_dark.png', fit: BoxFit.contain)
+          : Image.asset('assets/images/logo_light.png', fit: BoxFit.contain),
+    );
+
+    return isMobile
+        ? Column(children: [logo, form])
+        : Row(
+            children: [
+              Expanded(child: logo),
+              Expanded(child: form),
+            ],
+          );
+  }
 
   Widget _buildField(
     TextEditingController controller,
@@ -505,12 +535,13 @@ class _HeroSectionState extends State<HeroSection> {
     Widget? suffixIcon,
     List<TextInputFormatter>? inputFormatters,
     ValueChanged<String>? onChanged,
+    bool fullWidth = false,
   }) {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         Container(
-          width: 400,
+          width: fullWidth ? null : 400,
           padding: const EdgeInsets.symmetric(horizontal: 1, vertical: 3),
           decoration: BoxDecoration(
             gradient: LinearGradient(colors: _fieldGradient),
@@ -519,9 +550,7 @@ class _HeroSectionState extends State<HeroSection> {
             controller: controller,
             obscureText: obscureText,
             cursorColor: _cursorColor,
-            onChanged: (v) {
-              onChanged?.call(v);
-            },
+            onChanged: onChanged,
             inputFormatters: inputFormatters,
             style: TextStyle(color: _textColor),
             decoration: InputDecoration(
@@ -548,28 +577,21 @@ class _HeroSectionState extends State<HeroSection> {
     );
   }
 
-  // ── Password check row ─────────────────────────────────────────────────
-
   Widget _buildCheck(String text, bool valid) {
-    return SizedBox(
-      width: 400,
-      child: Row(
-        children: [
-          Icon(
-            valid ? Icons.check_circle : Icons.circle_outlined,
-            color: valid ? Colors.green : Colors.grey,
-            size: 16,
-          ),
-          const SizedBox(width: 6),
-          Text(
-            text,
-            style: TextStyle(
-              color: valid ? Colors.green : Colors.grey,
-              fontSize: 12,
-            ),
-          ),
-        ],
-      ),
+    return Row(
+      children: [
+        Icon(
+          valid ? Icons.check_circle : Icons.circle_outlined,
+          color: valid ? Colors.green : Colors.grey,
+          size: 16,
+        ),
+        const SizedBox(width: 6),
+        Text(
+          text,
+          style: TextStyle(
+              color: valid ? Colors.green : Colors.grey, fontSize: 12),
+        ),
+      ],
     );
   }
 }

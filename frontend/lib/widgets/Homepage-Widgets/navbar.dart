@@ -5,9 +5,6 @@ import 'package:interfaces/pages/login_page.dart';
 import '../../pages/about_page.dart';
 import '../../pages/register_page.dart';
 
-// ─────────────────────────────────────────────────────────────
-// NavDrawer — standalone, mounted as endDrawer on each Scaffold
-// ─────────────────────────────────────────────────────────────
 class NavDrawer extends StatelessWidget {
   final bool isDarkMode;
   final VoidCallback onToggleTheme;
@@ -41,11 +38,9 @@ class NavDrawer extends StatelessWidget {
         style: TextStyle(
           fontSize: 15,
           fontWeight: isActive ? FontWeight.bold : FontWeight.normal,
-          color: isPrimary
+          color: isPrimary || isActive
               ? const Color(0xFF2563EB)
-              : isActive
-                  ? const Color(0xFF2563EB)
-                  : (isDarkMode ? Colors.white : Colors.black),
+              : (isDarkMode ? Colors.white : Colors.black),
         ),
       ),
       onTap: () => _go(context, page),
@@ -83,19 +78,18 @@ class NavDrawer extends StatelessWidget {
   }
 }
 
-// ─────────────────────────────────────────────────────────────
-// NavBar — pure AppBar
-// ─────────────────────────────────────────────────────────────
 class NavBar extends StatefulWidget implements PreferredSizeWidget {
   final bool isDarkMode;
   final VoidCallback onToggleTheme;
   final String activePage;
+  final GlobalKey<ScaffoldState>? scaffoldKey; // ← add this
 
   const NavBar({
     super.key,
     required this.isDarkMode,
     required this.onToggleTheme,
     this.activePage = 'Home',
+    this.scaffoldKey, // ← add this
   });
 
   @override
@@ -108,7 +102,6 @@ class NavBar extends StatefulWidget implements PreferredSizeWidget {
 class _NavBarState extends State<NavBar> {
   String? _hoveredItem;
 
-  // Use rootNavigator: false so we navigate within the current navigator
   void _go(BuildContext context, Widget page) {
     Navigator.pushReplacement(
       context,
@@ -237,14 +230,14 @@ class _NavBarState extends State<NavBar> {
                   size: 20,
                 ),
               ),
-              Builder(
-                builder: (ctx) => IconButton(
-                  icon: Icon(
-                    Icons.menu,
-                    color: widget.isDarkMode ? Colors.white : Colors.black,
-                  ),
-                  onPressed: () => Scaffold.of(ctx).openEndDrawer(),
+              IconButton(
+                icon: Icon(
+                  Icons.menu,
+                  color: widget.isDarkMode ? Colors.white : Colors.black,
                 ),
+                // ← directly open via scaffoldKey, no Builder needed
+                onPressed: () =>
+                    widget.scaffoldKey?.currentState?.openEndDrawer(),
               ),
             ]
           : const [SizedBox.shrink()],
@@ -291,13 +284,12 @@ class _NavBarState extends State<NavBar> {
                             onToggleTheme: widget.onToggleTheme)),
                     const SizedBox(width: 40),
                     _authButton(
-                      ctx,
-                      'Register',
-                      RegisterPage(
-                          isDarkMode: widget.isDarkMode,
-                          onToggleTheme: widget.onToggleTheme),
-                      isPrimary: true,
-                    ),
+                        ctx,
+                        'Register',
+                        RegisterPage(
+                            isDarkMode: widget.isDarkMode,
+                            onToggleTheme: widget.onToggleTheme),
+                        isPrimary: true),
                     const SizedBox(width: 40),
                     IconButton(
                       onPressed: widget.onToggleTheme,
