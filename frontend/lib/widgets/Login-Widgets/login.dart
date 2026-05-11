@@ -113,298 +113,354 @@ class _LoginState extends State<Login> {
   }
 
   void _showForgotPasswordDialog() {
-    final emailController = TextEditingController();
-    final otpController = TextEditingController();
-    final newPassController = TextEditingController();
-    final confirmPassController = TextEditingController();
+  final emailController = TextEditingController();
+  final otpController = TextEditingController();
+  final newPassController = TextEditingController();
+  final confirmPassController = TextEditingController();
 
-    int step = 1;
-    bool isSendingOTP = false;
-    bool isVerifyingOTP = false;
-    bool isResetting = false;
-    bool showPass = false;
+  int step = 1;
+  bool isSendingOTP = false;
+  bool isVerifyingOTP = false;
+  bool isResetting = false;
+  bool showPass = false;
 
-    showDialog(
-      context: context,
-      barrierDismissible: false,
-      builder: (context) {
-        return StatefulBuilder(
-          builder: (context, setStateDialog) {
-            Future<void> sendOTP() async {
-              final email = emailController.text.trim();
-              if (email.isEmpty) {
-                ScaffoldMessenger.of(context).showSnackBar(
-                  const SnackBar(content: Text("Email is required")),
-                );
-                return;
-              }
-              setStateDialog(() => isSendingOTP = true);
-              try {
-                final response = await http.post(
-                  Uri.parse('http://localhost:8080/forgot-password/send-otp'),
-                  headers: {'Content-Type': 'application/json'},
-                  body: jsonEncode({'email': email}),
-                );
-                final data = jsonDecode(response.body);
-                ScaffoldMessenger.of(context).showSnackBar(
-                  SnackBar(
-                      content:
-                          Text(data['message'] ?? data['error'] ?? 'OTP Sent')),
-                );
-              } catch (e) {
-                ScaffoldMessenger.of(context).showSnackBar(
-                  SnackBar(content: Text("Network error: $e")),
-                );
-              }
-              setStateDialog(() => isSendingOTP = false);
+  final bool dark = widget.isDarkMode;
+
+  final Color dialogBg = dark ? const Color(0xFF1A1A1A) : const Color(0xFFF5F5F5);
+  final Color cardBg   = dark ? const Color(0xFF2A2A2A) : Colors.white;
+  final Color textCol  = dark ? Colors.white : Colors.black87;
+  final Color labelCol = dark ? Colors.white70 : Colors.black54;
+  final Color iconCol  = dark ? Colors.white54 : Colors.black45;
+  final Color borderEn = dark ? Colors.white24 : Colors.black26;
+  final Color borderFo = dark ? Colors.white : Colors.black54;
+
+  const Gradient blueGrad = LinearGradient(
+    colors: [Colors.blue, Color.fromARGB(255, 2, 55, 230)],
+  );
+
+  InputDecoration _fieldDecor(String label, {IconData? prefix, Widget? suffix}) =>
+      InputDecoration(
+        labelText: label,
+        labelStyle: TextStyle(color: labelCol, fontSize: 13),
+        prefixIcon: prefix != null ? Icon(prefix, color: iconCol, size: 20) : null,
+        suffixIcon: suffix,
+        filled: true,
+        fillColor: cardBg,
+        enabledBorder: OutlineInputBorder(
+          borderRadius: BorderRadius.circular(8),
+          borderSide: BorderSide(color: borderEn),
+        ),
+        focusedBorder: OutlineInputBorder(
+          borderRadius: BorderRadius.circular(8),
+          borderSide: BorderSide(color: borderFo, width: 1.5),
+        ),
+        contentPadding: const EdgeInsets.symmetric(horizontal: 14, vertical: 16),
+      );
+
+  Widget _gradientButton({
+    required String label,
+    required VoidCallback? onPressed,
+    bool fullWidth = true,
+    EdgeInsets padding = const EdgeInsets.symmetric(vertical: 14),
+  }) {
+    return Container(
+      width: fullWidth ? double.infinity : null,
+      decoration: BoxDecoration(
+        gradient: onPressed != null ? blueGrad : null,
+        color: onPressed == null ? Colors.grey : null,
+        borderRadius: BorderRadius.circular(8),
+      ),
+      child: InkWell(
+        borderRadius: BorderRadius.circular(8),
+        onTap: onPressed,
+        child: Padding(
+          padding: padding,
+          child: Center(
+            child: Text(label,
+                style: const TextStyle(
+                    color: Colors.white,
+                    fontWeight: FontWeight.w600,
+                    fontSize: 14)),
+          ),
+        ),
+      ),
+    );
+  }
+
+  showDialog(
+    context: context,
+    barrierDismissible: false,
+    builder: (context) {
+      return StatefulBuilder(
+        builder: (context, setStateDialog) {
+          Future<void> sendOTP() async {
+            final email = emailController.text.trim();
+            if (email.isEmpty) {
+              ScaffoldMessenger.of(context).showSnackBar(
+                const SnackBar(content: Text("Email is required")),
+              );
+              return;
             }
-
-            Future<void> verifyOTP() async {
-              final email = emailController.text.trim();
-              final otp = otpController.text.trim();
-              if (email.isEmpty || otp.isEmpty) {
-                ScaffoldMessenger.of(context).showSnackBar(
-                  const SnackBar(content: Text("Email and OTP are required")),
-                );
-                return;
-              }
-              setStateDialog(() => isVerifyingOTP = true);
-              try {
-                final response = await http.post(
-                  Uri.parse('http://localhost:8080/forgot-password/verify-otp'),
-                  headers: {'Content-Type': 'application/json'},
-                  body: jsonEncode({'email': email, 'otp': otp}),
-                );
-                final data = jsonDecode(response.body);
-                if (response.statusCode == 200) {
-                  setStateDialog(() => step = 2);
-                  ScaffoldMessenger.of(context).showSnackBar(
-                    SnackBar(content: Text(data['message'] ?? 'OTP Verified')),
-                  );
-                } else {
-                  ScaffoldMessenger.of(context).showSnackBar(
-                    SnackBar(content: Text(data['error'] ?? 'Invalid OTP')),
-                  );
-                }
-              } catch (e) {
-                ScaffoldMessenger.of(context).showSnackBar(
-                  SnackBar(content: Text("Network error: $e")),
-                );
-              }
-              setStateDialog(() => isVerifyingOTP = false);
+            setStateDialog(() => isSendingOTP = true);
+            try {
+              final response = await http.post(
+                Uri.parse('http://localhost:8080/forgot-password/send-otp'),
+                headers: {'Content-Type': 'application/json'},
+                body: jsonEncode({'email': email}),
+              );
+              final data = jsonDecode(response.body);
+              ScaffoldMessenger.of(context).showSnackBar(
+                SnackBar(content: Text(data['message'] ?? data['error'] ?? 'OTP Sent')),
+              );
+            } catch (e) {
+              ScaffoldMessenger.of(context).showSnackBar(
+                SnackBar(content: Text("Network error: $e")),
+              );
             }
+            setStateDialog(() => isSendingOTP = false);
+          }
 
-            Future<void> resetPassword() async {
-              final email = emailController.text.trim();
-              final pass = newPassController.text.trim();
-              final confirm = confirmPassController.text.trim();
-              if (pass.isEmpty || confirm.isEmpty) {
-                ScaffoldMessenger.of(context).showSnackBar(
-                  const SnackBar(content: Text("Enter new password")),
-                );
-                return;
-              }
-              if (pass.length < 8) {
-                ScaffoldMessenger.of(context).showSnackBar(
-                  const SnackBar(
-                      content: Text("Password must be at least 8 characters")),
-                );
-                return;
-              }
-              if (pass != confirm) {
-                ScaffoldMessenger.of(context).showSnackBar(
-                  const SnackBar(content: Text("Passwords do not match")),
-                );
-                return;
-              }
-              setStateDialog(() => isResetting = true);
-              try {
-                final response = await http.post(
-                  Uri.parse('http://localhost:8080/forgot-password/reset'),
-                  headers: {'Content-Type': 'application/json'},
-                  body: jsonEncode({'email': email, 'password': pass}),
-                );
-                final data = jsonDecode(response.body);
-                if (response.statusCode == 200) {
-                  Navigator.pop(context);
-                  ScaffoldMessenger.of(this.context).showSnackBar(
-                    SnackBar(
-                        content: Text(
-                            data['message'] ?? 'Password reset successful')),
-                  );
-                } else {
-                  ScaffoldMessenger.of(context).showSnackBar(
-                    SnackBar(content: Text(data['error'] ?? 'Reset failed')),
-                  );
-                }
-              } catch (e) {
-                ScaffoldMessenger.of(context).showSnackBar(
-                  SnackBar(content: Text("Network error: $e")),
-                );
-              }
-              setStateDialog(() => isResetting = false);
+          Future<void> verifyOTP() async {
+            final email = emailController.text.trim();
+            final otp = otpController.text.trim();
+            if (email.isEmpty || otp.isEmpty) {
+              ScaffoldMessenger.of(context).showSnackBar(
+                const SnackBar(content: Text("Email and OTP are required")),
+              );
+              return;
             }
+            setStateDialog(() => isVerifyingOTP = true);
+            try {
+              final response = await http.post(
+                Uri.parse('http://localhost:8080/forgot-password/verify-otp'),
+                headers: {'Content-Type': 'application/json'},
+                body: jsonEncode({'email': email, 'otp': otp}),
+              );
+              final data = jsonDecode(response.body);
+              if (response.statusCode == 200) {
+                setStateDialog(() => step = 2);
+                ScaffoldMessenger.of(context).showSnackBar(
+                  SnackBar(content: Text(data['message'] ?? 'OTP Verified')),
+                );
+              } else {
+                ScaffoldMessenger.of(context).showSnackBar(
+                  SnackBar(content: Text(data['error'] ?? 'Invalid OTP')),
+                );
+              }
+            } catch (e) {
+              ScaffoldMessenger.of(context).showSnackBar(
+                SnackBar(content: Text("Network error: $e")),
+              );
+            }
+            setStateDialog(() => isVerifyingOTP = false);
+          }
 
-            return AlertDialog(
-              backgroundColor: const Color.fromARGB(255, 32, 32, 32),
-              title: Row(
-                mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                children: [
-                  const Text("Forgot Password",
-                      style: TextStyle(color: Colors.white)),
-                  IconButton(
-                    icon: const Icon(Icons.close, color: Colors.white),
-                    onPressed: () => Navigator.pop(context),
-                    splashRadius: 20,
+          Future<void> resetPassword() async {
+            final email = emailController.text.trim();
+            final pass = newPassController.text.trim();
+            final confirm = confirmPassController.text.trim();
+            if (pass.isEmpty || confirm.isEmpty) {
+              ScaffoldMessenger.of(context).showSnackBar(
+                const SnackBar(content: Text("Enter new password")),
+              );
+              return;
+            }
+            if (pass.length < 8) {
+              ScaffoldMessenger.of(context).showSnackBar(
+                const SnackBar(content: Text("Password must be at least 8 characters")),
+              );
+              return;
+            }
+            if (pass != confirm) {
+              ScaffoldMessenger.of(context).showSnackBar(
+                const SnackBar(content: Text("Passwords do not match")),
+              );
+              return;
+            }
+            setStateDialog(() => isResetting = true);
+            try {
+              final response = await http.post(
+                Uri.parse('http://localhost:8080/forgot-password/reset'),
+                headers: {'Content-Type': 'application/json'},
+                body: jsonEncode({'email': email, 'password': pass}),
+              );
+              final data = jsonDecode(response.body);
+              if (response.statusCode == 200) {
+                Navigator.pop(context);
+                ScaffoldMessenger.of(this.context).showSnackBar(
+                  SnackBar(content: Text(data['message'] ?? 'Password reset successful')),
+                );
+              } else {
+                ScaffoldMessenger.of(context).showSnackBar(
+                  SnackBar(content: Text(data['error'] ?? 'Reset failed')),
+                );
+              }
+            } catch (e) {
+              ScaffoldMessenger.of(context).showSnackBar(
+                SnackBar(content: Text("Network error: $e")),
+              );
+            }
+            setStateDialog(() => isResetting = false);
+          }
+
+          return AlertDialog(
+            backgroundColor: dialogBg,
+            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+            titlePadding: const EdgeInsets.fromLTRB(24, 20, 12, 0),
+            contentPadding: const EdgeInsets.fromLTRB(24, 16, 24, 24),
+            title: Row(
+              children: [
+                Container(
+                  padding: const EdgeInsets.all(8),
+                  decoration: BoxDecoration(
+                    gradient: blueGrad,
+                    borderRadius: BorderRadius.circular(8),
                   ),
-                ],
-              ),
-              content: SizedBox(
-                width: 420,
-                child: SingleChildScrollView(
+                  child: const Icon(Icons.lock_reset, color: Colors.white, size: 20),
+                ),
+                const SizedBox(width: 12),
+                Expanded(
                   child: Column(
-                    mainAxisSize: MainAxisSize.min,
+                    crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      if (step == 1) ...[
-                        TextField(
-                          cursorColor: Colors.white,
-                          controller: emailController,
-                          style: const TextStyle(color: Colors.white),
-                          decoration: const InputDecoration(
-                            labelText: "Email",
-                            labelStyle: TextStyle(color: Colors.white),
-                            enabledBorder: OutlineInputBorder(
-                                borderSide: BorderSide(color: Colors.grey)),
-                            focusedBorder: OutlineInputBorder(
-                                borderSide:
-                                    BorderSide(color: Colors.white, width: 1)),
-                            hoverColor: Colors.transparent,
-                            border: OutlineInputBorder(
-                                borderSide: BorderSide(color: Colors.white)),
-                          ),
-                        ),
-                        const SizedBox(height: 12),
-                        Row(
-                          children: [
-                            Expanded(
-                              child: TextField(
-                                cursorColor: Colors.white,
-                                controller: otpController,
-                                style: const TextStyle(color: Colors.white),
-                                decoration: const InputDecoration(
-                                  labelText: "OTP",
-                                  labelStyle: TextStyle(color: Colors.white),
-                                  enabledBorder: OutlineInputBorder(
-                                      borderSide:
-                                          BorderSide(color: Colors.grey)),
-                                  focusedBorder: OutlineInputBorder(
-                                      borderSide: BorderSide(
-                                          color: Colors.white, width: 1)),
-                                  hoverColor: Colors.transparent,
-                                  border: OutlineInputBorder(
-                                      borderSide:
-                                          BorderSide(color: Colors.white)),
-                                ),
-                              ),
-                            ),
-                            const SizedBox(width: 8),
-                            ElevatedButton(
-                              style: ElevatedButton.styleFrom(
-                                backgroundColor: Colors.green,
-                                padding: const EdgeInsets.symmetric(
-                                    vertical: 22, horizontal: 25),
-                                shape: RoundedRectangleBorder(
-                                    borderRadius: BorderRadius.circular(5)),
-                              ),
-                              onPressed: isSendingOTP ? null : sendOTP,
-                              child: const Text("Send",
-                                  style: TextStyle(color: Colors.white)),
-                            ),
-                          ],
-                        ),
-                        const SizedBox(height: 15),
-                        SizedBox(
-                          width: double.infinity,
-                          child: ElevatedButton(
-                            style: ElevatedButton.styleFrom(
-                              backgroundColor: Colors.green,
-                              shape: RoundedRectangleBorder(
-                                  borderRadius: BorderRadius.circular(5)),
-                              padding: const EdgeInsets.symmetric(vertical: 22),
-                            ),
-                            onPressed: isVerifyingOTP ? null : verifyOTP,
-                            child: const Text("Verify",
-                                style: TextStyle(color: Colors.white)),
-                          ),
-                        ),
-                      ],
-                      if (step == 2) ...[
-                        TextField(
-                          controller: newPassController,
-                          obscureText: !showPass,
-                          style: const TextStyle(color: Colors.white),
-                          decoration: const InputDecoration(
-                            prefixIcon: Icon(Icons.password_outlined,
-                                color: Colors.white),
-                            enabledBorder: OutlineInputBorder(
-                                borderSide: BorderSide(color: Colors.grey)),
-                            focusedBorder: OutlineInputBorder(
-                                borderSide: BorderSide(color: Colors.white)),
-                            labelText: "New Password",
-                            labelStyle: TextStyle(color: Colors.white),
-                          ),
-                        ),
-                        const SizedBox(height: 10),
-                        TextField(
-                          controller: confirmPassController,
-                          obscureText: !showPass,
-                          style: const TextStyle(color: Colors.white),
-                          decoration: InputDecoration(
-                            prefixIcon: const Icon(Icons.password_outlined,
-                                color: Colors.white),
-                            enabledBorder: const OutlineInputBorder(
-                                borderSide: BorderSide(color: Colors.grey)),
-                            focusedBorder: const OutlineInputBorder(
-                                borderSide: BorderSide(color: Colors.white)),
-                            labelText: "Retype New Password",
-                            labelStyle: const TextStyle(color: Colors.white),
-                            suffixIcon: IconButton(
-                              icon: Icon(
-                                  showPass
-                                      ? Icons.visibility
-                                      : Icons.visibility_off,
-                                  color: Colors.white),
-                              onPressed: () =>
-                                  setStateDialog(() => showPass = !showPass),
-                            ),
-                          ),
-                        ),
-                        const SizedBox(height: 15),
-                        SizedBox(
-                          width: double.infinity,
-                          child: ElevatedButton(
-                            style: ElevatedButton.styleFrom(
-                              padding: const EdgeInsets.symmetric(vertical: 20),
-                              backgroundColor: Colors.green,
-                              shape: RoundedRectangleBorder(
-                                  borderRadius: BorderRadius.circular(6)),
-                            ),
-                            onPressed: isResetting ? null : resetPassword,
-                            child: const Text("Confirm",
-                                style: TextStyle(color: Colors.white)),
-                          ),
-                        ),
-                      ],
+                      Text("Forgot Password",
+                          style: TextStyle(
+                              color: textCol,
+                              fontSize: 16,
+                              fontWeight: FontWeight.w700)),
+                      Text(
+                        step == 1 ? "Enter your email and OTP to verify" : "Set your new password",
+                        style: TextStyle(color: labelCol, fontSize: 11, fontWeight: FontWeight.w400),
+                      ),
                     ],
                   ),
                 ),
+                IconButton(
+                  icon: Icon(Icons.close, color: iconCol, size: 20),
+                  onPressed: () => Navigator.pop(context),
+                  splashRadius: 18,
+                ),
+              ],
+            ),
+            content: SizedBox(
+              width: 400,
+              child: SingleChildScrollView(
+                child: Column(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    // Step indicator
+                    Row(
+                      children: [
+                        _StepDot(active: true, label: "1", done: step == 2),
+                        Expanded(
+                          child: Container(
+                            height: 2,
+                            color: step == 2 ? Colors.blue : borderEn,
+                          ),
+                        ),
+                        _StepDot(active: step == 2, label: "2", done: false),
+                      ],
+                    ),
+                    const SizedBox(height: 20),
+
+                    if (step == 1) ...[
+                      TextField(
+                        cursorColor: borderFo,
+                        controller: emailController,
+                        style: TextStyle(color: textCol, fontSize: 14),
+                        decoration: _fieldDecor("Email", prefix: Icons.email_outlined),
+                      ),
+                      const SizedBox(height: 12),
+                      Row(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Expanded(
+                            child: TextField(
+                              cursorColor: borderFo,
+                              controller: otpController,
+                              style: TextStyle(color: textCol, fontSize: 14),
+                              keyboardType: TextInputType.number,
+                              decoration: _fieldDecor("OTP Code", prefix: Icons.pin_outlined),
+                            ),
+                          ),
+                          const SizedBox(width: 10),
+                          Container(
+                            decoration: BoxDecoration(
+                              gradient: isSendingOTP ? null : blueGrad,
+                              color: isSendingOTP ? Colors.grey : null,
+                              borderRadius: BorderRadius.circular(8),
+                            ),
+                            child: InkWell(
+                              borderRadius: BorderRadius.circular(8),
+                              onTap: isSendingOTP ? null : sendOTP,
+                              child: Padding(
+                                padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 16),
+                                child: isSendingOTP
+                                    ? const SizedBox(
+                                        width: 18,
+                                        height: 18,
+                                        child: CircularProgressIndicator(
+                                            color: Colors.white, strokeWidth: 2))
+                                    : const Text("Send",
+                                        style: TextStyle(
+                                            color: Colors.white,
+                                            fontWeight: FontWeight.w600,
+                                            fontSize: 14)),
+                              ),
+                            ),
+                          ),
+                        ],
+                      ),
+                      const SizedBox(height: 16),
+                      _gradientButton(
+                        label: isVerifyingOTP ? "Verifying…" : "Verify OTP",
+                        onPressed: isVerifyingOTP ? null : verifyOTP,
+                      ),
+                    ],
+
+                    if (step == 2) ...[
+                      TextField(
+                        controller: newPassController,
+                        obscureText: !showPass,
+                        cursorColor: borderFo,
+                        style: TextStyle(color: textCol, fontSize: 14),
+                        decoration: _fieldDecor("New Password", prefix: Icons.lock_outline),
+                      ),
+                      const SizedBox(height: 12),
+                      TextField(
+                        controller: confirmPassController,
+                        obscureText: !showPass,
+                        cursorColor: borderFo,
+                        style: TextStyle(color: textCol, fontSize: 14),
+                        decoration: _fieldDecor(
+                          "Confirm Password",
+                          prefix: Icons.lock_outline,
+                          suffix: IconButton(
+                            icon: Icon(
+                              showPass ? Icons.visibility : Icons.visibility_off,
+                              color: iconCol,
+                              size: 20,
+                            ),
+                            onPressed: () => setStateDialog(() => showPass = !showPass),
+                          ),
+                        ),
+                      ),
+                      const SizedBox(height: 16),
+                      _gradientButton(
+                        label: isResetting ? "Resetting…" : "Confirm",
+                        onPressed: isResetting ? null : resetPassword,
+                      ),
+                    ],
+                  ],
+                ),
               ),
-            );
-          },
-        );
-      },
-    );
-  }
+            ),
+          );
+        },
+      );
+    },
+  );
+}
 
   @override
   void dispose() {
@@ -583,5 +639,37 @@ class _LoginState extends State<Login> {
               Expanded(child: form),
             ],
           );
+  }
+}
+
+class _StepDot extends StatelessWidget {
+  final bool active;
+  final bool done;
+  final String label;
+  const _StepDot({required this.active, required this.done, required this.label});
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      width: 28,
+      height: 28,
+      decoration: BoxDecoration(
+        shape: BoxShape.circle,
+        gradient: active
+            ? const LinearGradient(
+                colors: [Colors.blue, Color.fromARGB(255, 2, 55, 230)])
+            : null,
+        color: active ? null : Colors.grey.withOpacity(0.3),
+      ),
+      child: Center(
+        child: done
+            ? const Icon(Icons.check, color: Colors.white, size: 14)
+            : Text(label,
+                style: TextStyle(
+                    color: active ? Colors.white : Colors.grey,
+                    fontSize: 12,
+                    fontWeight: FontWeight.w700)),
+      ),
+    );
   }
 }
