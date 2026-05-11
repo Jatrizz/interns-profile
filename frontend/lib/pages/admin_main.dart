@@ -1,6 +1,4 @@
 import 'package:flutter/material.dart';
-import 'package:shared_preferences/shared_preferences.dart';
-import 'package:interfaces/pages/login_page.dart';
 import '../widgets/Dashboard-Widgets/sidebar.dart';
 import '../widgets/Dashboard-Widgets/top_bar.dart';
 import 'dashboard.dart';
@@ -8,6 +6,8 @@ import 'time_logs.dart';
 import 'interns_list.dart';
 import 'intern_profile_page.dart';
 import 'developer_team_page.dart';
+import 'package:go_router/go_router.dart';
+import '../utils/session_storage.dart';
 
 class AdminMainPage extends StatefulWidget {
   final String firstName;
@@ -28,7 +28,7 @@ class AdminMainPage extends StatefulWidget {
 class _AdminMainPageState extends State<AdminMainPage> {
   late bool isDarkMode;
   int selectedIndex = 0;
-  dynamic selectedIntern; // ADD THIS
+  dynamic selectedIntern;
 
   @override
   void initState() {
@@ -69,26 +69,13 @@ class _AdminMainPageState extends State<AdminMainPage> {
 
     if (confirm != true) return;
 
-    final prefs = await SharedPreferences.getInstance();
-    await prefs.remove('authToken');
+    clearSession();
 
     if (!mounted) return;
-
-    Navigator.pushReplacement(
-      context,
-      PageRouteBuilder(
-        pageBuilder: (_, __, ___) => LoginPage(
-          isDarkMode: isDarkMode,
-          onToggleTheme: () => setState(() => isDarkMode = !isDarkMode),
-        ),
-        transitionDuration: Duration.zero,
-        reverseTransitionDuration: Duration.zero,
-      ),
-    );
+    context.go('/');
   }
 
   Widget _buildPage() {
-    // If an intern is selected, show their profile inline
     if (selectedIntern != null) {
       return InternProfileBody(
         intern: selectedIntern,
@@ -143,7 +130,7 @@ class _AdminMainPageState extends State<AdminMainPage> {
             onLogout: handleLogout,
             onItemSelected: (index) => setState(() {
               selectedIndex = index;
-              selectedIntern = null; // Clear profile when switching pages
+              selectedIntern = null;
             }),
           ),
           Expanded(

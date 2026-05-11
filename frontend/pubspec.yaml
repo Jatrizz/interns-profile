@@ -11,7 +11,8 @@ environment:
 dependencies:
   flutter:
     sdk: flutter
-
+    
+  go_router: ^14.0.0
   cupertino_icons: ^1.0.8
   file_picker: ^8.0.0
   http: ^1.1.0

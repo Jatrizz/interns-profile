@@ -1,12 +1,12 @@
 import 'package:flutter/material.dart';
-import 'package:shared_preferences/shared_preferences.dart';
-import 'package:interfaces/pages/login_page.dart';
 import '../widgets/Intern-Dashboard-Widgets/intern_sidebar.dart';
 import '../widgets/Intern-Dashboard-Widgets/intern_topbar.dart';
 import 'intern_dashboard.dart';
 import 'intern_time_logs.dart';
 import 'intern_my_profile.dart';
 import 'developer_team_page.dart';
+import 'package:go_router/go_router.dart';
+import '../utils/session_storage.dart'; 
 
 class InternMainPage extends StatefulWidget {
   final String firstName;
@@ -69,32 +69,19 @@ class _InternMainPageState extends State<InternMainPage> {
 
     if (confirm != true) return;
 
-    final prefs = await SharedPreferences.getInstance();
-    await prefs.remove('authToken');
+    clearSession();
 
     if (!mounted) return;
-
-    Navigator.pushReplacement(
-      context,
-      PageRouteBuilder(
-        pageBuilder: (_, __, ___) => LoginPage(
-          isDarkMode: isDarkMode,
-          onToggleTheme: () => setState(() => isDarkMode = !isDarkMode),
-        ),
-        transitionDuration: Duration.zero,
-        reverseTransitionDuration: Duration.zero,
-      ),
-    );
+    context.go('/');
   }
 
-  // Swap page content based on selectedIndex
   Widget _buildPage() {
     switch (selectedIndex) {
       case 0:
         return InternDashboardPage(
           firstName: widget.firstName,
-          userId: widget.userId, // add this
-          isDarkMode: isDarkMode, // pass dark mode state
+          userId: widget.userId,
+          isDarkMode: isDarkMode,
         );
       case 1:
         return InternMyProfilePage(
@@ -113,8 +100,8 @@ class _InternMainPageState extends State<InternMainPage> {
       default:
         return InternDashboardPage(
           firstName: widget.firstName,
-          userId: widget.userId, // add this
-          isDarkMode: isDarkMode, // pass dark mode state
+          userId: widget.userId,
+          isDarkMode: isDarkMode,
         );
     }
   }
