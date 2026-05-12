@@ -1,10 +1,11 @@
 import 'package:flutter/material.dart';
+import '../../utils/responsive.dart';
 
 class InternStatsCards extends StatelessWidget {
   final bool isDarkMode;
   final double totalHoursRendered;
   final double remainingHours;
-  final String todayStatus; // e.g. "On-time", "Late", "Absent"
+  final String todayStatus;
 
   const InternStatsCards({
     super.key,
@@ -13,41 +14,6 @@ class InternStatsCards extends StatelessWidget {
     required this.remainingHours,
     required this.todayStatus,
   });
-
-  @override
-  Widget build(BuildContext context) {
-    return Row(
-      children: [
-        Expanded(
-          child: _StatCard(
-            isDarkMode: isDarkMode,
-            label: 'Total Hours Rendered',
-            value: totalHoursRendered.toStringAsFixed(0),
-            isLarge: false,
-          ),
-        ),
-        const SizedBox(width: 12),
-        Expanded(
-          child: _StatCard(
-            isDarkMode: isDarkMode,
-            label: 'Remaining Hours',
-            value: remainingHours.toStringAsFixed(0),
-            isLarge: false,
-          ),
-        ),
-        const SizedBox(width: 12),
-        Expanded(
-          child: _StatCard(
-            isDarkMode: isDarkMode,
-            label: "Today's Status",
-            value: _capitalize(todayStatus),
-            isLarge: true,
-            statusColor: _statusColor(todayStatus),
-          ),
-        ),
-      ],
-    );
-  }
 
   Color _statusColor(String status) {
     final normalized = status.toLowerCase().trim();
@@ -71,14 +37,61 @@ class InternStatsCards extends StatelessWidget {
   }
 
   String _capitalize(String text) {
-  final normalized = text.toLowerCase().trim();
-  if (normalized == 'on-time') return 'On Time';
-  if (normalized == 'half-day' || 
-      normalized == 'halfday' || 
-      normalized == 'half day') return 'Half Day';
-  if (text.isEmpty) return text;
-  return text[0].toUpperCase() + text.substring(1);
-}
+    final normalized = text.toLowerCase().trim();
+    if (normalized == 'on-time') return 'On Time';
+    if (normalized == 'half-day' ||
+        normalized == 'halfday' ||
+        normalized == 'half day') return 'Half Day';
+    if (text.isEmpty) return text;
+    return text[0].toUpperCase() + text.substring(1);
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final isMobile = Responsive.isMobile(context);
+    final cards = [
+      _StatCard(
+        isDarkMode: isDarkMode,
+        label: 'Total Hours Rendered',
+        value: totalHoursRendered.toStringAsFixed(0),
+        isLarge: false,
+      ),
+      _StatCard(
+        isDarkMode: isDarkMode,
+        label: 'Remaining Hours',
+        value: remainingHours.toStringAsFixed(0),
+        isLarge: false,
+      ),
+      _StatCard(
+        isDarkMode: isDarkMode,
+        label: "Today's Status",
+        value: _capitalize(todayStatus),
+        isLarge: true,
+        statusColor: _statusColor(todayStatus),
+      ),
+    ];
+
+    return isMobile
+        ? Column(
+            crossAxisAlignment: CrossAxisAlignment.stretch, // ← same as admin
+            children: [
+              cards[0],
+              const SizedBox(height: 12),
+              cards[1],
+              const SizedBox(height: 12),
+              cards[2],
+            ],
+          )
+        : Row(
+            children: [
+              Expanded(child: cards[0]),
+              const SizedBox(width: 12),
+              Expanded(child: cards[1]),
+              const SizedBox(width: 12),
+              Expanded(child: cards[2]),
+            ],
+          );
+  }
 }
 
 class _StatCard extends StatelessWidget {

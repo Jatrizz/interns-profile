@@ -18,7 +18,6 @@ class StatsCards extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final isMobile = Responsive.isMobile(context);
-
     final cards = [
       _buildCard("No. of New Interns", newInterns.toString()),
       _buildCard("Total No. of Interns", totalInterns.toString()),
@@ -27,6 +26,8 @@ class StatsCards extends StatelessWidget {
 
     return isMobile
         ? Column(
+            crossAxisAlignment:
+                CrossAxisAlignment.stretch, // ← stretch fills width
             children: [
               cards[0],
               const SizedBox(height: 15),
@@ -54,7 +55,7 @@ class StatsCards extends StatelessWidget {
         borderRadius: BorderRadius.circular(12),
       ),
       child: Column(
-        crossAxisAlignment: CrossAxisAlignment.center,
+        crossAxisAlignment: CrossAxisAlignment.center, // ← same as intern
         children: [
           Text(
             title,

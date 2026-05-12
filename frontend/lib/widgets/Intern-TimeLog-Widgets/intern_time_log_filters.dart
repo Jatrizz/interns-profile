@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import '../../theme/app_theme.dart';
+import '../../utils/responsive.dart';
 
 class InternTimeLogFilters extends StatelessWidget {
   final bool isDarkMode;
@@ -52,9 +53,7 @@ class InternTimeLogFilters extends StatelessWidget {
     } else if (parts.length == 2) {
       final month = _months.indexOf(parts[0]) + 1;
       final year = int.tryParse(parts[1]);
-      if (month > 0 && year != null) {
-        return DateTime(year, month);
-      }
+      if (month > 0 && year != null) return DateTime(year, month);
     }
     return null;
   }
@@ -73,31 +72,29 @@ class InternTimeLogFilters extends StatelessWidget {
 
   void _adjustDate(int direction) {
     final current = _parsedDate ?? DateTime.now();
-    final DateTime adjusted;
-    if (isSpecificDate) {
-      adjusted = current.add(Duration(days: direction));
-    } else {
-      adjusted = DateTime(current.year, current.month + direction);
-    }
+    final DateTime adjusted = isSpecificDate
+        ? current.add(Duration(days: direction))
+        : DateTime(current.year, current.month + direction);
     onMonthChanged(adjusted);
   }
 
   @override
   Widget build(BuildContext context) {
     final theme = AppTheme.of(isDarkMode);
+
+    // Wrap handles both mobile and desktop —
+    // on narrow screens filters naturally wrap to next line
     return Wrap(
       spacing: 12,
       runSpacing: 12,
       crossAxisAlignment: WrapCrossAlignment.center,
       children: [
-        // Toggle
+        // Month / Date toggle
         Container(
           decoration: BoxDecoration(
             color: theme.cardInnerBg,
             borderRadius: BorderRadius.circular(8),
-            border: Border.all(
-              color: theme.divider,
-            ),
+            border: Border.all(color: theme.divider),
           ),
           child: Row(
             mainAxisSize: MainAxisSize.min,
@@ -108,7 +105,9 @@ class InternTimeLogFilters extends StatelessWidget {
             ],
           ),
         ),
+
         _buildDatePicker(context, theme),
+
         _buildLabel('Status', theme),
         _buildDropdown(
           value: selectedStatus,
@@ -124,6 +123,7 @@ class InternTimeLogFilters extends StatelessWidget {
           onChanged: onStatusChanged,
           theme: theme,
         ),
+
         if (!isSpecificDate) ...[
           _buildLabel('Week', theme),
           _buildDropdown(
@@ -186,11 +186,7 @@ class InternTimeLogFilters extends StatelessWidget {
       onTap: onTap,
       child: Container(
         padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 10),
-        child: Icon(
-          icon,
-          size: 18,
-          color: theme.iconMuted,
-        ),
+        child: Icon(icon, size: 18, color: theme.iconMuted),
       ),
     );
   }
@@ -214,9 +210,7 @@ class InternTimeLogFilters extends StatelessWidget {
         } else {
           picked = await _showMonthPickerDialog(context, theme);
         }
-        if (picked != null) {
-          onMonthChanged(picked);
-        }
+        if (picked != null) onMonthChanged(picked);
       },
       child: Container(
         width: 170,
@@ -224,9 +218,7 @@ class InternTimeLogFilters extends StatelessWidget {
         decoration: BoxDecoration(
           color: theme.cardInnerBg,
           borderRadius: BorderRadius.circular(8),
-          border: Border.all(
-            color: theme.divider,
-          ),
+          border: Border.all(color: theme.divider),
         ),
         child: Row(
           mainAxisAlignment: MainAxisAlignment.spaceBetween,
@@ -235,10 +227,7 @@ class InternTimeLogFilters extends StatelessWidget {
               child: Text(
                 selectedMonth,
                 overflow: TextOverflow.ellipsis,
-                style: TextStyle(
-                  color: theme.textPrimary,
-                  fontSize: 14,
-                ),
+                style: TextStyle(color: theme.textPrimary, fontSize: 14),
               ),
             ),
             const SizedBox(width: 8),
@@ -280,15 +269,12 @@ class InternTimeLogFilters extends StatelessWidget {
                 child: Column(
                   mainAxisSize: MainAxisSize.min,
                   children: [
-                    // Year navigation
                     Row(
                       mainAxisAlignment: MainAxisAlignment.spaceBetween,
                       children: [
                         IconButton(
-                          icon: Icon(
-                            Icons.chevron_left,
-                            color: theme.textPrimary,
-                          ),
+                          icon: Icon(Icons.chevron_left,
+                              color: theme.textPrimary),
                           onPressed: () => setDialogState(() => selectedYear--),
                         ),
                         Text(
@@ -300,16 +286,13 @@ class InternTimeLogFilters extends StatelessWidget {
                           ),
                         ),
                         IconButton(
-                          icon: Icon(
-                            Icons.chevron_right,
-                            color: theme.textPrimary,
-                          ),
+                          icon: Icon(Icons.chevron_right,
+                              color: theme.textPrimary),
                           onPressed: () => setDialogState(() => selectedYear++),
                         ),
                       ],
                     ),
                     const SizedBox(height: 12),
-                    // Month grid
                     GridView.count(
                       shrinkWrap: true,
                       crossAxisCount: 3,
@@ -319,12 +302,10 @@ class InternTimeLogFilters extends StatelessWidget {
                       children: List.generate(12, (index) {
                         final isSelected = index == selectedMonthIndex;
                         return GestureDetector(
-                          onTap: () {
-                            Navigator.pop(
-                              context,
-                              DateTime(selectedYear, index + 1),
-                            );
-                          },
+                          onTap: () => Navigator.pop(
+                            context,
+                            DateTime(selectedYear, index + 1),
+                          ),
                           child: Container(
                             decoration: BoxDecoration(
                               color: isSelected
@@ -369,22 +350,14 @@ class InternTimeLogFilters extends StatelessWidget {
       decoration: BoxDecoration(
         color: theme.cardInnerBg,
         borderRadius: BorderRadius.circular(8),
-        border: Border.all(
-          color: theme.divider,
-        ),
+        border: Border.all(color: theme.divider),
       ),
       child: DropdownButtonHideUnderline(
         child: DropdownButton<String>(
           value: value,
           dropdownColor: theme.cardBg,
-          style: TextStyle(
-            color: theme.textPrimary,
-            fontSize: 14,
-          ),
-          icon: Icon(
-            Icons.keyboard_arrow_down,
-            color: theme.iconMuted,
-          ),
+          style: TextStyle(color: theme.textPrimary, fontSize: 14),
+          icon: Icon(Icons.keyboard_arrow_down, color: theme.iconMuted),
           items: items.map((item) {
             return DropdownMenuItem(value: item, child: Text(item));
           }).toList(),

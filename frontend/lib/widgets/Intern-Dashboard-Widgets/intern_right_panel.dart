@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
-import 'package:interfaces/widgets/Intern-Dashboard-Widgets/intern_calendar.dart';
-import 'package:interfaces/widgets/Intern-Dashboard-Widgets/intern_list.dart';
+import '../../utils/responsive.dart';
+import 'intern_calendar.dart';
+import 'intern_list.dart';
 
 class InternRightPanel extends StatelessWidget {
   final bool isDarkMode;
@@ -22,8 +23,13 @@ class InternRightPanel extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    // hidden on mobile — parent page handles showing
+    // calendar + intern list inline below main content
+    if (Responsive.isMobile(context)) return const SizedBox.shrink();
+
     return Container(
-      width: 300,
+      width: Responsive.value(context,
+          mobile: double.infinity, tablet: 240.0, desktop: 300.0),
       color: isDarkMode ? const Color(0xFF242424) : const Color(0xFFF5F5F5),
       padding: const EdgeInsets.all(15),
       child: Column(
@@ -39,7 +45,10 @@ class InternRightPanel extends StatelessWidget {
           const SizedBox(height: 20),
           Expanded(
             child: SingleChildScrollView(
-              child: InternList(isDarkMode: isDarkMode, interns: interns),
+              child: InternList(
+                isDarkMode: isDarkMode,
+                interns: interns,
+              ),
             ),
           ),
         ],

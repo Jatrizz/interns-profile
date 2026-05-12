@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import '../../utils/responsive.dart';
 
 class InternProfileFormFields extends StatelessWidget {
   final bool isDarkMode;
@@ -23,68 +24,61 @@ class InternProfileFormFields extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final isMobile = Responsive.isMobile(context);
+
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         // First Name + Last Name
-        Row(
-          children: [
-            Expanded(
-              child: _buildField(
-                label: 'First Name',
-                controller: firstNameController,
+        isMobile
+            ? Column(
+                children: [
+                  _buildField(
+                      label: 'First Name', controller: firstNameController),
+                  const SizedBox(height: 16),
+                  _buildField(
+                      label: 'Last Name', controller: lastNameController),
+                ],
+              )
+            : Row(
+                children: [
+                  Expanded(
+                    child: _buildField(
+                        label: 'First Name', controller: firstNameController),
+                  ),
+                  const SizedBox(width: 16),
+                  Expanded(
+                    child: _buildField(
+                        label: 'Last Name', controller: lastNameController),
+                  ),
+                ],
               ),
-            ),
-            const SizedBox(width: 16),
-            Expanded(
-              child: _buildField(
-                label: 'Last Name',
-                controller: lastNameController,
-              ),
-            ),
-          ],
-        ),
         const SizedBox(height: 16),
         _buildLabel('Program'),
         const SizedBox(height: 6),
         _buildField(
-          label: 'Program',
-          controller: programController,
-          showLabel: false,
-        ),
+            label: 'Program', controller: programController, showLabel: false),
         const SizedBox(height: 16),
         _buildLabel('School'),
         const SizedBox(height: 6),
         _buildField(
-          label: 'School',
-          controller: schoolController,
-          showLabel: false,
-        ),
+            label: 'School', controller: schoolController, showLabel: false),
         const SizedBox(height: 16),
+
         // Email + Phone
-        Row(
-          children: [
-            Expanded(
-              child: Column(
+        isMobile
+            ? Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   _buildLabel('Email'),
                   const SizedBox(height: 6),
-                  // Email is NOT editable
                   _buildField(
                     label: 'Email',
                     controller: emailController,
                     showLabel: false,
                     readOnly: true,
                   ),
-                ],
-              ),
-            ),
-            const SizedBox(width: 16),
-            Expanded(
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
+                  const SizedBox(height: 16),
                   _buildLabel('Phone Number'),
                   const SizedBox(height: 6),
                   _buildField(
@@ -94,10 +88,44 @@ class InternProfileFormFields extends StatelessWidget {
                     inputFormatters: [FilteringTextInputFormatter.digitsOnly],
                   ),
                 ],
+              )
+            : Row(
+                children: [
+                  Expanded(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        _buildLabel('Email'),
+                        const SizedBox(height: 6),
+                        _buildField(
+                          label: 'Email',
+                          controller: emailController,
+                          showLabel: false,
+                          readOnly: true,
+                        ),
+                      ],
+                    ),
+                  ),
+                  const SizedBox(width: 16),
+                  Expanded(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        _buildLabel('Phone Number'),
+                        const SizedBox(height: 6),
+                        _buildField(
+                          label: 'Phone Number',
+                          controller: phoneController,
+                          showLabel: false,
+                          inputFormatters: [
+                            FilteringTextInputFormatter.digitsOnly
+                          ],
+                        ),
+                      ],
+                    ),
+                  ),
+                ],
               ),
-            ),
-          ],
-        ),
       ],
     );
   }

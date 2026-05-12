@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:file_picker/file_picker.dart';
+import '../../utils/responsive.dart';
 
 class InternProfileResumePreview extends StatelessWidget {
   final bool isDarkMode;
@@ -18,10 +19,14 @@ class InternProfileResumePreview extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final isMobile = Responsive.isMobile(context);
+
     return Container(
-      width: 380,
-      // Let height be driven by parent instead of fixed 560
-      constraints: const BoxConstraints(minHeight: 400, maxHeight: 620),
+      width: isMobile ? double.infinity : 380,
+      constraints: BoxConstraints(
+        minHeight: isMobile ? 200 : 400,
+        maxHeight: isMobile ? 300 : 620,
+      ),
       decoration: BoxDecoration(
         color: Colors.white,
         borderRadius: BorderRadius.circular(16),
@@ -37,7 +42,6 @@ class InternProfileResumePreview extends StatelessWidget {
         borderRadius: BorderRadius.circular(16),
         child: Stack(
           children: [
-            // Resume content
             if (resumeFile != null && resumeFile!.bytes != null)
               Positioned.fill(
                 child: Image.memory(
@@ -56,8 +60,6 @@ class InternProfileResumePreview extends StatelessWidget {
               )
             else
               _emptyResume(),
-
-            // Expand icon — only when there's something to show
             if (_hasResume)
               Positioned(
                 top: 10,
@@ -70,11 +72,8 @@ class InternProfileResumePreview extends StatelessWidget {
                       color: Colors.white.withOpacity(0.8),
                       borderRadius: BorderRadius.circular(6),
                     ),
-                    child: const Icon(
-                      Icons.open_in_full,
-                      size: 18,
-                      color: Colors.black,
-                    ),
+                    child: const Icon(Icons.open_in_full,
+                        size: 18, color: Colors.black),
                   ),
                 ),
               ),
@@ -102,7 +101,6 @@ class InternProfileResumePreview extends StatelessWidget {
 
   void _showFullResume(BuildContext context) {
     if (!_hasResume) return;
-
     showDialog(
       context: context,
       builder: (_) => Dialog(

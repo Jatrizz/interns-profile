@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import '../../utils/responsive.dart';
 
 class InternTimeLogTable extends StatelessWidget {
   final bool isDarkMode;
@@ -12,7 +13,6 @@ class InternTimeLogTable extends StatelessWidget {
 
   Color _statusColor(String status) {
     final normalized = status.toLowerCase().replaceAll(' ', '-');
-
     switch (normalized) {
       case 'on-time':
         return const Color(0xFF4CAF50);
@@ -31,7 +31,6 @@ class InternTimeLogTable extends StatelessWidget {
 
   String _capitalize(String text) {
     final normalized = text.toLowerCase().replaceAll(' ', '-');
-
     switch (normalized) {
       case 'on-time':
         return 'On Time';
@@ -40,30 +39,35 @@ class InternTimeLogTable extends StatelessWidget {
       case 'weekend':
         return 'Weekend/Holiday';
     }
-
     if (text.isEmpty) return text;
     return text[0].toUpperCase() + text.substring(1);
   }
 
   @override
   Widget build(BuildContext context) {
-    final headerColor = isDarkMode ? Colors.grey[400]! : Colors.grey[700]!;
+    final isMobile = Responsive.isMobile(context);
     final borderColor =
         isDarkMode ? const Color(0xFF333333) : const Color(0xFFE0E0E0);
     final rowColor =
         isDarkMode ? const Color(0xFF242424) : const Color(0xFFF9F9F9);
+    final headerColor = isDarkMode ? Colors.grey[400]! : Colors.grey[700]!;
     final textColor = isDarkMode ? Colors.white : Colors.black;
 
-    return Container(
+    // fixed min width so table always looks proper
+    const double minTableWidth = 600;
+
+    final tableContent = Container(
       decoration: BoxDecoration(
         color: isDarkMode ? const Color(0xFF1E1E1E) : Colors.white,
         borderRadius: BorderRadius.circular(12),
         border: Border.all(color: borderColor),
       ),
       child: Column(
+        mainAxisSize: MainAxisSize.min,
         children: [
-          // Header Row
+          // header
           Container(
+            width: isMobile ? minTableWidth : null,
             padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
             decoration: BoxDecoration(
               color: rowColor,
@@ -82,18 +86,13 @@ class InternTimeLogTable extends StatelessWidget {
               ],
             ),
           ),
-          // Data Rows
+          // rows
           if (logs.isEmpty)
             Padding(
               padding: const EdgeInsets.all(32),
               child: Center(
-                child: Text(
-                  'No records found.',
-                  style: TextStyle(
-                    color: textColor,
-                    fontSize: 14,
-                  ),
-                ),
+                child: Text('No records found.',
+                    style: TextStyle(color: textColor, fontSize: 14)),
               ),
             )
           else
@@ -103,6 +102,7 @@ class InternTimeLogTable extends StatelessWidget {
               final isLast = index == logs.length - 1;
 
               return Container(
+                width: isMobile ? minTableWidth : null,
                 padding:
                     const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
                 decoration: BoxDecoration(
@@ -148,6 +148,14 @@ class InternTimeLogTable extends StatelessWidget {
         ],
       ),
     );
+
+    // on mobile wrap in horizontal scroll — same as admin table
+    return isMobile
+        ? SingleChildScrollView(
+            scrollDirection: Axis.horizontal,
+            child: tableContent,
+          )
+        : tableContent;
   }
 
   Widget _headerCell(String text, {required int flex, required Color color}) {
@@ -168,10 +176,7 @@ class InternTimeLogTable extends StatelessWidget {
   Widget _dataCell(String text, {required int flex, required Color color}) {
     return Expanded(
       flex: flex,
-      child: Text(
-        text,
-        style: TextStyle(color: color, fontSize: 13),
-      ),
+      child: Text(text, style: TextStyle(color: color, fontSize: 13)),
     );
   }
 }

@@ -3,6 +3,7 @@ import 'dart:convert';
 import 'package:http/http.dart' as http;
 import 'package:image_picker/image_picker.dart';
 import 'package:file_picker/file_picker.dart';
+import '../utils/responsive.dart';
 import '../widgets/Intern-My-Profile-Widgets/intern_profile_image_section.dart';
 import '../widgets/Intern-My-Profile-Widgets/intern_profile_resume_preview.dart';
 import '../widgets/Intern-My-Profile-Widgets/intern_profile_action_buttons.dart';
@@ -34,21 +35,16 @@ class _InternMyProfilePageState extends State<InternMyProfilePage> {
   final _phoneController = TextEditingController();
 
   String idNumber = '';
-
   XFile? _pickedImageFile;
   String? _profileImageUrl;
-
   PlatformFile? _pickedResumeFile;
   String? _resumeUrl;
-
   bool _isLoading = false;
   bool _isSaving = false;
   bool _isEditing = false;
-
   bool _removePhotoRequested = false;
   bool _removeResumeRequested = false;
 
-  // Snapshots for cancel
   String _snapFirstName = '';
   String _snapLastName = '';
   String _snapProgram = '';
@@ -81,9 +77,8 @@ class _InternMyProfilePageState extends State<InternMyProfilePage> {
   Future<void> _fetchProfile() async {
     setState(() => _isLoading = true);
     try {
-      final res = await http.get(
-        Uri.parse('$_base/intern?id=${widget.userId}'),
-      );
+      final res =
+          await http.get(Uri.parse('$_base/intern?id=${widget.userId}'));
       if (res.statusCode == 200) {
         final data = jsonDecode(res.body);
         setState(() {
@@ -120,9 +115,7 @@ class _InternMyProfilePageState extends State<InternMyProfilePage> {
       maxWidth: 800,
       imageQuality: 85,
     );
-    if (picked != null) {
-      setState(() => _pickedImageFile = picked);
-    }
+    if (picked != null) setState(() => _pickedImageFile = picked);
   }
 
   void _removeProfileImage() {
@@ -155,7 +148,6 @@ class _InternMyProfilePageState extends State<InternMyProfilePage> {
   Future<void> _saveChanges() async {
     setState(() => _isSaving = true);
     try {
-      // 1. Update text fields
       final res = await http.put(
         Uri.parse('$_base/update-intern?id=${widget.userId}'),
         headers: {'Content-Type': 'application/json'},
@@ -177,16 +169,12 @@ class _InternMyProfilePageState extends State<InternMyProfilePage> {
         return;
       }
 
-      // 2. Remove photo if explicitly requested OR replacing with a new one
       if (_removePhotoRequested ||
           (_pickedImageFile != null && _profileImageUrl != null)) {
-        await http.delete(
-          Uri.parse('$_base/remove-photo?id=${widget.userId}'),
-        );
+        await http.delete(Uri.parse('$_base/remove-photo?id=${widget.userId}'));
         _removePhotoRequested = false;
       }
 
-      // 3. Upload new photo
       if (_pickedImageFile != null) {
         final bytes = await _pickedImageFile!.readAsBytes();
         final photoReq = http.MultipartRequest(
@@ -216,16 +204,13 @@ class _InternMyProfilePageState extends State<InternMyProfilePage> {
         }
       }
 
-      // 4. Remove resume if explicitly requested OR replacing with a new one
       if (_removeResumeRequested ||
           (_pickedResumeFile != null && _resumeUrl != null)) {
-        await http.delete(
-          Uri.parse('$_base/remove-resume?id=${widget.userId}'),
-        );
+        await http
+            .delete(Uri.parse('$_base/remove-resume?id=${widget.userId}'));
         _removeResumeRequested = false;
       }
 
-      // 5. Upload new resume
       if (_pickedResumeFile != null && _pickedResumeFile!.bytes != null) {
         final resumeReq = http.MultipartRequest(
           'POST',
@@ -307,14 +292,11 @@ class _InternMyProfilePageState extends State<InternMyProfilePage> {
         icon: const Icon(Icons.close, size: 16),
         label: const Text('Cancel'),
         style: OutlinedButton.styleFrom(
-          foregroundColor:
-              widget.isDarkMode ? Colors.white70 : Colors.black54,
+          foregroundColor: widget.isDarkMode ? Colors.white70 : Colors.black54,
           side: BorderSide(
             color: widget.isDarkMode ? Colors.white30 : Colors.black26,
           ),
-          shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(8),
-          ),
+          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
         ),
       );
     }
@@ -327,10 +309,172 @@ class _InternMyProfilePageState extends State<InternMyProfilePage> {
             ? const Color(0xFF4A90D9)
             : const Color(0xFF1A73E8),
         foregroundColor: Colors.white,
-        shape: RoundedRectangleBorder(
-          borderRadius: BorderRadius.circular(8),
-        ),
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
       ),
+    );
+  }
+
+  // ── shared form column ──────────────────────────────────────────────────
+  Widget _formColumn(bool isMobile) {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Text(
+          'My Profile',
+          style: TextStyle(
+            color: widget.isDarkMode ? Colors.white : Colors.black,
+            fontSize: 22,
+            fontWeight: FontWeight.w700,
+            letterSpacing: -0.3,
+          ),
+        ),
+        const SizedBox(height: 16),
+
+        // image section + edit button
+        // image section + edit button
+        isMobile
+            ? Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  InternProfileImageSection(
+                    isDarkMode: widget.isDarkMode,
+                    pickedImageFile: _pickedImageFile,
+                    profileImageUrl: _profileImageUrl,
+                    idNumber: idNumber,
+                    isEditing: _isEditing,
+                    onChangeImage: _pickProfileImage,
+                    onRemoveImage: _removeProfileImage,
+                  ),
+                  const SizedBox(height: 12),
+                  Align(
+                    alignment: Alignment.centerRight,
+                    child: _buildEditCancelButton(),
+                  ),
+                ],
+              )
+            : Row(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Expanded(
+                    child: InternProfileImageSection(
+                      isDarkMode: widget.isDarkMode,
+                      pickedImageFile: _pickedImageFile,
+                      profileImageUrl: _profileImageUrl,
+                      idNumber: idNumber,
+                      isEditing: _isEditing,
+                      onChangeImage: _pickProfileImage,
+                      onRemoveImage: _removeProfileImage,
+                    ),
+                  ),
+                  const SizedBox(width: 16),
+                  _buildEditCancelButton(),
+                ],
+              ),
+
+        // First + Last name
+        isMobile
+            ? Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  _buildLabel('First Name'),
+                  const SizedBox(height: 6),
+                  _buildField(controller: _firstNameController),
+                  const SizedBox(height: 16),
+                  _buildLabel('Last Name'),
+                  const SizedBox(height: 6),
+                  _buildField(controller: _lastNameController),
+                ],
+              )
+            : Row(
+                children: [
+                  Expanded(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        _buildLabel('First Name'),
+                        const SizedBox(height: 6),
+                        _buildField(controller: _firstNameController),
+                      ],
+                    ),
+                  ),
+                  const SizedBox(width: 16),
+                  Expanded(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        _buildLabel('Last Name'),
+                        const SizedBox(height: 6),
+                        _buildField(controller: _lastNameController),
+                      ],
+                    ),
+                  ),
+                ],
+              ),
+        const SizedBox(height: 16),
+
+        _buildLabel('Program'),
+        const SizedBox(height: 6),
+        _buildField(controller: _programController),
+        const SizedBox(height: 16),
+
+        _buildLabel('School'),
+        const SizedBox(height: 6),
+        _buildField(controller: _schoolController),
+        const SizedBox(height: 16),
+
+        // Email + Phone
+        isMobile
+            ? Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  _buildLabel('Email'),
+                  const SizedBox(height: 6),
+                  _buildField(
+                      controller: _emailController, alwaysReadOnly: true),
+                  const SizedBox(height: 16),
+                  _buildLabel('Phone Number'),
+                  const SizedBox(height: 6),
+                  _buildField(controller: _phoneController),
+                ],
+              )
+            : Row(
+                children: [
+                  Expanded(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        _buildLabel('Email'),
+                        const SizedBox(height: 6),
+                        _buildField(
+                            controller: _emailController, alwaysReadOnly: true),
+                      ],
+                    ),
+                  ),
+                  const SizedBox(width: 16),
+                  Expanded(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        _buildLabel('Phone Number'),
+                        const SizedBox(height: 6),
+                        _buildField(controller: _phoneController),
+                      ],
+                    ),
+                  ),
+                ],
+              ),
+        const SizedBox(height: 32),
+
+        if (_isEditing)
+          InternProfileActionButtons(
+            isDarkMode: widget.isDarkMode,
+            isSaving: _isSaving,
+            hasResume: _resumeUrl != null || _pickedResumeFile != null,
+            onSave: _saveChanges,
+            onUploadResume: _pickResume,
+            onRemoveResume: _removeResume,
+          ),
+      ],
     );
   }
 
@@ -340,152 +484,43 @@ class _InternMyProfilePageState extends State<InternMyProfilePage> {
       return const Center(child: CircularProgressIndicator());
     }
 
-    return LayoutBuilder(
-      builder: (context, constraints) {
-        final availableHeight = constraints.maxHeight;
+    final isMobile = Responsive.isMobile(context);
 
-        return SingleChildScrollView(
-          padding: const EdgeInsets.all(24),
-          child: ConstrainedBox(
-            constraints: BoxConstraints(minHeight: availableHeight - 48),
-            child: IntrinsicHeight(
-              child: Row(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  // ── Left column: form ────────────────────────────────
-                  Expanded(
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        // ── Title (standalone, no button here) ──────────
-                        Text(
-                          'My Profile',
-                          style: TextStyle(
-                            color: widget.isDarkMode
-                                ? Colors.white
-                                : Colors.black,
-                            fontSize: 22,
-                            fontWeight: FontWeight.w700,
-                            letterSpacing: -0.3,
-                          ),
-                        ),
-                        const SizedBox(height: 16),
+    final resumePreview = InternProfileResumePreview(
+      isDarkMode: widget.isDarkMode,
+      resumeFile: _pickedResumeFile,
+      resumeUrl: _resumeUrl,
+    );
 
-                        // ── Image section + Edit button side by side ─────
-                        // Button sits to the right, top-aligned with the
-                        // image section (same level as Change/Remove Image).
-                        Row(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            Expanded(
-                              child: InternProfileImageSection(
-                                isDarkMode: widget.isDarkMode,
-                                pickedImageFile: _pickedImageFile,
-                                profileImageUrl: _profileImageUrl,
-                                idNumber: idNumber,
-                                isEditing: _isEditing,
-                                onChangeImage: _pickProfileImage,
-                                onRemoveImage: _removeProfileImage,
-                              ),
-                            ),
-                            const SizedBox(width: 16),
-                            _buildEditCancelButton(),
-                          ],
-                        ),
-                        const SizedBox(height: 24),
-
-                        // ── First Name + Last Name ───────────────────────
-                        Row(
-                          children: [
-                            Expanded(child: _buildLabel('First Name')),
-                            const SizedBox(width: 16),
-                            Expanded(child: _buildLabel('Last Name')),
-                          ],
-                        ),
-                        const SizedBox(height: 6),
-                        Row(
-                          children: [
-                            Expanded(
-                              child: _buildField(
-                                  controller: _firstNameController),
-                            ),
-                            const SizedBox(width: 16),
-                            Expanded(
-                              child: _buildField(
-                                  controller: _lastNameController),
-                            ),
-                          ],
-                        ),
-                        const SizedBox(height: 16),
-
-                        _buildLabel('Program'),
-                        const SizedBox(height: 6),
-                        _buildField(controller: _programController),
-                        const SizedBox(height: 16),
-
-                        _buildLabel('School'),
-                        const SizedBox(height: 6),
-                        _buildField(controller: _schoolController),
-                        const SizedBox(height: 16),
-
-                        Row(
-                          children: [
-                            Expanded(child: _buildLabel('Email')),
-                            const SizedBox(width: 16),
-                            Expanded(child: _buildLabel('Phone Number')),
-                          ],
-                        ),
-                        const SizedBox(height: 6),
-                        Row(
-                          children: [
-                            Expanded(
-                              child: _buildField(
-                                controller: _emailController,
-                                alwaysReadOnly: true,
-                              ),
-                            ),
-                            const SizedBox(width: 16),
-                            Expanded(
-                              child:
-                                  _buildField(controller: _phoneController),
-                            ),
-                          ],
-                        ),
-                        const SizedBox(height: 32),
-
-                        if (_isEditing)
-                          InternProfileActionButtons(
-                            isDarkMode: widget.isDarkMode,
-                            isSaving: _isSaving,
-                            hasResume: _resumeUrl != null ||
-                                _pickedResumeFile != null,
-                            onSave: _saveChanges,
-                            onUploadResume: _pickResume,
-                            onRemoveResume: _removeResume,
-                          ),
-                      ],
-                    ),
+    return SingleChildScrollView(
+      padding: const EdgeInsets.all(24),
+      child: isMobile
+          // mobile: form then resume stacked
+          ? Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                _formColumn(true),
+                const SizedBox(height: 24),
+                Center(child: resumePreview),
+              ],
+            )
+          // desktop: form left, resume right — no IntrinsicHeight needed
+          : Row(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Expanded(
+                  child: _formColumn(false),
+                ),
+                const SizedBox(width: 32),
+                Align(
+                  alignment: Alignment.topCenter,
+                  child: Padding(
+                    padding: const EdgeInsets.only(top: 60),
+                    child: resumePreview,
                   ),
-                  const SizedBox(width: 32),
-
-                  // ── Right column: resume centered vertically ──────────
-                  Align(
-                    alignment: Alignment.center,
-                    child: Padding(
-                      padding: const EdgeInsets.symmetric(vertical: 24),
-                      child: InternProfileResumePreview(
-                        isDarkMode: widget.isDarkMode,
-                        resumeFile: _pickedResumeFile,
-                        resumeUrl: _resumeUrl,
-                      ),
-                    ),
-                  ),
-                ],
-              ),
+                ),
+              ],
             ),
-          ),
-        );
-      },
     );
   }
 

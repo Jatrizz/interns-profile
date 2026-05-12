@@ -3,7 +3,6 @@ import '../../theme/app_theme.dart';
 
 class InternTimeLogLegend extends StatelessWidget {
   final bool isDarkMode;
-
   const InternTimeLogLegend({super.key, required this.isDarkMode});
 
   @override
@@ -17,7 +16,11 @@ class InternTimeLogLegend extends StatelessWidget {
       {'label': 'Weekend', 'color': const Color(0xFFAB47BC)},
     ];
 
-    return Row(
+    // Wrap handles both mobile and desktop naturally
+    return Wrap(
+      spacing: 10,
+      runSpacing: 8,
+      crossAxisAlignment: WrapCrossAlignment.center,
       children: [
         Text(
           'Legend:',
@@ -27,23 +30,19 @@ class InternTimeLogLegend extends StatelessWidget {
             fontWeight: FontWeight.w500,
           ),
         ),
-        const SizedBox(width: 12),
         ...legends.map((item) {
-          return Padding(
-            padding: const EdgeInsets.only(right: 10),
-            child: Container(
-              padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 6),
-              decoration: BoxDecoration(
-                color: item['color'] as Color,
-                borderRadius: BorderRadius.circular(20),
-              ),
-              child: Text(
-                item['label'] as String,
-                style: const TextStyle(
-                  color: Colors.white,
-                  fontSize: 12,
-                  fontWeight: FontWeight.w600,
-                ),
+          return Container(
+            padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 6),
+            decoration: BoxDecoration(
+              color: item['color'] as Color,
+              borderRadius: BorderRadius.circular(20),
+            ),
+            child: Text(
+              item['label'] as String,
+              style: const TextStyle(
+                color: Colors.white,
+                fontSize: 12,
+                fontWeight: FontWeight.w600,
               ),
             ),
           );
