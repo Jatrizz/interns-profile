@@ -382,12 +382,6 @@ class _LoginState extends State<Login> {
                           style: TextStyle(color: textCol, fontSize: 14),
                           decoration: fieldDecor("Email",
                                   prefix: Icons.email_outlined)
-                              .copyWith(
-                            fillColor: dark
-                                ? const Color(0xFF0A1A3A)
-                                : const Color(0xFFE8F0FF),
-                            filled: true,
-                          ),
                         ),
                         const SizedBox(height: 12),
                         Row(
