@@ -1,7 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:url_launcher/url_launcher.dart';
 import 'package:barcode_widget/barcode_widget.dart';
-import 'lanyard.dart';
 
 class LesterCard extends StatefulWidget {
   const LesterCard({super.key});
@@ -27,10 +26,7 @@ class _LesterCardState extends State<LesterCard> {
     return Column(
       mainAxisSize: MainAxisSize.min,
       children: [
-        const LanyardWidget(
-          color: Color.fromARGB(185, 158, 158, 158),
-          height: 90,
-        ),
+        const RealisticIDLace(),
         MouseRegion(
           cursor: SystemMouseCursors.click,
           onEnter: (_) => setState(() => _isHovered = true),
@@ -48,18 +44,16 @@ class _LesterCardState extends State<LesterCard> {
                     width: 260,
                     height: 390,
                     decoration: BoxDecoration(
-                        color: Colors.black.withOpacity(0.65),
-                        borderRadius: BorderRadius.circular(20),
-                        border: Border.all(color: Colors.grey, width: 0.5)),
+                      color: Colors.black.withOpacity(0.65),
+                      borderRadius: BorderRadius.circular(20),
+                      border: Border.all(color: Colors.grey, width: 0.5),
+                    ),
                     child: const Center(
-                        child: Row(
-                            mainAxisAlignment: MainAxisAlignment.center,
-                            children: [
-                          Icon(
-                            Icons.person,
-                            color: Colors.white,
-                            size: 16,
-                          ),
+                      child: Row(
+                        mainAxisAlignment: MainAxisAlignment.center,
+                        children: [
+                          Icon(Icons.person, color: Colors.white, size: 16),
+                          SizedBox(width: 6),
                           Text(
                             'VIEW PROFILE',
                             style: TextStyle(
@@ -69,7 +63,9 @@ class _LesterCardState extends State<LesterCard> {
                               fontWeight: FontWeight.w600,
                             ),
                           ),
-                        ])),
+                        ],
+                      ),
+                    ),
                   ),
                 ),
               ],
@@ -86,6 +82,97 @@ class _LesterCardState extends State<LesterCard> {
           ),
         ),
       ],
+    );
+  }
+}
+
+class RealisticIDLace extends StatelessWidget {
+  const RealisticIDLace({super.key});
+
+  @override
+  Widget build(BuildContext context) {
+    const Color maroon = Color(0xFF7A0019);
+
+    return SizedBox(
+      width: 260,
+      height: 95,
+      child: Column(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Container(
+            width: 26,
+            height: 85,
+            decoration: const BoxDecoration(
+              borderRadius: BorderRadius.vertical(
+                  top: Radius.circular(7), bottom: Radius.circular(7)),
+              gradient: LinearGradient(
+                begin: Alignment.topCenter,
+                end: Alignment.bottomCenter,
+                colors: [
+                  Colors.white,
+                  Color(0xFFEDEDED),
+                ],
+              ),
+            ),
+            child: Column(
+              mainAxisAlignment: MainAxisAlignment.center,
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                Container(
+                    width: 24,
+                    height: 24,
+                    decoration: const BoxDecoration(
+                      shape: BoxShape.circle,
+                      color: maroon,
+                    ),
+                    child: Image.asset('../../assets/images/fdsap-logo.png')),
+                const SizedBox(height: 4),
+                Flexible(
+                  child: Column(
+                    mainAxisSize: MainAxisSize.min,
+                    children: const [
+                      Text('F',
+                          style: TextStyle(
+                              fontSize: 8,
+                              fontWeight: FontWeight.w700,
+                              color: maroon)),
+                      Text('D',
+                          style: TextStyle(
+                              fontSize: 8,
+                              fontWeight: FontWeight.w700,
+                              color: maroon)),
+                      Text('S',
+                          style: TextStyle(
+                              fontSize: 8,
+                              fontWeight: FontWeight.w700,
+                              color: maroon)),
+                      Text('A',
+                          style: TextStyle(
+                              fontSize: 8,
+                              fontWeight: FontWeight.w700,
+                              color: maroon)),
+                      Text('P',
+                          style: TextStyle(
+                              fontSize: 8,
+                              fontWeight: FontWeight.w700,
+                              color: maroon)),
+                    ],
+                  ),
+                ),
+              ],
+            ),
+          ),
+          Container(
+            height: 10,
+            width: 8,
+            decoration: BoxDecoration(
+                color: const Color.fromARGB(255, 165, 165, 165),
+                borderRadius: BorderRadius.only(
+                    bottomLeft: Radius.circular(2),
+                    bottomRight: Radius.circular(2))),
+          ),
+        ],
+      ),
     );
   }
 }
@@ -128,8 +215,9 @@ class _ProfessionalCard extends StatelessWidget {
               decoration: BoxDecoration(
                 color: const Color.fromARGB(255, 69, 69, 69),
                 shape: BoxShape.circle,
-                border:
-                    Border.all(color: const Color.fromARGB(144, 54, 54, 54)),
+                border: Border.all(
+                  color: const Color.fromARGB(144, 54, 54, 54),
+                ),
               ),
               child: Image.asset(
                 'assets/images/lester.png',
@@ -151,10 +239,7 @@ class _ProfessionalCard extends StatelessWidget {
               padding: const EdgeInsets.symmetric(vertical: 5, horizontal: 10),
               decoration: BoxDecoration(
                 borderRadius: BorderRadius.circular(20),
-                border: Border.all(
-                  color: Colors.grey,
-                  width: 1,
-                ),
+                border: Border.all(color: Colors.grey, width: 1),
               ),
               child: Text(
                 'FRONT-END DEVELOPER',
@@ -183,10 +268,7 @@ class _ProfessionalCard extends StatelessWidget {
                 const Spacer(),
                 const Text(
                   '●',
-                  style: TextStyle(
-                    fontSize: 8,
-                    color: Colors.green,
-                  ),
+                  style: TextStyle(fontSize: 8, color: Colors.green),
                 ),
                 const SizedBox(width: 4),
                 const Text(
@@ -211,9 +293,7 @@ class _ProfessionalCard extends StatelessWidget {
                 backgroundColor: Colors.transparent,
               ),
             ),
-            SizedBox(
-              height: 5,
-            ),
+            const SizedBox(height: 5),
             Text(
               'DEV-2026-182',
               style: TextStyle(

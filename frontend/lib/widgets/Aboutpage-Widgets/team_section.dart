@@ -67,7 +67,7 @@ class TeamSection extends StatelessWidget {
             runSpacing: 30,
             alignment: WrapAlignment.center,
             children: [
-              _member('assets/images/lester.png', 'Lester John Manzanero',
+              _member('assets/images/Lester.jpg', 'Lester John Manzanero',
                   'Frontend Developer'),
               _member('assets/images/janna.webp', 'Janna Tricia Pujeda',
                   'Full-stack Developer'),
