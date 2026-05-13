@@ -1,5 +1,7 @@
+import 'dart:async';
 import 'dart:convert';
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:go_router/go_router.dart';
 import 'package:http/http.dart' as http;
 import '../../utils/responsive.dart';
@@ -21,6 +23,31 @@ class _LoginState extends State<Login> {
 
   final _emailController = TextEditingController();
   final _passwordController = TextEditingController();
+
+  // Forgot-password OTP cooldown — lives here so it persists across dialog open/close
+  int _otpCooldown = 0;
+  bool _hasSentOtp = false;
+  Timer? _cooldownTimer;
+
+  void _startOtpCooldown([void Function(void Function())? dialogSetState]) {
+    _cooldownTimer?.cancel();
+    setState(() {
+      _otpCooldown = 60;
+      _hasSentOtp = true;
+    });
+    dialogSetState?.call(() {});
+    _cooldownTimer = Timer.periodic(const Duration(seconds: 1), (t) {
+      if (!mounted) { t.cancel(); return; }
+      setState(() {
+        if (_otpCooldown > 0) {
+          _otpCooldown--;
+        } else {
+          t.cancel();
+        }
+      });
+      dialogSetState?.call(() {}); // keep dialog in sync
+    });
+  }
 
   String? _emailError;
   String? _passwordError;
@@ -112,6 +139,7 @@ class _LoginState extends State<Login> {
     bool isVerifyingOTP = false;
     bool isResetting = false;
     bool showPass = false;
+    bool isOtpValid = false;
 
     final bool dark = widget.isDarkMode;
 
@@ -186,6 +214,31 @@ class _LoginState extends State<Login> {
       builder: (context) {
         return StatefulBuilder(
           builder: (context, setStateDialog) {
+            // If a countdown is already running (dialog was closed and reopened),
+            // re-register setStateDialog so the button stays in sync.
+            if (_otpCooldown > 0 && _cooldownTimer != null && _cooldownTimer!.isActive) {
+              _cooldownTimer!.cancel();
+              _cooldownTimer = Timer.periodic(const Duration(seconds: 1), (t) {
+                if (!mounted) { t.cancel(); return; }
+                setState(() {
+                  if (_otpCooldown > 0) {
+                    _otpCooldown--;
+                  } else {
+                    t.cancel();
+                  }
+                });
+                setStateDialog(() {}); // keep dialog in sync
+              });
+            }
+
+            // Keep isOtpValid in sync whenever the OTP field changes
+            otpController.addListener(() {
+              final valid = otpController.text.trim().length == 6;
+              if (valid != isOtpValid) {
+                setStateDialog(() => isOtpValid = valid);
+              }
+            });
+
             Future<void> sendOTP() async {
               final email = emailController.text.trim();
               if (email.isEmpty) {
@@ -208,6 +261,10 @@ class _LoginState extends State<Login> {
                       content: Text(
                           data['message'] ?? data['error'] ?? 'OTP Sent')),
                 );
+                // Start countdown on the parent state so it survives dialog close
+                _startOtpCooldown(setStateDialog);
+                setStateDialog(() => isSendingOTP = false);
+                return;
               } catch (e) {
                 ScaffoldMessenger.of(context).showSnackBar(
                   SnackBar(content: Text("Network error: $e")),
@@ -394,24 +451,33 @@ class _LoginState extends State<Login> {
                                 style: TextStyle(
                                     color: textCol, fontSize: 14),
                                 keyboardType: TextInputType.number,
+                                maxLength: 6, // enforce max 6 digits
+                                inputFormatters: [FilteringTextInputFormatter.digitsOnly],
                                 decoration: fieldDecor("OTP Code",
-                                    prefix: Icons.pin_outlined),
+                                    prefix: Icons.pin_outlined).copyWith(
+                                  counterText: '', // hide the maxLength counter
+                                ),
                               ),
                             ),
                             const SizedBox(width: 10),
                             Container(
                               decoration: BoxDecoration(
-                                gradient: isSendingOTP ? null : blueGrad,
-                                color:
-                                    isSendingOTP ? Colors.grey : null,
+                                gradient: (isSendingOTP || _otpCooldown > 0)
+                                    ? null
+                                    : blueGrad,
+                                color: (isSendingOTP || _otpCooldown > 0)
+                                    ? Colors.grey
+                                    : null,
                                 borderRadius: BorderRadius.circular(8),
                               ),
                               child: InkWell(
                                 borderRadius: BorderRadius.circular(8),
-                                onTap: isSendingOTP ? null : sendOTP,
+                                onTap: (isSendingOTP || _otpCooldown > 0)
+                                    ? null
+                                    : sendOTP,
                                 child: Padding(
                                   padding: const EdgeInsets.symmetric(
-                                      horizontal: 16, vertical: 16),
+                                      horizontal: 12, vertical: 16),
                                   child: isSendingOTP
                                       ? const SizedBox(
                                           width: 18,
@@ -419,22 +485,34 @@ class _LoginState extends State<Login> {
                                           child: CircularProgressIndicator(
                                               color: Colors.white,
                                               strokeWidth: 2))
-                                      : const Text("Send",
-                                          style: TextStyle(
-                                              color: Colors.white,
-                                              fontWeight: FontWeight.w600,
-                                              fontSize: 14)),
+                                      : _otpCooldown > 0
+                                          ? Text(
+                                              "${_otpCooldown}s",
+                                              style: const TextStyle(
+                                                  color: Colors.white,
+                                                  fontWeight: FontWeight.w600,
+                                                  fontSize: 13),
+                                            )
+                                          : Text(
+                                              _hasSentOtp ? "Resend OTP" : "Send OTP",
+                                              style: const TextStyle(
+                                                  color: Colors.white,
+                                                  fontWeight: FontWeight.w600,
+                                                  fontSize: 14)),
                                 ),
                               ),
                             ),
                           ],
                         ),
                         const SizedBox(height: 16),
+                        // Verify OTP button: disabled until OTP is exactly 6 digits
                         gradientButton(
                           label: isVerifyingOTP
                               ? "Verifying…"
                               : "Verify OTP",
-                          onPressed: isVerifyingOTP ? null : verifyOTP,
+                          onPressed: (!isOtpValid || isVerifyingOTP)
+                              ? null
+                              : verifyOTP,
                         ),
                       ],
                       if (step == 2) ...[
@@ -489,6 +567,7 @@ class _LoginState extends State<Login> {
   void dispose() {
     _emailController.dispose();
     _passwordController.dispose();
+    _cooldownTimer?.cancel();
     super.dispose();
   }
 
