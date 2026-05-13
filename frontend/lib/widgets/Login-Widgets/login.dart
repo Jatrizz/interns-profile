@@ -1,6 +1,7 @@
 import 'dart:async';
 import 'dart:convert';
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:go_router/go_router.dart';
 import 'package:http/http.dart' as http;
 import '../../utils/responsive.dart';
@@ -451,6 +452,7 @@ class _LoginState extends State<Login> {
                                     color: textCol, fontSize: 14),
                                 keyboardType: TextInputType.number,
                                 maxLength: 6, // enforce max 6 digits
+                                inputFormatters: [FilteringTextInputFormatter.digitsOnly],
                                 decoration: fieldDecor("OTP Code",
                                     prefix: Icons.pin_outlined).copyWith(
                                   counterText: '', // hide the maxLength counter
