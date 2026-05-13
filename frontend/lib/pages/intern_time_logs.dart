@@ -35,7 +35,15 @@ class _InternTimeLogsPageState extends State<InternTimeLogsPage> {
   int lateArrivals = 0;
   int absences = 0;
 
-  String selectedMonth = 'April 2026';
+  String selectedMonth = () {
+    final now = DateTime.now();
+    const months = [
+      'January', 'February', 'March', 'April', 'May', 'June',
+      'July', 'August', 'September', 'October', 'November', 'December'
+    ];
+    return '${months[now.month - 1]} ${now.year}';
+  }();
+
   String selectedStatus = 'All';
   String selectedWeek = 'All Weeks';
 
