@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import '../widgets/Developer-Page-Widgets/janna_id_card.dart';
 import '../widgets/Developer-Page-Widgets/nathaniel_id_card.dart';
 import '../widgets/Developer-Page-Widgets/lester_card.dart';
+import '../utils/responsive.dart';
 
 class DeveloperTeamPage extends StatelessWidget {
   final bool isDarkMode;
@@ -9,6 +10,9 @@ class DeveloperTeamPage extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final isMobile = Responsive.isMobile(context);
+    final isTablet = Responsive.isTablet(context);
+
     final textColor = isDarkMode ? Colors.white : Colors.black87;
     final subTextColor =
         isDarkMode ? Colors.white.withOpacity(0.35) : Colors.black45;
@@ -16,13 +20,18 @@ class DeveloperTeamPage extends StatelessWidget {
         isDarkMode ? Colors.white.withOpacity(0.30) : Colors.black38;
     final dividerColor =
         isDarkMode ? Colors.white.withOpacity(0.08) : Colors.black12;
-    final dotColor =
-        isDarkMode ? const Color(0xFF3b82f6) : const Color(0xFF3b82f6);
-    final lineColor = isDarkMode
-        ? const Color(0xFF3b82f6).withOpacity(0.4)
-        : const Color(0xFF3b82f6).withOpacity(0.4);
+    final dotColor = const Color(0xFF3b82f6);
+    final lineColor = const Color(0xFF3b82f6).withOpacity(0.4);
     final footerColor =
         isDarkMode ? Colors.white.withOpacity(0.15) : Colors.black26;
+
+    // Scale cards down on smaller screens
+    final cardScale = isMobile ? 0.75 : (isTablet ? 0.88 : 1.0);
+
+    Widget _scaledCard(Widget card) => Transform.scale(
+          scale: cardScale,
+          child: card,
+        );
 
     return Container(
       width: double.infinity,
@@ -30,7 +39,7 @@ class DeveloperTeamPage extends StatelessWidget {
       color: isDarkMode ? const Color(0xFF1A1A1A) : Colors.white,
       child: Stack(
         children: [
-          // Background glow circles — softer in light mode
+          // Background glow circles
           Positioned(
             top: -100,
             left: -80,
@@ -76,40 +85,37 @@ class DeveloperTeamPage extends StatelessWidget {
             children: [
               // Header
               Padding(
-                padding: const EdgeInsets.fromLTRB(40, 40, 40, 0),
+                padding: EdgeInsets.fromLTRB(isMobile ? 20 : 40,
+                    isMobile ? 24 : 40, isMobile ? 20 : 40, 0),
                 child: Column(
                   children: [
                     Row(
                       mainAxisAlignment: MainAxisAlignment.center,
                       children: [
-                        Container(
-                          width: 40,
-                          height: 1,
-                          color: lineColor,
-                        ),
+                        Container(width: 40, height: 1, color: lineColor),
                         const SizedBox(width: 14),
-                        Text(
-                          'FDS ASYA PHILIPPINES INC. INTERNS',
-                          style: TextStyle(
-                            fontSize: 11,
-                            letterSpacing: 0.15,
-                            color: labelColor,
-                            fontFamily: 'monospace',
+                        Flexible(
+                          child: Text(
+                            'FDS ASYA PHILIPPINES INC. INTERNS',
+                            textAlign: TextAlign.center,
+                            style: TextStyle(
+                              fontSize: 11,
+                              letterSpacing: 0.15,
+                              color: labelColor,
+                              fontFamily: 'monospace',
+                            ),
                           ),
                         ),
                         const SizedBox(width: 14),
-                        Container(
-                          width: 40,
-                          height: 1,
-                          color: lineColor,
-                        ),
+                        Container(width: 40, height: 1, color: lineColor),
                       ],
                     ),
                     const SizedBox(height: 14),
                     Text(
                       'Meet the Dev Team',
+                      textAlign: TextAlign.center,
                       style: TextStyle(
-                        fontSize: 34,
+                        fontSize: isMobile ? 24 : 34,
                         fontWeight: FontWeight.w500,
                         color: textColor,
                         letterSpacing: -0.5,
@@ -118,6 +124,7 @@ class DeveloperTeamPage extends StatelessWidget {
                     const SizedBox(height: 10),
                     Text(
                       'The people who designed and built this system',
+                      textAlign: TextAlign.center,
                       style: TextStyle(
                         fontSize: 14,
                         color: subTextColor,
@@ -128,11 +135,7 @@ class DeveloperTeamPage extends StatelessWidget {
                     Row(
                       mainAxisAlignment: MainAxisAlignment.center,
                       children: [
-                        Container(
-                          width: 70,
-                          height: 0.5,
-                          color: dividerColor,
-                        ),
+                        Container(width: 70, height: 0.5, color: dividerColor),
                         const SizedBox(width: 10),
                         Container(
                           width: 5,
@@ -143,11 +146,7 @@ class DeveloperTeamPage extends StatelessWidget {
                           ),
                         ),
                         const SizedBox(width: 10),
-                        Container(
-                          width: 70,
-                          height: 0.5,
-                          color: dividerColor,
-                        ),
+                        Container(width: 70, height: 0.5, color: dividerColor),
                       ],
                     ),
                   ],
@@ -157,21 +156,39 @@ class DeveloperTeamPage extends StatelessWidget {
               // Cards
               Expanded(
                 child: SingleChildScrollView(
-                  child: Padding(
-                    padding: const EdgeInsets.symmetric(
-                        horizontal: 60, vertical: 36),
-                    child: Row(
-                      mainAxisAlignment: MainAxisAlignment.center,
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: const [
-                        Expanded(child: Center(child: LesterCard())),
-                        SizedBox(width: 60),
-                        Center(child: JannaIDCard()),
-                        SizedBox(width: 60),
-                        Expanded(child: Center(child: NathanielIDCard())),
-                      ],
-                    ),
+                  padding: EdgeInsets.symmetric(
+                    horizontal: isMobile ? 16 : 60,
+                    vertical: isMobile ? 16 : 36,
                   ),
+                  child: isMobile
+                      // Mobile: stacked column, centered
+                      ? Column(
+                          mainAxisAlignment: MainAxisAlignment.center,
+                          children: [
+                            _scaledCard(const LesterCard()),
+                            SizedBox(height: isMobile ? 0 : 24),
+                            _scaledCard(const JannaIDCard()),
+                            SizedBox(height: isMobile ? 0 : 24),
+                            _scaledCard(const NathanielIDCard()),
+                          ],
+                        )
+                      // Tablet/Desktop: row
+                      : Row(
+                          mainAxisAlignment: MainAxisAlignment.center,
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Expanded(
+                                child: Center(
+                                    child: _scaledCard(const LesterCard()))),
+                            SizedBox(width: isTablet ? 20 : 60),
+                            Center(child: _scaledCard(const JannaIDCard())),
+                            SizedBox(width: isTablet ? 20 : 60),
+                            Expanded(
+                                child: Center(
+                                    child:
+                                        _scaledCard(const NathanielIDCard()))),
+                          ],
+                        ),
                 ),
               ),
 
@@ -179,7 +196,10 @@ class DeveloperTeamPage extends StatelessWidget {
               Padding(
                 padding: const EdgeInsets.only(bottom: 20),
                 child: Text(
-                  'Hover over a card to interact  ·  Click to view full profile',
+                  isMobile
+                      ? 'Tap a card to interact'
+                      : 'Hover over a card to interact  ·  Click to view full profile',
+                  textAlign: TextAlign.center,
                   style: TextStyle(
                     fontSize: 11,
                     color: footerColor,
