@@ -99,7 +99,7 @@ class _InternsProfileState extends State<InternsProfile> {
         scaffoldBackgroundColor:
             isDarkMode ? Colors.black : const Color(0xFFF7F9FC),
       ),
-      title: "Intern's Profile",
+      title: "InTurn - Intern Profile Management System",
     );
   }
 }
