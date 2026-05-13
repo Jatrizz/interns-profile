@@ -54,26 +54,23 @@ class InternStatsCards extends StatelessWidget {
         isDarkMode: isDarkMode,
         label: 'Total Hours Rendered',
         value: totalHoursRendered.toStringAsFixed(0),
-        isLarge: false,
       ),
       _StatCard(
         isDarkMode: isDarkMode,
         label: 'Remaining Hours',
         value: remainingHours.toStringAsFixed(0),
-        isLarge: false,
       ),
       _StatCard(
         isDarkMode: isDarkMode,
         label: "Today's Status",
         value: _capitalize(todayStatus),
-        isLarge: true,
         statusColor: _statusColor(todayStatus),
       ),
     ];
 
     return isMobile
         ? Column(
-            crossAxisAlignment: CrossAxisAlignment.stretch, // ← same as admin
+            crossAxisAlignment: CrossAxisAlignment.stretch,
             children: [
               cards[0],
               const SizedBox(height: 12),
@@ -98,14 +95,12 @@ class _StatCard extends StatelessWidget {
   final bool isDarkMode;
   final String label;
   final String value;
-  final bool isLarge;
   final Color? statusColor;
 
   const _StatCard({
     required this.isDarkMode,
     required this.label,
     required this.value,
-    required this.isLarge,
     this.statusColor,
   });
 
@@ -133,9 +128,8 @@ class _StatCard extends StatelessWidget {
             value,
             textAlign: TextAlign.center,
             style: TextStyle(
-              color:
-                  statusColor ?? (isDarkMode ? Colors.white : Colors.black87),
-              fontSize: isLarge ? 28 : 36,
+              color: statusColor ?? (isDarkMode ? Colors.white : Colors.black87),
+              fontSize: 36,
               fontWeight: FontWeight.bold,
             ),
           ),
