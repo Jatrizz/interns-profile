@@ -29,6 +29,9 @@ class _HeroSectionState extends State<HeroSection> {
   final _passwordController = TextEditingController();
   final _confirmpassController = TextEditingController();
 
+  final _passwordFocusNode = FocusNode();
+  bool _passwordFocused = false;
+
   final Map<String, String?> _errors = {};
 
   bool _isSubmitting = false;
@@ -58,6 +61,9 @@ class _HeroSectionState extends State<HeroSection> {
     _checkPassword(_passwordController.text);
     _passwordController
         .addListener(() => _checkPassword(_passwordController.text));
+    _passwordFocusNode.addListener(() {
+      setState(() => _passwordFocused = _passwordFocusNode.hasFocus);
+    });
   }
 
   @override
@@ -70,6 +76,7 @@ class _HeroSectionState extends State<HeroSection> {
     _numberController.dispose();
     _passwordController.dispose();
     _confirmpassController.dispose();
+    _passwordFocusNode.dispose();
     super.dispose();
   }
 
@@ -264,7 +271,7 @@ class _HeroSectionState extends State<HeroSection> {
               ),
               const SizedBox(height: 20),
 
-              // First + Last name row
+              // First + Last name
               SizedBox(
                 width: fieldWidth,
                 child: Row(
@@ -310,11 +317,10 @@ class _HeroSectionState extends State<HeroSection> {
               ),
               const SizedBox(height: 10),
 
-              // Password + Confirm row
+              // Password + Confirm
               SizedBox(
                 width: fieldWidth,
                 child: isMobile
-                    // On mobile: stack password fields vertically
                     ? Column(
                         children: [
                           _buildField(
@@ -324,6 +330,7 @@ class _HeroSectionState extends State<HeroSection> {
                             icon: Icons.lock_outline,
                             obscureText: !_showPassword,
                             fullWidth: true,
+                            focusNode: _passwordFocusNode,
                             suffixIcon: IconButton(
                               icon: Icon(
                                 _showPassword
@@ -356,7 +363,6 @@ class _HeroSectionState extends State<HeroSection> {
                           ),
                         ],
                       )
-                    // On desktop: side by side
                     : Row(
                         children: [
                           Expanded(
@@ -367,6 +373,7 @@ class _HeroSectionState extends State<HeroSection> {
                               icon: Icons.lock_outline,
                               obscureText: !_showPassword,
                               fullWidth: true,
+                              focusNode: _passwordFocusNode,
                               suffixIcon: IconButton(
                                 icon: Icon(
                                   _showPassword
@@ -404,24 +411,26 @@ class _HeroSectionState extends State<HeroSection> {
                         ],
                       ),
               ),
-              const SizedBox(height: 8),
 
-              // Password strength
-              SizedBox(
-                width: fieldWidth,
-                child: Column(
-                  children: [
-                    _buildCheck("At least 8 characters",
-                        _passwordChecks['minLength'] ?? false),
-                    _buildCheck("At least 1 uppercase",
-                        _passwordChecks['uppercase'] ?? false),
-                    _buildCheck("At least 1 lowercase",
-                        _passwordChecks['lowercase'] ?? false),
-                    _buildCheck("At least 1 number",
-                        _passwordChecks['number'] ?? false),
-                  ],
+              // Password strength — only when focused
+              if (_passwordFocused) ...[
+                const SizedBox(height: 8),
+                SizedBox(
+                  width: fieldWidth,
+                  child: Column(
+                    children: [
+                      _buildCheck("At least 8 characters",
+                          _passwordChecks['minLength'] ?? false),
+                      _buildCheck("At least 1 uppercase",
+                          _passwordChecks['uppercase'] ?? false),
+                      _buildCheck("At least 1 lowercase",
+                          _passwordChecks['lowercase'] ?? false),
+                      _buildCheck("At least 1 number",
+                          _passwordChecks['number'] ?? false),
+                    ],
+                  ),
                 ),
-              ),
+              ],
               const SizedBox(height: 15),
 
               // Register button
@@ -536,6 +545,7 @@ class _HeroSectionState extends State<HeroSection> {
     List<TextInputFormatter>? inputFormatters,
     ValueChanged<String>? onChanged,
     bool fullWidth = false,
+    FocusNode? focusNode,
   }) {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
@@ -552,6 +562,7 @@ class _HeroSectionState extends State<HeroSection> {
             cursorColor: _cursorColor,
             onChanged: onChanged,
             inputFormatters: inputFormatters,
+            focusNode: focusNode,
             style: TextStyle(color: _textColor),
             decoration: InputDecoration(
               border: InputBorder.none,
