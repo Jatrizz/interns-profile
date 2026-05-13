@@ -360,6 +360,20 @@ class _HeroSectionState extends State<HeroSection> {
                               onPressed: () => setState(() =>
                                   _showConfirmPassword = !_showConfirmPassword),
                             ),
+                            // ── real-time confirm password validation ──
+                            onChanged: (_) {
+                              setState(() {
+                                if (_confirmpassController.text.isEmpty) {
+                                  _errors['confirmpass'] = null;
+                                } else {
+                                  _errors['confirmpass'] =
+                                      _confirmpassController.text !=
+                                              _passwordController.text
+                                          ? 'Passwords do not match'
+                                          : null;
+                                }
+                              });
+                            },
                           ),
                         ],
                       )
@@ -406,6 +420,16 @@ class _HeroSectionState extends State<HeroSection> {
                                     _showConfirmPassword =
                                         !_showConfirmPassword),
                               ),
+                              // ── real-time confirm password validation ──
+                              onChanged: (_) {
+                                setState(() {
+                                  _errors['confirmpass'] =
+                                      _confirmpassController.text !=
+                                              _passwordController.text
+                                          ? 'Passwords do not match'
+                                          : null;
+                                });
+                              },
                             ),
                           ),
                         ],
