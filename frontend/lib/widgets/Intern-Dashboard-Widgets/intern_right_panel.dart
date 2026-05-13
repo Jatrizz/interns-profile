@@ -23,8 +23,6 @@ class InternRightPanel extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    // hidden on mobile — parent page handles showing
-    // calendar + intern list inline below main content
     if (Responsive.isMobile(context)) return const SizedBox.shrink();
 
     return Container(
@@ -32,26 +30,24 @@ class InternRightPanel extends StatelessWidget {
           mobile: double.infinity, tablet: 240.0, desktop: 300.0),
       color: isDarkMode ? const Color(0xFF242424) : const Color(0xFFF5F5F5),
       padding: const EdgeInsets.all(15),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          InternCalendar(
-            isDarkMode: isDarkMode,
-            currentDate: currentDate,
-            calendarDate: calendarDate,
-            onPreviousMonth: onPreviousMonth,
-            onNextMonth: onNextMonth,
-          ),
-          const SizedBox(height: 20),
-          Expanded(
-            child: SingleChildScrollView(
-              child: InternList(
-                isDarkMode: isDarkMode,
-                interns: interns,
-              ),
+      child: SingleChildScrollView(
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            InternCalendar(
+              isDarkMode: isDarkMode,
+              currentDate: currentDate,
+              calendarDate: calendarDate,
+              onPreviousMonth: onPreviousMonth,
+              onNextMonth: onNextMonth,
             ),
-          ),
-        ],
+            const SizedBox(height: 20),
+            InternList(
+              isDarkMode: isDarkMode,
+              interns: interns,
+            ),
+          ],
+        ),
       ),
     );
   }

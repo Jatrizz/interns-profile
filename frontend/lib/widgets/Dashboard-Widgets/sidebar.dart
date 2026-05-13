@@ -39,41 +39,52 @@ class Sidebar extends StatelessWidget {
             ),
           ),
           const SizedBox(height: 15),
-          _buildIcon(
-            icon: Icons.grid_view,
-            index: 0,
-            tooltip: 'Dashboard',
-            isDarkMode: isDarkMode,
+
+          // Scrollable nav icons — won't overflow when window shrinks
+          Expanded(
+            child: SingleChildScrollView(
+              child: Column(
+                children: [
+                  _buildIcon(
+                    icon: Icons.grid_view,
+                    index: 0,
+                    tooltip: 'Dashboard',
+                    isDarkMode: isDarkMode,
+                  ),
+                  const SizedBox(height: 10),
+                  _buildIcon(
+                    icon: Icons.person_outline,
+                    index: 1,
+                    tooltip: 'Interns',
+                    isDarkMode: isDarkMode,
+                  ),
+                  const SizedBox(height: 10),
+                  _buildIcon(
+                    icon: Icons.access_time_outlined,
+                    index: 2,
+                    tooltip: 'Time Logs',
+                    isDarkMode: isDarkMode,
+                  ),
+                  const SizedBox(height: 10),
+                  Divider(
+                    color: isDarkMode ? Colors.grey[600] : Colors.grey[400],
+                    thickness: 1,
+                    indent: 10,
+                    endIndent: 10,
+                  ),
+                  const SizedBox(height: 10),
+                  _buildIcon(
+                    icon: Icons.groups_outlined,
+                    index: 3,
+                    tooltip: 'Developers Team',
+                    isDarkMode: isDarkMode,
+                  ),
+                ],
+              ),
+            ),
           ),
-          const SizedBox(height: 10),
-          _buildIcon(
-            icon: Icons.person_outline,
-            index: 1,
-            tooltip: 'Interns',
-            isDarkMode: isDarkMode,
-          ),
-          const SizedBox(height: 10),
-          _buildIcon(
-            icon: Icons.access_time_outlined,
-            index: 2,
-            tooltip: 'Time Logs',
-            isDarkMode: isDarkMode,
-          ),
-          const SizedBox(height: 10),
-          Divider(
-            color: isDarkMode ? Colors.grey[600] : Colors.grey[400],
-            thickness: 1,
-            indent: 10,
-            endIndent: 10,
-          ),
-          const SizedBox(height: 10),
-          _buildIcon(
-            icon: Icons.groups_outlined,
-            index: 3,
-            tooltip: 'Developers Team',
-            isDarkMode: isDarkMode,
-          ),
-          const Spacer(),
+
+          // Logout always pinned at the bottom
           _buildIcon(
             icon: Icons.logout,
             index: -1,

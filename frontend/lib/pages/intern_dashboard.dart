@@ -3,7 +3,7 @@ import 'dart:async';
 import 'dart:convert';
 import 'package:http/http.dart' as http;
 import 'package:shared_preferences/shared_preferences.dart';
-
+import '../utils/responsive.dart';
 import '../widgets/Intern-Dashboard-Widgets/intern_clock_in_banner.dart';
 import '../widgets/Intern-Dashboard-Widgets/intern_stats_cards.dart';
 import '../widgets/Intern-Dashboard-Widgets/intern_weekly_chart.dart';
@@ -11,6 +11,8 @@ import '../widgets/Intern-Dashboard-Widgets/intern_recent_timelogs.dart';
 import '../widgets/Intern-Dashboard-Widgets/intern_right_panel.dart';
 import '../widgets/Intern-Dashboard-Widgets/intern_welcome_card.dart';
 import '../widgets/Intern-Dashboard-Widgets/intern_ojthours_dialog.dart';
+import '../widgets/Intern-Dashboard-Widgets/intern_calendar.dart';
+import '../widgets/Intern-Dashboard-Widgets/intern_list.dart';
 
 const String _base = 'http://127.0.0.1:8080';
 
@@ -35,13 +37,12 @@ class _InternDashboardPageState extends State<InternDashboardPage> {
   DateTime _currentDate = DateTime.now();
   DateTime _calendarDate = DateTime.now();
   String _currentTimeString = '';
-
   bool isClockedIn = false;
   DateTime? clockInTime;
   String elapsedTime = '0 hr 0 min';
-
   double requiredOjtHours = 0;
   double totalHoursRendered = 0;
+
   double get remainingHours =>
       (requiredOjtHours - totalHoursRendered).clamp(0, double.infinity);
 
@@ -82,7 +83,6 @@ class _InternDashboardPageState extends State<InternDashboardPage> {
       final period = h >= 12 ? 'PM' : 'AM';
       final hour12 = h % 12 == 0 ? 12 : h % 12;
       _currentTimeString = '$hour12:$m $period';
-
       if (isClockedIn && clockInTime != null) {
         final diff = now.difference(clockInTime!);
         elapsedTime = '${diff.inHours} hr ${diff.inMinutes.remainder(60)} min';
@@ -95,22 +95,17 @@ class _InternDashboardPageState extends State<InternDashboardPage> {
       final res = await http.get(Uri.parse(
         '$_base/intern-dashboard?user_id=${widget.userId}&first_name=${widget.firstName}',
       ));
-
       if (res.statusCode == 200) {
         final data = jsonDecode(res.body);
-
         final double requiredFromServer =
             (data['required_ojt_hours'] as num? ?? 0).toDouble();
         final double totalFromServer =
-            (data['total_hours_rendered'] as num? ?? 0)
-                .toDouble(); // ← add this
-
+            (data['total_hours_rendered'] as num? ?? 0).toDouble();
         setState(() {
           totalHoursRendered = totalFromServer;
           requiredOjtHours = requiredFromServer;
           todayStatus = data['todays_status'] ?? 'absent';
           isClockedIn = data['is_clocked_in'] ?? false;
-
           if (isClockedIn &&
               data['clock_in_time'] != null &&
               data['clock_in_time'] != '') {
@@ -126,8 +121,6 @@ class _InternDashboardPageState extends State<InternDashboardPage> {
             );
           }
         });
-
-        // ← check both conditions using local variables
         if (requiredFromServer == 0 && totalFromServer == 0) {
           WidgetsBinding.instance
               .addPostFrameCallback((_) => _promptOjtHours());
@@ -143,10 +136,8 @@ class _InternDashboardPageState extends State<InternDashboardPage> {
       final res = await http.get(Uri.parse(
         '$_base/intern-weekly-hours?user_id=${widget.userId}',
       ));
-
       if (res.statusCode == 200) {
         final data = jsonDecode(res.body) as List;
-
         final dayMap = {
           'Mon': 'Mon',
           'Tue': 'Tue',
@@ -154,7 +145,6 @@ class _InternDashboardPageState extends State<InternDashboardPage> {
           'Thu': 'Thurs',
           'Fri': 'Fri',
         };
-
         setState(() {
           for (var e in data) {
             final day = e['day'].toString();
@@ -163,7 +153,6 @@ class _InternDashboardPageState extends State<InternDashboardPage> {
               weeklyData[dayMap[day]!] = hours;
             }
           }
-
           recentLogs = data.map<Map<String, String>>((e) {
             return {
               'date': e['day'].toString(),
@@ -193,7 +182,6 @@ class _InternDashboardPageState extends State<InternDashboardPage> {
   Future<void> _promptOjtHours() async {
     final hours =
         await showOjtHoursDialog(context, isDarkMode: widget.isDarkMode);
-
     if (hours != null) {
       try {
         await http.post(
@@ -207,7 +195,6 @@ class _InternDashboardPageState extends State<InternDashboardPage> {
       } catch (e) {
         debugPrint('setRequiredHours error: $e');
       }
-
       final prefs = await SharedPreferences.getInstance();
       await prefs.setDouble('requiredOjtHours', hours);
       setState(() => requiredOjtHours = hours);
@@ -221,7 +208,6 @@ class _InternDashboardPageState extends State<InternDashboardPage> {
         headers: {'Content-Type': 'application/json'},
         body: jsonEncode({'user_id': widget.userId}),
       );
-
       if (res.statusCode == 200) {
         final data = jsonDecode(res.body);
         setState(() {
@@ -259,7 +245,6 @@ class _InternDashboardPageState extends State<InternDashboardPage> {
           'remarks': '',
         }),
       );
-
       if (res.statusCode == 200) {
         final data = jsonDecode(res.body);
         setState(() {
@@ -271,7 +256,6 @@ class _InternDashboardPageState extends State<InternDashboardPage> {
         });
         _fetchWeeklyHours();
         _fetchCoInterns();
-
         if (mounted) {
           ScaffoldMessenger.of(context).showSnackBar(
             SnackBar(
@@ -301,6 +285,14 @@ class _InternDashboardPageState extends State<InternDashboardPage> {
     }
   }
 
+  void _previousMonth() => setState(() {
+        _calendarDate = DateTime(_calendarDate.year, _calendarDate.month - 1);
+      });
+
+  void _nextMonth() => setState(() {
+        _calendarDate = DateTime(_calendarDate.year, _calendarDate.month + 1);
+      });
+
   String get _clockInTimeFormatted {
     if (clockInTime == null) return '';
     final h = clockInTime!.hour;
@@ -312,62 +304,88 @@ class _InternDashboardPageState extends State<InternDashboardPage> {
 
   @override
   Widget build(BuildContext context) {
-    return Row(
-      children: [
-        Expanded(
-          child: SingleChildScrollView(
-            padding: const EdgeInsets.all(20),
-            child: Column(
-              children: [
-                ClockInBanner(
-                  isDarkMode: widget.isDarkMode,
-                  isClockedIn: isClockedIn,
-                  clockInTime: _clockInTimeFormatted,
-                  elapsedTime: elapsedTime,
-                  onClockToggle: _handleClockToggle,
-                ),
-                const SizedBox(height: 16),
-                InternWelcomeCard(
-                  isDarkMode: widget.isDarkMode,
-                  firstName: widget.firstName,
-                  currentTime: _currentTimeString,
-                ),
-                const SizedBox(height: 16),
-                InternStatsCards(
-                  isDarkMode: widget.isDarkMode,
-                  totalHoursRendered: totalHoursRendered,
-                  remainingHours: remainingHours,
-                  todayStatus: todayStatus,
-                ),
-                const SizedBox(height: 16),
-                InternWeeklyChart(
-                  isDarkMode: widget.isDarkMode,
-                  weeklyData: weeklyData,
-                ),
-                const SizedBox(height: 16),
-                RecentTimeLogs(
-                  isDarkMode: widget.isDarkMode,
-                  logs: recentLogs,
-                ),
-              ],
-            ),
+    final isMobile = Responsive.isMobile(context);
+
+    // Main scrollable content
+    final mainContent = SingleChildScrollView(
+      padding: const EdgeInsets.all(20),
+      child: Column(
+        children: [
+          ClockInBanner(
+            isDarkMode: widget.isDarkMode,
+            isClockedIn: isClockedIn,
+            clockInTime: _clockInTimeFormatted,
+            elapsedTime: elapsedTime,
+            onClockToggle: _handleClockToggle,
           ),
-        ),
-        InternRightPanel(
-          isDarkMode: widget.isDarkMode,
-          interns: interns,
-          currentDate: _currentDate,
-          calendarDate: _calendarDate,
-          onPreviousMonth: () => setState(() {
-            _calendarDate =
-                DateTime(_calendarDate.year, _calendarDate.month - 1);
-          }),
-          onNextMonth: () => setState(() {
-            _calendarDate =
-                DateTime(_calendarDate.year, _calendarDate.month + 1);
-          }),
-        ),
-      ],
+          const SizedBox(height: 16),
+          InternWelcomeCard(
+            isDarkMode: widget.isDarkMode,
+            firstName: widget.firstName,
+            currentTime: _currentTimeString,
+          ),
+          const SizedBox(height: 16),
+          InternStatsCards(
+            isDarkMode: widget.isDarkMode,
+            totalHoursRendered: totalHoursRendered,
+            remainingHours: remainingHours,
+            todayStatus: todayStatus,
+          ),
+          const SizedBox(height: 16),
+          InternWeeklyChart(
+            isDarkMode: widget.isDarkMode,
+            weeklyData: weeklyData,
+          ),
+          const SizedBox(height: 16),
+          RecentTimeLogs(
+            isDarkMode: widget.isDarkMode,
+            logs: recentLogs,
+          ),
+
+          // On mobile: show calendar + intern list inline below
+          if (isMobile) ...[
+            const SizedBox(height: 20),
+            Container(
+              padding: const EdgeInsets.all(15),
+              decoration: BoxDecoration(
+                color: widget.isDarkMode
+                    ? const Color(0xFF242424)
+                    : const Color(0xFFF5F5F5),
+                borderRadius: BorderRadius.circular(12),
+              ),
+              child: InternCalendar(
+                isDarkMode: widget.isDarkMode,
+                currentDate: _currentDate,
+                calendarDate: _calendarDate,
+                onPreviousMonth: _previousMonth,
+                onNextMonth: _nextMonth,
+              ),
+            ),
+            const SizedBox(height: 20),
+            InternList(
+              isDarkMode: widget.isDarkMode,
+              interns: interns,
+            ),
+          ],
+        ],
+      ),
     );
+
+    // Desktop: Row with RightPanel | Mobile: just mainContent
+    return isMobile
+        ? mainContent
+        : Row(
+            children: [
+              Expanded(child: mainContent),
+              InternRightPanel(
+                isDarkMode: widget.isDarkMode,
+                interns: interns,
+                currentDate: _currentDate,
+                calendarDate: _calendarDate,
+                onPreviousMonth: _previousMonth,
+                onNextMonth: _nextMonth,
+              ),
+            ],
+          );
   }
 }
