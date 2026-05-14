@@ -40,15 +40,18 @@ class InternTimeLogStatsCards extends StatelessWidget {
           boxShadow: theme.cardShadow,
         ),
         child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
+          mainAxisAlignment: MainAxisAlignment.center,
+          crossAxisAlignment: CrossAxisAlignment.center,
           children: [
             Text(
               card['label'] as String,
+              textAlign: TextAlign.center,
               style: TextStyle(color: theme.textSecondary, fontSize: 13),
             ),
             const SizedBox(height: 12),
             Text(
               '${card['value']}',
+              textAlign: TextAlign.center,
               style: TextStyle(
                 color: theme.textPrimary,
                 fontSize: 36,
@@ -64,29 +67,39 @@ class InternTimeLogStatsCards extends StatelessWidget {
     if (isMobile) {
       return Column(
         children: [
-          Row(
-            children: [
-              Expanded(child: buildCard(cards[0])),
-              Expanded(child: buildCard(cards[1], addMargin: false)),
-            ],
+          IntrinsicHeight(
+            child: Row(
+              crossAxisAlignment: CrossAxisAlignment.stretch,
+              children: [
+                Expanded(child: buildCard(cards[0])),
+                Expanded(child: buildCard(cards[1], addMargin: false)),
+              ],
+            ),
           ),
           const SizedBox(height: 12),
-          Row(
-            children: [
-              Expanded(child: buildCard(cards[2])),
-              Expanded(child: buildCard(cards[3], addMargin: false)),
-            ],
+          IntrinsicHeight(
+            child: Row(
+              crossAxisAlignment: CrossAxisAlignment.stretch,
+              children: [
+                Expanded(child: buildCard(cards[2])),
+                Expanded(child: buildCard(cards[3], addMargin: false)),
+              ],
+            ),
           ),
         ],
       );
     }
 
     // desktop: single row
-    return Row(
-      children: cards.asMap().entries.map((e) {
-        return Expanded(
-            child: buildCard(e.value, addMargin: e.key < cards.length - 1));
-      }).toList(),
+    return IntrinsicHeight(
+      child: Row(
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        children: cards.asMap().entries.map((e) {
+          return Expanded(
+            child: buildCard(e.value, addMargin: e.key < cards.length - 1),
+          );
+        }).toList(),
+      ),
     );
   }
 }

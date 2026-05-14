@@ -20,20 +20,26 @@ class TimeLogsOverviewCards extends StatelessWidget {
   Widget build(BuildContext context) {
     return Column(
       children: [
-        Row(
-          children: [
-            _buildCard('Total Interns', totalInterns),
-            const SizedBox(width: 12),
-            _buildCard('Present Today', presentToday),
-          ],
+        IntrinsicHeight(
+          child: Row(
+            crossAxisAlignment: CrossAxisAlignment.stretch,
+            children: [
+              _buildCard('Total Interns', totalInterns),
+              const SizedBox(width: 12),
+              _buildCard('Present Today', presentToday),
+            ],
+          ),
         ),
         const SizedBox(height: 12),
-        Row(
-          children: [
-            _buildCard('Late Today', lateToday),
-            const SizedBox(width: 12),
-            _buildCard('Absent Today', absentToday),
-          ],
+        IntrinsicHeight(
+          child: Row(
+            crossAxisAlignment: CrossAxisAlignment.stretch,
+            children: [
+              _buildCard('Late Today', lateToday),
+              const SizedBox(width: 12),
+              _buildCard('Absent Today', absentToday),
+            ],
+          ),
         ),
       ],
     );
@@ -48,10 +54,12 @@ class TimeLogsOverviewCards extends StatelessWidget {
           borderRadius: BorderRadius.circular(12),
         ),
         child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
+          mainAxisAlignment: MainAxisAlignment.center,
+          crossAxisAlignment: CrossAxisAlignment.center,
           children: [
             Text(
               label,
+              textAlign: TextAlign.center,
               style: TextStyle(
                 color: isDarkMode ? Colors.grey[400] : Colors.grey[600],
                 fontSize: 12,
@@ -60,6 +68,7 @@ class TimeLogsOverviewCards extends StatelessWidget {
             const SizedBox(height: 10),
             Text(
               '$value',
+              textAlign: TextAlign.center,
               style: TextStyle(
                 color: isDarkMode ? Colors.white : Colors.black,
                 fontSize: 32,

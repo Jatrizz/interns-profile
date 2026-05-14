@@ -128,7 +128,8 @@ class _StatCard extends StatelessWidget {
             value,
             textAlign: TextAlign.center,
             style: TextStyle(
-              color: statusColor ?? (isDarkMode ? Colors.white : Colors.black87),
+              color:
+                  statusColor ?? (isDarkMode ? Colors.white : Colors.black87),
               fontSize: 36,
               fontWeight: FontWeight.bold,
             ),
