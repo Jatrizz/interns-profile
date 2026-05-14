@@ -26,32 +26,26 @@ class AdminMainPage extends StatefulWidget {
 }
 
 class _AdminMainPageState extends State<AdminMainPage> {
-  late bool isDarkMode;
   int selectedIndex = 0;
   dynamic selectedIntern;
-
-  @override
-  void initState() {
-    super.initState();
-    isDarkMode = widget.isDarkMode;
-  }
 
   Future<void> handleLogout() async {
     final confirm = await showDialog<bool>(
       context: context,
       builder: (context) => AlertDialog(
-        backgroundColor: isDarkMode ? const Color(0xFF242424) : Colors.white,
+        backgroundColor:
+            widget.isDarkMode ? const Color(0xFF242424) : Colors.white,
         title: Text(
           'Logout',
           style: TextStyle(
-            color: isDarkMode ? Colors.white : Colors.black,
+            color: widget.isDarkMode ? Colors.white : Colors.black,
             fontWeight: FontWeight.bold,
           ),
         ),
         content: Text(
           'Are you sure you want to logout?',
           style: TextStyle(
-            color: isDarkMode ? Colors.grey[400] : Colors.grey[600],
+            color: widget.isDarkMode ? Colors.grey[400] : Colors.grey[600],
           ),
         ),
         actions: [
@@ -66,11 +60,8 @@ class _AdminMainPageState extends State<AdminMainPage> {
         ],
       ),
     );
-
     if (confirm != true) return;
-
     clearSession();
-
     if (!mounted) return;
     context.go('/');
   }
@@ -79,41 +70,32 @@ class _AdminMainPageState extends State<AdminMainPage> {
     if (selectedIntern != null) {
       return InternProfileBody(
         intern: selectedIntern,
-        isDarkMode: isDarkMode,
-        onBack: () {
-          setState(() {
-            selectedIntern = null;
-          });
-        },
+        isDarkMode: widget.isDarkMode,
+        onBack: () => setState(() => selectedIntern = null),
       );
     }
-
     switch (selectedIndex) {
       case 0:
         return DashboardOverviewPage(
           firstName: widget.firstName,
-          isDarkMode: isDarkMode,
+          isDarkMode: widget.isDarkMode,
         );
       case 1:
         return InternsList(
-          isDarkMode: isDarkMode,
-          onViewProfile: (intern) {
-            setState(() {
-              selectedIntern = intern;
-            });
-          },
+          isDarkMode: widget.isDarkMode,
+          onViewProfile: (intern) => setState(() => selectedIntern = intern),
         );
       case 2:
         return TimeLogsPage(
           firstName: widget.firstName,
-          isDarkMode: isDarkMode,
+          isDarkMode: widget.isDarkMode,
         );
       case 3:
-        return DeveloperTeamPage(isDarkMode: isDarkMode);
+        return DeveloperTeamPage(isDarkMode: widget.isDarkMode);
       default:
         return DashboardOverviewPage(
           firstName: widget.firstName,
-          isDarkMode: isDarkMode,
+          isDarkMode: widget.isDarkMode,
         );
     }
   }
@@ -121,11 +103,12 @@ class _AdminMainPageState extends State<AdminMainPage> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: isDarkMode ? const Color(0xFF1A1A1A) : Colors.white,
+      backgroundColor:
+          widget.isDarkMode ? const Color(0xFF1A1A1A) : Colors.white,
       body: Row(
         children: [
           Sidebar(
-            isDarkMode: isDarkMode,
+            isDarkMode: widget.isDarkMode,
             selectedIndex: selectedIndex,
             onLogout: handleLogout,
             onItemSelected: (index) => setState(() {
@@ -137,10 +120,9 @@ class _AdminMainPageState extends State<AdminMainPage> {
             child: Column(
               children: [
                 TopBar(
-                  isDarkMode: isDarkMode,
+                  isDarkMode: widget.isDarkMode,
                   firstName: widget.firstName,
-                  onToggleDarkMode: () =>
-                      setState(() => isDarkMode = !isDarkMode),
+                  onToggleDarkMode: widget.onToggleTheme,
                 ),
                 Expanded(child: _buildPage()),
               ],

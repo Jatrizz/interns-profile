@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:go_router/go_router.dart';
 import 'package:interfaces/pages/contact_page.dart';
 import 'package:interfaces/pages/home_page.dart';
 import 'package:interfaces/pages/login_page.dart';
@@ -17,19 +18,25 @@ class NavDrawer extends StatelessWidget {
     required this.activePage,
   });
 
-  void _go(BuildContext context, Widget page) {
-    Navigator.of(context).pop();
-    Navigator.pushReplacement(
-      context,
-      PageRouteBuilder(
-        pageBuilder: (_, __, ___) => page,
-        transitionDuration: Duration.zero,
-        reverseTransitionDuration: Duration.zero,
+  @override
+  Widget build(BuildContext context) {
+    return Drawer(
+      backgroundColor: isDarkMode ? Colors.black : Colors.white,
+      child: ListView(
+        padding: const EdgeInsets.only(top: 60),
+        children: [
+          _item(context, 'Home', '/'),
+          _item(context, 'About', '/about'),
+          _item(context, 'Contact', '/contact'),
+          const Divider(),
+          _item(context, 'Login', '/login'),
+          _item(context, 'Register', '/register', isPrimary: true),
+        ],
       ),
     );
   }
 
-  Widget _item(BuildContext context, String label, Widget page,
+  Widget _item(BuildContext context, String label, String route,
       {bool isPrimary = false}) {
     final isActive = activePage == label;
     return ListTile(
@@ -43,37 +50,10 @@ class NavDrawer extends StatelessWidget {
               : (isDarkMode ? Colors.white : Colors.black),
         ),
       ),
-      onTap: () => _go(context, page),
-    );
-  }
-
-  @override
-  Widget build(BuildContext context) {
-    return Drawer(
-      backgroundColor: isDarkMode ? Colors.black : Colors.white,
-      child: ListView(
-        padding: const EdgeInsets.only(top: 60),
-        children: [
-          _item(context, 'Home',
-              HomePage(isDarkMode: isDarkMode, onToggleTheme: onToggleTheme)),
-          _item(context, 'About',
-              AboutPage(isDarkMode: isDarkMode, onToggleTheme: onToggleTheme)),
-          _item(
-              context,
-              'Contact',
-              ContactPage(
-                  isDarkMode: isDarkMode, onToggleTheme: onToggleTheme)),
-          const Divider(),
-          _item(context, 'Login',
-              LoginPage(isDarkMode: isDarkMode, onToggleTheme: onToggleTheme)),
-          _item(
-            context,
-            'Register',
-            RegisterPage(isDarkMode: isDarkMode, onToggleTheme: onToggleTheme),
-            isPrimary: true,
-          ),
-        ],
-      ),
+      onTap: () {
+        Navigator.of(context).pop(); // close drawer
+        context.go(route);
+      },
     );
   }
 }
@@ -82,14 +62,14 @@ class NavBar extends StatefulWidget implements PreferredSizeWidget {
   final bool isDarkMode;
   final VoidCallback onToggleTheme;
   final String activePage;
-  final GlobalKey<ScaffoldState>? scaffoldKey; // ← add this
+  final GlobalKey<ScaffoldState>? scaffoldKey;
 
   const NavBar({
     super.key,
     required this.isDarkMode,
     required this.onToggleTheme,
     this.activePage = 'Home',
-    this.scaffoldKey, // ← add this
+    this.scaffoldKey,
   });
 
   @override
@@ -102,18 +82,7 @@ class NavBar extends StatefulWidget implements PreferredSizeWidget {
 class _NavBarState extends State<NavBar> {
   String? _hoveredItem;
 
-  void _go(BuildContext context, Widget page) {
-    Navigator.pushReplacement(
-      context,
-      PageRouteBuilder(
-        pageBuilder: (_, __, ___) => page,
-        transitionDuration: Duration.zero,
-        reverseTransitionDuration: Duration.zero,
-      ),
-    );
-  }
-
-  Widget _navLink(BuildContext context, String label, Widget page) {
+  Widget _navLink(BuildContext context, String label, String route) {
     final isHovered = _hoveredItem == label;
     final isActive = widget.activePage == label;
 
@@ -122,7 +91,7 @@ class _NavBarState extends State<NavBar> {
       onEnter: (_) => setState(() => _hoveredItem = label),
       onExit: (_) => setState(() => _hoveredItem = null),
       child: TextButton(
-        onPressed: () => _go(context, page),
+        onPressed: () => context.go(route),
         style: ButtonStyle(
             overlayColor: WidgetStateProperty.all(Colors.transparent)),
         child: Column(
@@ -162,7 +131,7 @@ class _NavBarState extends State<NavBar> {
     );
   }
 
-  Widget _authButton(BuildContext context, String label, Widget page,
+  Widget _authButton(BuildContext context, String label, String route,
       {bool isPrimary = false}) {
     final isHovered = _hoveredItem == label;
 
@@ -171,7 +140,7 @@ class _NavBarState extends State<NavBar> {
       onEnter: (_) => setState(() => _hoveredItem = label),
       onExit: (_) => setState(() => _hoveredItem = null),
       child: TextButton(
-        onPressed: () => _go(context, page),
+        onPressed: () => context.go(route),
         style: ButtonStyle(
             overlayColor: WidgetStateProperty.all(Colors.transparent)),
         child: AnimatedContainer(
@@ -235,7 +204,6 @@ class _NavBarState extends State<NavBar> {
                   Icons.menu,
                   color: widget.isDarkMode ? Colors.white : Colors.black,
                 ),
-                // ← directly open via scaffoldKey, no Builder needed
                 onPressed: () =>
                     widget.scaffoldKey?.currentState?.openEndDrawer(),
               ),
@@ -252,57 +220,30 @@ class _NavBarState extends State<NavBar> {
                   color: widget.isDarkMode ? Colors.white : Colors.black,
                 ),
               )
-            : Builder(
-                builder: (ctx) => Row(
-                  children: [
-                    _navLink(
-                        ctx,
-                        'Home',
-                        HomePage(
-                            isDarkMode: widget.isDarkMode,
-                            onToggleTheme: widget.onToggleTheme)),
-                    const SizedBox(width: 60),
-                    _navLink(
-                        ctx,
-                        'About',
-                        AboutPage(
-                            isDarkMode: widget.isDarkMode,
-                            onToggleTheme: widget.onToggleTheme)),
-                    const SizedBox(width: 60),
-                    _navLink(
-                        ctx,
-                        'Contact',
-                        ContactPage(
-                            isDarkMode: widget.isDarkMode,
-                            onToggleTheme: widget.onToggleTheme)),
-                    const Spacer(),
-                    _authButton(
-                        ctx,
-                        'Login',
-                        LoginPage(
-                            isDarkMode: widget.isDarkMode,
-                            onToggleTheme: widget.onToggleTheme)),
-                    const SizedBox(width: 40),
-                    _authButton(
-                        ctx,
-                        'Register',
-                        RegisterPage(
-                            isDarkMode: widget.isDarkMode,
-                            onToggleTheme: widget.onToggleTheme),
-                        isPrimary: true),
-                    const SizedBox(width: 40),
-                    IconButton(
-                      onPressed: widget.onToggleTheme,
-                      icon: Icon(
-                        widget.isDarkMode
-                            ? Icons.nightlight_round
-                            : Icons.wb_sunny_outlined,
-                        color: widget.isDarkMode ? Colors.white : Colors.black,
-                        size: 20,
-                      ),
+            : Row(
+                children: [
+                  _navLink(context, 'Home', '/'),
+                  const SizedBox(width: 60),
+                  _navLink(context, 'About', '/about'),
+                  const SizedBox(width: 60),
+                  _navLink(context, 'Contact', '/contact'),
+                  const Spacer(),
+                  _authButton(context, 'Login', '/login'),
+                  const SizedBox(width: 40),
+                  _authButton(context, 'Register', '/register',
+                      isPrimary: true),
+                  const SizedBox(width: 40),
+                  IconButton(
+                    onPressed: widget.onToggleTheme,
+                    icon: Icon(
+                      widget.isDarkMode
+                          ? Icons.nightlight_round
+                          : Icons.wb_sunny_outlined,
+                      color: widget.isDarkMode ? Colors.white : Colors.black,
+                      size: 20,
                     ),
-                  ],
-                ),
+                  ),
+                ],
               ),
       ),
     );

@@ -17,36 +17,35 @@ class HomePage extends StatefulWidget {
 }
 
 class _HomePageState extends State<HomePage> {
-  late bool isDarkMode;
   final _scaffoldKey = GlobalKey<ScaffoldState>();
-
-  @override
-  void initState() {
-    super.initState();
-    isDarkMode = widget.isDarkMode;
-  }
-
-  void _toggle() => setState(() => isDarkMode = !isDarkMode);
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       key: _scaffoldKey,
-      backgroundColor: isDarkMode ? Colors.black : const Color(0xFFF5F6FA),
+      backgroundColor:
+          widget.isDarkMode ? Colors.black : const Color(0xFFF5F6FA),
       appBar: NavBar(
-          isDarkMode: isDarkMode,
-          onToggleTheme: _toggle,
-          activePage: 'Home',
-          scaffoldKey: _scaffoldKey),
+        isDarkMode: widget.isDarkMode,
+        onToggleTheme: widget.onToggleTheme,
+        activePage: 'Home',
+        scaffoldKey: _scaffoldKey,
+      ),
       endDrawer: NavDrawer(
-          isDarkMode: isDarkMode, onToggleTheme: _toggle, activePage: 'Home'),
+        isDarkMode: widget.isDarkMode,
+        onToggleTheme: widget.onToggleTheme,
+        activePage: 'Home',
+      ),
       body: ListView(
         children: [
-          HeroSection(isDarkMode: isDarkMode, onToggleTheme: _toggle),
-          FeaturesSection(isDarkMode: isDarkMode),
-          StatsSection(isDarkMode: isDarkMode),
-          PreFooter(isDarkMode: isDarkMode),
-          Footer(isDarkMode: isDarkMode),
+          HeroSection(
+            isDarkMode: widget.isDarkMode,
+            onToggleTheme: widget.onToggleTheme,
+          ),
+          FeaturesSection(isDarkMode: widget.isDarkMode),
+          StatsSection(isDarkMode: widget.isDarkMode),
+          PreFooter(isDarkMode: widget.isDarkMode),
+          Footer(isDarkMode: widget.isDarkMode),
         ],
       ),
     );

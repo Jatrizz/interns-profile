@@ -6,13 +6,14 @@ import 'intern_time_logs.dart';
 import 'intern_my_profile.dart';
 import 'developer_team_page.dart';
 import 'package:go_router/go_router.dart';
-import '../utils/session_storage.dart'; 
+import '../utils/session_storage.dart';
 
 class InternMainPage extends StatefulWidget {
   final String firstName;
   final String userId;
   final bool isDarkMode;
   final VoidCallback onToggleTheme;
+
   const InternMainPage({
     super.key,
     required this.firstName,
@@ -26,32 +27,25 @@ class InternMainPage extends StatefulWidget {
 }
 
 class _InternMainPageState extends State<InternMainPage> {
-  late bool isDarkMode;
-
-  @override
-  void initState() {
-    super.initState();
-    isDarkMode = widget.isDarkMode;
-  }
-
   int selectedIndex = 0;
 
   Future<void> handleLogout() async {
     final confirm = await showDialog<bool>(
       context: context,
       builder: (context) => AlertDialog(
-        backgroundColor: isDarkMode ? const Color(0xFF242424) : Colors.white,
+        backgroundColor:
+            widget.isDarkMode ? const Color(0xFF242424) : Colors.white,
         title: Text(
           'Logout',
           style: TextStyle(
-            color: isDarkMode ? Colors.white : Colors.black,
+            color: widget.isDarkMode ? Colors.white : Colors.black,
             fontWeight: FontWeight.bold,
           ),
         ),
         content: Text(
           'Are you sure you want to logout?',
           style: TextStyle(
-            color: isDarkMode ? Colors.grey[400] : Colors.grey[600],
+            color: widget.isDarkMode ? Colors.grey[400] : Colors.grey[600],
           ),
         ),
         actions: [
@@ -66,11 +60,8 @@ class _InternMainPageState extends State<InternMainPage> {
         ],
       ),
     );
-
     if (confirm != true) return;
-
     clearSession();
-
     if (!mounted) return;
     context.go('/');
   }
@@ -81,11 +72,11 @@ class _InternMainPageState extends State<InternMainPage> {
         return InternDashboardPage(
           firstName: widget.firstName,
           userId: widget.userId,
-          isDarkMode: isDarkMode,
+          isDarkMode: widget.isDarkMode,
         );
       case 1:
         return InternMyProfilePage(
-          isDarkMode: isDarkMode,
+          isDarkMode: widget.isDarkMode,
           firstName: widget.firstName,
           userId: widget.userId,
         );
@@ -93,15 +84,15 @@ class _InternMainPageState extends State<InternMainPage> {
         return InternTimeLogsPage(
           firstName: widget.firstName,
           userId: widget.userId,
-          isDarkMode: isDarkMode,
+          isDarkMode: widget.isDarkMode,
         );
       case 3:
-        return DeveloperTeamPage(isDarkMode: isDarkMode);
+        return DeveloperTeamPage(isDarkMode: widget.isDarkMode);
       default:
         return InternDashboardPage(
           firstName: widget.firstName,
           userId: widget.userId,
-          isDarkMode: isDarkMode,
+          isDarkMode: widget.isDarkMode,
         );
     }
   }
@@ -109,11 +100,12 @@ class _InternMainPageState extends State<InternMainPage> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: isDarkMode ? const Color(0xFF1A1A1A) : Colors.white,
+      backgroundColor:
+          widget.isDarkMode ? const Color(0xFF1A1A1A) : Colors.white,
       body: Row(
         children: [
           InternSidebar(
-            isDarkMode: isDarkMode,
+            isDarkMode: widget.isDarkMode,
             selectedIndex: selectedIndex,
             onLogout: handleLogout,
             firstName: widget.firstName,
@@ -123,10 +115,9 @@ class _InternMainPageState extends State<InternMainPage> {
             child: Column(
               children: [
                 InternTopBar(
-                  isDarkMode: isDarkMode,
+                  isDarkMode: widget.isDarkMode,
                   firstName: widget.firstName,
-                  onToggleDarkMode: () =>
-                      setState(() => isDarkMode = !isDarkMode),
+                  onToggleDarkMode: widget.onToggleTheme,
                 ),
                 Expanded(child: _buildPage()),
               ],

@@ -7,36 +7,39 @@ class LoginPage extends StatefulWidget {
   final VoidCallback onToggleTheme;
   const LoginPage(
       {super.key, required this.isDarkMode, required this.onToggleTheme});
+
   @override
   _LoginPageState createState() => _LoginPageState();
 }
 
 class _LoginPageState extends State<LoginPage> {
-  late bool isDarkMode;
   final _scaffoldKey = GlobalKey<ScaffoldState>();
-
-  @override
-  void initState() {
-    super.initState();
-    isDarkMode = widget.isDarkMode;
-  }
-
-  void _toggle() => setState(() => isDarkMode = !isDarkMode);
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       key: _scaffoldKey,
-      backgroundColor: isDarkMode ? Colors.black : const Color(0xFFF5F6FA),
+      backgroundColor:
+          widget.isDarkMode ? Colors.black : const Color(0xFFF5F6FA),
       appBar: NavBar(
-          isDarkMode: isDarkMode,
-          onToggleTheme: _toggle,
-          activePage: 'Login',
-          scaffoldKey: _scaffoldKey),
+        isDarkMode: widget.isDarkMode,
+        onToggleTheme: widget.onToggleTheme,
+        activePage: 'Login',
+        scaffoldKey: _scaffoldKey,
+      ),
       endDrawer: NavDrawer(
-          isDarkMode: isDarkMode, onToggleTheme: _toggle, activePage: 'Login'),
+        isDarkMode: widget.isDarkMode,
+        onToggleTheme: widget.onToggleTheme,
+        activePage: 'Login',
+      ),
       body: ListView(
-          children: [Login(isDarkMode: isDarkMode, onToggleTheme: _toggle)]),
+        children: [
+          Login(
+            isDarkMode: widget.isDarkMode,
+            onToggleTheme: widget.onToggleTheme,
+          ),
+        ],
+      ),
     );
   }
 }
