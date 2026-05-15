@@ -4,16 +4,14 @@ import '../../utils/responsive.dart';
 
 class InternTimeLogStatsCards extends StatelessWidget {
   final bool isDarkMode;
-  final int totalHours;
-  final int remainingHours;
+  final int presentDays;
   final int lateArrivals;
   final int absences;
 
   const InternTimeLogStatsCards({
     super.key,
     required this.isDarkMode,
-    required this.totalHours,
-    required this.remainingHours,
+    required this.presentDays,
     required this.lateArrivals,
     required this.absences,
   });
@@ -24,8 +22,7 @@ class InternTimeLogStatsCards extends StatelessWidget {
     final theme = AppTheme.of(isDarkMode);
 
     final cards = [
-      {'label': 'Total Hours', 'value': totalHours},
-      {'label': 'Remaining Hours', 'value': remainingHours},
+      {'label': 'Present Days', 'value': presentDays},
       {'label': 'Late Arrivals', 'value': lateArrivals},
       {'label': 'Number of Absences', 'value': absences},
     ];

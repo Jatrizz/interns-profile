@@ -105,11 +105,9 @@ class _InternTimeLogsPageState extends State<InternTimeLogsPage> {
       if (response.statusCode == 200) {
         final data = jsonDecode(response.body);
         setState(() {
-          totalHours = data['total_hours'] ?? 0;
-          remainingHours = data['remaining_hours'] ?? 0;
+          presentDays = data['present_days'] ?? 0;
           lateArrivals = data['late_arrivals'] ?? 0;
           absences = data['absences'] ?? 0;
-          presentDays = data['present_days'] ?? 0;
         });
       }
     } catch (e) {
