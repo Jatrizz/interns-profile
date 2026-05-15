@@ -3,10 +3,8 @@ import 'dart:async';
 import 'dart:convert';
 import 'package:http/http.dart' as http;
 import '../theme/app_theme.dart';
-import '../widgets/Intern-TimeLog-Widgets/intern_time_log_stats_cards.dart';
 import '../widgets/Intern-TimeLog-Widgets/intern_time_log_filters.dart';
 import '../widgets/Intern-TimeLog-Widgets/intern_time_log_table.dart';
-import '../widgets/Intern-TimeLog-Widgets/intern_time_log_pagination.dart';
 import '../widgets/Intern-TimeLog-Widgets/intern_time_log_legend.dart';
 import 'package:interfaces/pages/login_page.dart';
 import 'package:shared_preferences/shared_preferences.dart';
@@ -34,6 +32,7 @@ class _InternTimeLogsPageState extends State<InternTimeLogsPage> {
   int remainingHours = 0;
   int lateArrivals = 0;
   int absences = 0;
+  int presentDays = 0;
 
   String selectedMonth = () {
     final now = DateTime.now();
@@ -46,10 +45,6 @@ class _InternTimeLogsPageState extends State<InternTimeLogsPage> {
 
   String selectedStatus = 'All';
   String selectedWeek = 'All Weeks';
-
-  int currentPage = 1;
-  int totalEntries = 0;
-  int entriesPerPage = 8;
 
   List<Map<String, dynamic>> allLogs = [];
   List<Map<String, dynamic>> filteredLogs = [];
@@ -65,7 +60,6 @@ class _InternTimeLogsPageState extends State<InternTimeLogsPage> {
     super.initState();
     fetchTimeLogs();
     fetchTimeLogStats();
-
     _refreshTimer = Timer.periodic(const Duration(seconds: 30), (_) async {
       if (!mounted || _isFetching) return;
       _isFetching = true;
@@ -76,6 +70,28 @@ class _InternTimeLogsPageState extends State<InternTimeLogsPage> {
   }
 
   @override
+  void didUpdateWidget(InternTimeLogsPage oldWidget) {
+    super.didUpdateWidget(oldWidget);
+    _resetToCurrentMonth();
+  }
+
+  void _resetToCurrentMonth() {
+    final now = DateTime.now();
+    const months = [
+      'January', 'February', 'March', 'April', 'May', 'June',
+      'July', 'August', 'September', 'October', 'November', 'December'
+    ];
+    final currentMonth = '${months[now.month - 1]} ${now.year}';
+    if (selectedMonth != currentMonth && !_isSpecificDate) {
+      setState(() {
+        selectedMonth = currentMonth;
+        selectedDate = null;
+      });
+      fetchTimeLogs();
+    }
+  }
+
+  @override
   void dispose() {
     _refreshTimer.cancel();
     super.dispose();
@@ -83,10 +99,8 @@ class _InternTimeLogsPageState extends State<InternTimeLogsPage> {
 
   Future<void> fetchTimeLogStats() async {
     try {
-      final response = await http.get(
-        Uri.parse(
-            'http://127.0.0.1:8080/intern/timelogs/stats?user_id=${widget.userId}'),
-      );
+      final response = await http.get(Uri.parse(
+          'http://127.0.0.1:8080/intern/timelogs/stats?user_id=${widget.userId}'));
       if (!mounted) return;
       if (response.statusCode == 200) {
         final data = jsonDecode(response.body);
@@ -95,6 +109,7 @@ class _InternTimeLogsPageState extends State<InternTimeLogsPage> {
           remainingHours = data['remaining_hours'] ?? 0;
           lateArrivals = data['late_arrivals'] ?? 0;
           absences = data['absences'] ?? 0;
+          presentDays = data['present_days'] ?? 0;
         });
       }
     } catch (e) {
@@ -103,24 +118,20 @@ class _InternTimeLogsPageState extends State<InternTimeLogsPage> {
   }
 
   Future<void> fetchTimeLogs() async {
-    final months = [
+    const months = [
       'January', 'February', 'March', 'April', 'May', 'June',
       'July', 'August', 'September', 'October', 'November', 'December'
     ];
-
     String url;
     if (_isSpecificDate && selectedDate != null) {
       final date = selectedDate!.toIso8601String().split('T')[0];
-      url =
-          'http://127.0.0.1:8080/intern/timelogs?user_id=${widget.userId}&date=$date';
+      url = 'http://127.0.0.1:8080/intern/timelogs?user_id=${widget.userId}&date=$date';
     } else {
       final parts = selectedMonth.split(' ');
       final monthIndex = months.indexOf(parts[0]) + 1;
       final year = parts[1];
-      url =
-          'http://127.0.0.1:8080/intern/timelogs?user_id=${widget.userId}&month=$monthIndex&year=$year';
+      url = 'http://127.0.0.1:8080/intern/timelogs?user_id=${widget.userId}&month=$monthIndex&year=$year';
     }
-
     try {
       final response = await http.get(Uri.parse(url));
       if (!mounted) return;
@@ -138,23 +149,15 @@ class _InternTimeLogsPageState extends State<InternTimeLogsPage> {
 
   void applyFilters() {
     List<Map<String, dynamic>> result = List.from(allLogs);
-
     if (selectedStatus != 'All') {
       result = result.where((log) {
         final status = log['status']?.toString().toLowerCase() ?? '';
-        if (selectedStatus == 'Present') {
-          return status == 'on-time' || status == 'late';
-        }
-        if (selectedStatus == 'On Time') {
-          return status == 'on-time';
-        }
-        if (selectedStatus == 'Half Day') {
-          return status == 'half-day' || status == 'halfday';
-        }
+        if (selectedStatus == 'Present') return status == 'on-time' || status == 'late';
+        if (selectedStatus == 'On Time') return status == 'on-time';
+        if (selectedStatus == 'Half Day') return status == 'half-day' || status == 'halfday';
         return status == selectedStatus.toLowerCase();
       }).toList();
     }
-
     if (selectedWeek != 'All Weeks') {
       final weekNumber = int.tryParse(selectedWeek.replaceAll('Week ', ''));
       if (weekNumber != null) {
@@ -163,31 +166,14 @@ class _InternTimeLogsPageState extends State<InternTimeLogsPage> {
           final parts = date.split(' ');
           if (parts.length == 2) {
             final day = int.tryParse(parts[1]);
-            if (day != null) {
-              final week = ((day - 1) ~/ 7) + 1;
-              return week == weekNumber;
-            }
+            if (day != null) return ((day - 1) ~/ 7) + 1 == weekNumber;
           }
           return false;
         }).toList();
       }
     }
-
-    setState(() {
-      filteredLogs = result;
-      totalEntries = result.length;
-      currentPage = 1;
-    });
+    setState(() => filteredLogs = result);
   }
-
-  List<Map<String, dynamic>> get paginatedLogs {
-    final start = (currentPage - 1) * entriesPerPage;
-    final end = (start + entriesPerPage).clamp(0, filteredLogs.length);
-    return filteredLogs.sublist(start, end);
-  }
-
-  int get totalPages =>
-      totalEntries == 0 ? 1 : (totalEntries / entriesPerPage).ceil();
 
   Future<void> handleLogout() async {
     final theme = AppTheme.of(isDarkMode);
@@ -195,17 +181,10 @@ class _InternTimeLogsPageState extends State<InternTimeLogsPage> {
       context: context,
       builder: (context) => AlertDialog(
         backgroundColor: theme.sidebarBg,
-        title: Text(
-          'Logout',
-          style: TextStyle(
-            color: theme.textPrimary,
-            fontWeight: FontWeight.bold,
-          ),
-        ),
-        content: Text(
-          'Are you sure you want to logout?',
-          style: TextStyle(color: theme.textSecondary),
-        ),
+        title: Text('Logout',
+            style: TextStyle(color: theme.textPrimary, fontWeight: FontWeight.bold)),
+        content: Text('Are you sure you want to logout?',
+            style: TextStyle(color: theme.textSecondary)),
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(context, false),
@@ -218,21 +197,15 @@ class _InternTimeLogsPageState extends State<InternTimeLogsPage> {
         ],
       ),
     );
-
     if (confirm != true) return;
-
     final prefs = await SharedPreferences.getInstance();
     await prefs.remove('authToken');
-
     if (!mounted) return;
-
     Navigator.pushReplacement(
       context,
       PageRouteBuilder(
-        pageBuilder: (_, __, ___) => LoginPage(
-          isDarkMode: isDarkMode,
-          onToggleTheme: () {},
-        ),
+        pageBuilder: (_, __, ___) =>
+            LoginPage(isDarkMode: isDarkMode, onToggleTheme: () {}),
         transitionDuration: Duration.zero,
         reverseTransitionDuration: Duration.zero,
       ),
@@ -242,11 +215,13 @@ class _InternTimeLogsPageState extends State<InternTimeLogsPage> {
   @override
   Widget build(BuildContext context) {
     final theme = AppTheme.of(isDarkMode);
-    return SingleChildScrollView(
+
+    return Padding(
       padding: const EdgeInsets.all(24),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
+          // ── Title ──────────────────────────────────
           Text(
             'Time Logs',
             style: TextStyle(
@@ -256,14 +231,83 @@ class _InternTimeLogsPageState extends State<InternTimeLogsPage> {
             ),
           ),
           const SizedBox(height: 16),
-          InternTimeLogStatsCards(
-            isDarkMode: isDarkMode,
-            totalHours: totalHours,
-            remainingHours: remainingHours,
-            lateArrivals: lateArrivals,
-            absences: absences,
+
+          // ── Single stat row: hours left | divider | attendance right ──
+          IntrinsicHeight(
+            child: Row(
+              children: [
+                // Left group: Total Hours + Remaining Hours
+                Expanded(
+                  child: Row(
+                    children: [
+                      Expanded(
+                        child: _StatCard(
+                          isDarkMode: isDarkMode,
+                          label: 'Total Hours Rendered',
+                          value: '$totalHours',
+                        ),
+                      ),
+                      const SizedBox(width: 12),
+                      Expanded(
+                        child: _StatCard(
+                          isDarkMode: isDarkMode,
+                          label: 'Remaining Hours',
+                          value: '$remainingHours',
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+
+                // Divider
+                Padding(
+                  padding: const EdgeInsets.symmetric(horizontal: 16),
+                  child: VerticalDivider(
+                    color: isDarkMode ? Colors.grey[700] : Colors.grey[300],
+                    thickness: 1,
+                    width: 1,
+                  ),
+                ),
+
+                // Right group: Present Days + Late Arrivals + Absences
+                Expanded(
+                  child: Row(
+                    children: [
+                      Expanded(
+                        child: _StatCard(
+                          isDarkMode: isDarkMode,
+                          label: 'Present Days',
+                          value: '$presentDays',
+                          accentColor: const Color(0xFF4CAF50),
+                        ),
+                      ),
+                      const SizedBox(width: 12),
+                      Expanded(
+                        child: _StatCard(
+                          isDarkMode: isDarkMode,
+                          label: 'Late Arrivals',
+                          value: '$lateArrivals',
+                          accentColor: const Color(0xFFFFA726),
+                        ),
+                      ),
+                      const SizedBox(width: 12),
+                      Expanded(
+                        child: _StatCard(
+                          isDarkMode: isDarkMode,
+                          label: 'Absences',
+                          value: '$absences',
+                          accentColor: const Color(0xFFEF5350),
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+              ],
+            ),
           ),
           const SizedBox(height: 24),
+
+          // ── Filters ────────────────────────────────
           InternTimeLogFilters(
             isDarkMode: isDarkMode,
             selectedMonth: selectedMonth,
@@ -272,7 +316,7 @@ class _InternTimeLogsPageState extends State<InternTimeLogsPage> {
             isSpecificDate: _isSpecificDate,
             onToggleMode: (val) {
               final now = DateTime.now();
-              final months = [
+              const months = [
                 'January', 'February', 'March', 'April', 'May', 'June',
                 'July', 'August', 'September', 'October', 'November', 'December'
               ];
@@ -280,8 +324,7 @@ class _InternTimeLogsPageState extends State<InternTimeLogsPage> {
                 _isSpecificDate = val;
                 if (val) {
                   selectedDate = now;
-                  selectedMonth =
-                      '${months[now.month - 1]} ${now.day}, ${now.year}';
+                  selectedMonth = '${months[now.month - 1]} ${now.day}, ${now.year}';
                 } else {
                   selectedDate = null;
                   selectedMonth = '${months[now.month - 1]} ${now.year}';
@@ -290,19 +333,15 @@ class _InternTimeLogsPageState extends State<InternTimeLogsPage> {
               fetchTimeLogs();
             },
             onMonthChanged: (DateTime picked) {
-              final months = [
+              const months = [
                 'January', 'February', 'March', 'April', 'May', 'June',
                 'July', 'August', 'September', 'October', 'November', 'December'
               ];
               setState(() {
                 selectedDate = picked;
-                if (_isSpecificDate) {
-                  selectedMonth =
-                      '${months[picked.month - 1]} ${picked.day}, ${picked.year}';
-                } else {
-                  selectedMonth =
-                      '${months[picked.month - 1]} ${picked.year}';
-                }
+                selectedMonth = _isSpecificDate
+                    ? '${months[picked.month - 1]} ${picked.day}, ${picked.year}'
+                    : '${months[picked.month - 1]} ${picked.year}';
               });
               fetchTimeLogs();
             },
@@ -316,22 +355,80 @@ class _InternTimeLogsPageState extends State<InternTimeLogsPage> {
             },
           ),
           const SizedBox(height: 16),
-          InternTimeLogTable(
-            isDarkMode: isDarkMode,
-            logs: paginatedLogs,
+
+          // ── Table with fixed header + scrollable body ──
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                _isSpecificDate
+                ? InternTimeLogTable(
+                    isDarkMode: isDarkMode,
+                    logs: filteredLogs,
+                    isSpecificDate: _isSpecificDate,
+                  )
+                : Expanded(
+                    child: InternTimeLogTable(
+                      isDarkMode: isDarkMode,
+                      logs: filteredLogs,
+                      isSpecificDate: _isSpecificDate,
+                    ),
+                  ),
+                const SizedBox(height: 12),
+                InternTimeLogLegend(isDarkMode: isDarkMode),
+              ],
+            ),
           ),
-          const SizedBox(height: 12),
-          InternTimeLogPagination(
-            isDarkMode: isDarkMode,
-            currentPage: currentPage,
-            totalPages: totalPages,
-            totalEntries: totalEntries,
-            entriesPerPage: entriesPerPage,
-            shownCount: paginatedLogs.length,
-            onPageChanged: (page) => setState(() => currentPage = page),
+        ],
+      ),
+    );
+  }
+}
+
+// ── Stat card ─────────────────────────────────────────────────────────────────
+class _StatCard extends StatelessWidget {
+  final bool isDarkMode;
+  final String label;
+  final String value;
+  final Color? accentColor;
+
+  const _StatCard({
+    required this.isDarkMode,
+    required this.label,
+    required this.value,
+    this.accentColor,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    final bg = isDarkMode ? const Color(0xFF2E2E2E) : const Color(0xFFF5F5F5);
+    final labelColor = isDarkMode ? Colors.grey[400] : Colors.grey[600];
+    final valueColor = accentColor ?? (isDarkMode ? Colors.white : Colors.black87);
+
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 18),
+      decoration: BoxDecoration(
+        color: bg,
+        borderRadius: BorderRadius.circular(12),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.center,
+        children: [
+          Text(
+            label,
+            textAlign: TextAlign.center,
+            style: TextStyle(color: labelColor, fontSize: 12),
           ),
-          const SizedBox(height: 16),
-          InternTimeLogLegend(isDarkMode: isDarkMode),
+          const SizedBox(height: 8),
+          Text(
+            value,
+            textAlign: TextAlign.center,
+            style: TextStyle(
+              color: valueColor,
+              fontSize: 32,
+              fontWeight: FontWeight.bold,
+            ),
+          ),
         ],
       ),
     );

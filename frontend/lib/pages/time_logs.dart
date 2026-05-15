@@ -7,7 +7,6 @@ import '../widgets/TimeLogs-Widgets/time_logs_intern_dropdown.dart';
 import '../widgets/TimeLogs-Widgets/time_logs_overview_cards.dart';
 import '../widgets/TimeLogs-Widgets/time_logs_filters.dart';
 import '../widgets/TimeLogs-Widgets/time_logs_table.dart';
-import '../widgets/TimeLogs-Widgets/time_logs_pagination.dart';
 import '../widgets/TimeLogs-Widgets/time_logs_legend.dart';
 import '../utils/responsive.dart';
 
@@ -39,9 +38,6 @@ class _TimeLogsPageState extends State<TimeLogsPage> {
   String selectedStatus = 'All';
   String selectedWeek = 'All Weeks';
 
-  int currentPage = 1;
-  int entriesPerPage = 8;
-
   final _now = DateTime.now();
   late String selectedMonth;
   bool _isSpecificDate = true;
@@ -54,18 +50,8 @@ class _TimeLogsPageState extends State<TimeLogsPage> {
   bool _isFetching = false;
 
   static const List<String> _months = [
-    'January',
-    'February',
-    'March',
-    'April',
-    'May',
-    'June',
-    'July',
-    'August',
-    'September',
-    'October',
-    'November',
-    'December'
+    'January', 'February', 'March', 'April', 'May', 'June',
+    'July', 'August', 'September', 'October', 'November', 'December'
   ];
 
   @override
@@ -76,7 +62,7 @@ class _TimeLogsPageState extends State<TimeLogsPage> {
 
     fetchOverviewStats();
     fetchInterns();
-    fetchTodayLogs(resetPage: true);
+    fetchTodayLogs();
 
     _refreshTimer = Timer.periodic(const Duration(seconds: 30), (_) async {
       if (!mounted || _isFetching) return;
@@ -108,8 +94,8 @@ class _TimeLogsPageState extends State<TimeLogsPage> {
         setState(() {
           totalInterns = data['total_interns'] ?? totalInterns;
           presentToday = data['present_today'] ?? presentToday;
-          lateToday = data['late_today'] ?? lateToday;
-          absentToday = data['absent_today'] ?? absentToday;
+          lateToday    = data['late_today']    ?? lateToday;
+          absentToday  = data['absent_today']  ?? absentToday;
         });
       }
     } catch (e) {
@@ -126,7 +112,7 @@ class _TimeLogsPageState extends State<TimeLogsPage> {
       if (response.statusCode == 200) {
         final List<dynamic> data = jsonDecode(response.body);
         setState(() {
-          internNames = data.map((e) => e.toString()).toList();
+          internNames  = data.map((e) => e.toString()).toList();
           totalInterns = internNames.length;
         });
       }
@@ -135,15 +121,14 @@ class _TimeLogsPageState extends State<TimeLogsPage> {
     }
   }
 
-  Future<void> fetchTodayLogs({bool resetPage = false}) async {
+  Future<void> fetchTodayLogs() async {
     String url;
     if (_isSpecificDate && selectedDate != null) {
       final date = selectedDate!.toIso8601String().split('T')[0];
       url = 'http://127.0.0.1:8080/timelogs/today?date=$date';
     } else {
       final parsed = _parseSelectedMonth();
-      url =
-          'http://127.0.0.1:8080/timelogs/today?month=${parsed['month']}&year=${parsed['year']}';
+      url = 'http://127.0.0.1:8080/timelogs/today?month=${parsed['month']}&year=${parsed['year']}';
     }
     try {
       final response = await http.get(Uri.parse(url));
@@ -151,9 +136,9 @@ class _TimeLogsPageState extends State<TimeLogsPage> {
       if (response.statusCode == 200) {
         final List<dynamic> data = jsonDecode(response.body);
         setState(() {
-          allLogs = data.map((e) => Map<String, dynamic>.from(e)).toList();
+          allLogs        = data.map((e) => Map<String, dynamic>.from(e)).toList();
           _isDefaultView = true;
-          applyFilters(resetPage: resetPage);
+          applyFilters();
         });
         await fetchOverviewStats();
       }
@@ -162,16 +147,14 @@ class _TimeLogsPageState extends State<TimeLogsPage> {
     }
   }
 
-  Future<void> fetchLogsForIntern(String name, {bool resetPage = false}) async {
+  Future<void> fetchLogsForIntern(String name) async {
     String url;
     if (_isSpecificDate && selectedDate != null) {
       final date = selectedDate!.toIso8601String().split('T')[0];
-      url =
-          'http://127.0.0.1:8080/timelogs/intern?name=${Uri.encodeComponent(name)}&date=$date';
+      url = 'http://127.0.0.1:8080/timelogs/intern?name=${Uri.encodeComponent(name)}&date=$date';
     } else {
       final parsed = _parseSelectedMonth();
-      url =
-          'http://127.0.0.1:8080/timelogs/intern?name=${Uri.encodeComponent(name)}&month=${parsed['month']}&year=${parsed['year']}';
+      url = 'http://127.0.0.1:8080/timelogs/intern?name=${Uri.encodeComponent(name)}&month=${parsed['month']}&year=${parsed['year']}';
     }
     try {
       final response = await http.get(Uri.parse(url));
@@ -180,7 +163,7 @@ class _TimeLogsPageState extends State<TimeLogsPage> {
         final List<dynamic> data = jsonDecode(response.body);
         setState(() {
           allLogs = data.map((e) => Map<String, dynamic>.from(e)).toList();
-          applyFilters(resetPage: resetPage);
+          applyFilters();
         });
         await fetchOverviewStats();
       }
@@ -189,7 +172,7 @@ class _TimeLogsPageState extends State<TimeLogsPage> {
     }
   }
 
-  void applyFilters({bool resetPage = false}) {
+  void applyFilters() {
     List<Map<String, dynamic>> result = List.from(allLogs);
 
     if (selectedStatus != 'All') {
@@ -205,9 +188,7 @@ class _TimeLogsPageState extends State<TimeLogsPage> {
           case 'Absent':
             return status == 'absent';
           case 'Half Day':
-            return status == 'half-day' ||
-                status == 'halfday' ||
-                status == 'half day';
+            return status == 'half-day' || status == 'halfday' || status == 'half day';
           case 'Weekend':
             return status == 'weekend';
           default:
@@ -220,41 +201,26 @@ class _TimeLogsPageState extends State<TimeLogsPage> {
       final weekNumber = int.tryParse(selectedWeek.replaceAll('Week ', ''));
       if (weekNumber != null) {
         result = result.where((log) {
-          final date = log['date']?.toString() ?? '';
+          final date  = log['date']?.toString() ?? '';
           final parts = date.split(' ');
           if (parts.length == 2) {
             final day = int.tryParse(parts[1]);
-            if (day != null) {
-              final week = ((day - 1) ~/ 7) + 1;
-              return week == weekNumber;
-            }
+            if (day != null) return ((day - 1) ~/ 7) + 1 == weekNumber;
           }
           return false;
         }).toList();
       }
     }
 
-    setState(() {
-      filteredLogs = result;
-      if (resetPage) currentPage = 1;
-    });
+    setState(() => filteredLogs = result);
   }
 
   Map<String, int> _parseSelectedMonth() {
-    final parts = selectedMonth.split(' ');
+    final parts      = selectedMonth.split(' ');
     final monthIndex = _months.indexOf(parts[0]) + 1;
-    final year = int.tryParse(parts[1]) ?? DateTime.now().year;
+    final year       = int.tryParse(parts[1]) ?? DateTime.now().year;
     return {'month': monthIndex, 'year': year};
   }
-
-  List<Map<String, dynamic>> get paginatedLogs {
-    final start = (currentPage - 1) * entriesPerPage;
-    final end = (start + entriesPerPage).clamp(0, filteredLogs.length);
-    return filteredLogs.sublist(start, end);
-  }
-
-  int get totalPages =>
-      filteredLogs.isEmpty ? 1 : (filteredLogs.length / entriesPerPage).ceil();
 
   List<String> get filteredInternNames {
     if (searchQuery.isEmpty) return internNames;
@@ -263,9 +229,10 @@ class _TimeLogsPageState extends State<TimeLogsPage> {
         .toList();
   }
 
-  // ── shared filters column ─────────────────────────────────────────────
-  Widget _buildFiltersColumn() {
-    return Column(
+  Widget _buildTopSection() {
+    final isMobile = Responsive.isMobile(context);
+
+    final filtersColumn = Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         Text(
@@ -285,10 +252,10 @@ class _TimeLogsPageState extends State<TimeLogsPage> {
           onSuggestionSelected: (name) {
             setState(() {
               selectedIntern = name;
-              searchQuery = '';
+              searchQuery    = '';
               _isDefaultView = false;
             });
-            fetchLogsForIntern(name, resetPage: true);
+            fetchLogsForIntern(name);
           },
         ),
         const SizedBox(height: 12),
@@ -311,13 +278,13 @@ class _TimeLogsPageState extends State<TimeLogsPage> {
                   selectedIntern = 'All Interns';
                   _isDefaultView = true;
                 });
-                fetchTodayLogs(resetPage: true);
+                fetchTodayLogs();
               } else {
                 setState(() {
                   selectedIntern = val;
                   _isDefaultView = false;
                 });
-                fetchLogsForIntern(val, resetPage: true);
+                fetchLogsForIntern(val);
               }
             }
           },
@@ -334,115 +301,96 @@ class _TimeLogsPageState extends State<TimeLogsPage> {
               _isSpecificDate = val;
               final now = DateTime.now();
               if (val) {
-                selectedDate = now;
-                selectedMonth =
-                    '${_months[now.month - 1]} ${now.day}, ${now.year}';
+                selectedDate  = now;
+                selectedMonth = '${_months[now.month - 1]} ${now.day}, ${now.year}';
               } else {
-                selectedDate = null;
+                selectedDate  = null;
                 selectedMonth = '${_months[now.month - 1]} ${now.year}';
               }
             });
-            fetchTodayLogs(resetPage: true);
+            fetchTodayLogs();
           },
           onMonthChanged: (DateTime picked) {
             setState(() {
               selectedDate = picked;
               if (_isSpecificDate) {
-                selectedMonth =
-                    '${_months[picked.month - 1]} ${picked.day}, ${picked.year}';
+                selectedMonth = '${_months[picked.month - 1]} ${picked.day}, ${picked.year}';
               } else {
                 selectedMonth = '${_months[picked.month - 1]} ${picked.year}';
               }
             });
             if (_isDefaultView) {
-              fetchTodayLogs(resetPage: true);
-            } else if (selectedIntern != null &&
-                selectedIntern != 'All Interns') {
-              fetchLogsForIntern(selectedIntern!, resetPage: true);
+              fetchTodayLogs();
+            } else if (selectedIntern != null && selectedIntern != 'All Interns') {
+              fetchLogsForIntern(selectedIntern!);
             }
           },
           onStatusChanged: (val) {
             setState(() => selectedStatus = val);
-            applyFilters(resetPage: true);
+            applyFilters();
           },
           onWeekChanged: (val) {
             setState(() => selectedWeek = val);
-            applyFilters(resetPage: true);
+            applyFilters();
           },
         ),
       ],
     );
+
+    final overviewCards = TimeLogsOverviewCards(
+      isDarkMode:   widget.isDarkMode,
+      totalInterns: totalInterns,
+      presentToday: presentToday,
+      lateToday:    lateToday,
+      absentToday:  absentToday,
+    );
+
+    return isMobile
+        ? Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              filtersColumn,
+              const SizedBox(height: 20),
+              overviewCards,
+            ],
+          )
+        : Row(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Expanded(child: filtersColumn),
+              const SizedBox(width: 24),
+              SizedBox(width: 320, child: overviewCards),
+            ],
+          );
   }
 
   @override
   Widget build(BuildContext context) {
-    final isMobile = Responsive.isMobile(context);
-
-    return SingleChildScrollView(
-      padding: const EdgeInsets.all(24),
+    return Padding(
+      padding: const EdgeInsets.fromLTRB(24, 12, 24, 12),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          // Top section — side by side on desktop, stacked on mobile
-          isMobile
-              ? Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    _buildFiltersColumn(),
-                    const SizedBox(height: 20),
-                    TimeLogsOverviewCards(
-                      isDarkMode: widget.isDarkMode,
-                      totalInterns: totalInterns,
-                      presentToday: presentToday,
-                      lateToday: lateToday,
-                      absentToday: absentToday,
-                    ),
-                  ],
-                )
-              : Row(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Expanded(child: _buildFiltersColumn()),
-                    const SizedBox(width: 24),
-                    SizedBox(
-                      width: 320,
-                      child: TimeLogsOverviewCards(
-                        isDarkMode: widget.isDarkMode,
-                        totalInterns: totalInterns,
-                        presentToday: presentToday,
-                        lateToday: lateToday,
-                        absentToday: absentToday,
-                      ),
-                    ),
-                  ],
-                ),
-
-          const SizedBox(height: 20),
-          TimeLogsTable(
-            isDarkMode: widget.isDarkMode,
-            logs: paginatedLogs,
-            showName: _isDefaultView,
-          ),
+          // ── Fixed top: filters + overview ──
+          _buildTopSection(),
           const SizedBox(height: 12),
-          TimeLogsPagination(
-            isDarkMode: widget.isDarkMode,
-            currentPage: currentPage,
-            totalPages: totalPages,
-            totalEntries: filteredLogs.length,
-            shownCount: paginatedLogs.length,
-            onPageChanged: (page) async {
-              setState(() => currentPage = page);
-              await fetchOverviewStats();
-              if (_isDefaultView) {
-                await fetchTodayLogs();
-              } else if (selectedIntern != null &&
-                  selectedIntern != 'All Interns') {
-                await fetchLogsForIntern(selectedIntern!);
-              }
-            },
+
+          // ── Table + legend: fills remaining space ──
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                TimeLogsTable(
+                  isDarkMode:     widget.isDarkMode,
+                  logs:           filteredLogs,
+                  showName:       _isDefaultView,
+                  isSpecificDate: _isSpecificDate,
+                ),
+                const SizedBox(height: 12),
+                TimeLogsLegend(isDarkMode: widget.isDarkMode),
+              ],
+            ),
           ),
-          const SizedBox(height: 16),
-          TimeLogsLegend(isDarkMode: widget.isDarkMode),
         ],
       ),
     );
