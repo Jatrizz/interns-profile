@@ -30,7 +30,7 @@ class _HeroSectionState extends State<HeroSection> {
   final _confirmpassController = TextEditingController();
 
   final _passwordFocusNode = FocusNode();
-  bool _passwordFocused = false;
+  bool _passwordFocused = true;
 
   final Map<String, String?> _errors = {};
 
@@ -62,7 +62,9 @@ class _HeroSectionState extends State<HeroSection> {
     _passwordController
         .addListener(() => _checkPassword(_passwordController.text));
     _passwordFocusNode.addListener(() {
-      setState(() => _passwordFocused = _passwordFocusNode.hasFocus);
+      if (_passwordFocusNode.hasFocus) {
+        setState(() => _passwordFocused = true);
+      }
     });
   }
 
@@ -212,8 +214,7 @@ class _HeroSectionState extends State<HeroSection> {
                   ),
                 ],
               ),
-              padding:
-                  const EdgeInsets.symmetric(horizontal: 28, vertical: 32),
+              padding: const EdgeInsets.symmetric(horizontal: 28, vertical: 32),
               child: Column(
                 mainAxisSize: MainAxisSize.min,
                 children: [
@@ -336,7 +337,10 @@ class _HeroSectionState extends State<HeroSection> {
                     child: DecoratedBox(
                       decoration: BoxDecoration(
                         gradient: const LinearGradient(
-                          colors: [Colors.blue, Color.fromARGB(255, 2, 55, 230)],
+                          colors: [
+                            Colors.blue,
+                            Color.fromARGB(255, 2, 55, 230)
+                          ],
                         ),
                         borderRadius: BorderRadius.circular(12),
                       ),
@@ -408,8 +412,7 @@ class _HeroSectionState extends State<HeroSection> {
       final response = await http.post(
         Uri.parse('http://localhost:8080/verify-otp'),
         headers: {'Content-Type': 'application/json'},
-        body:
-            jsonEncode({'email': _emailController.text.trim(), 'otp': otp}),
+        body: jsonEncode({'email': _emailController.text.trim(), 'otp': otp}),
       );
       if (response.statusCode == 200) {
         Navigator.pop(context);
@@ -500,7 +503,10 @@ class _HeroSectionState extends State<HeroSection> {
                 "Phone Number",
                 "phonenum",
                 icon: Icons.phone,
-                inputFormatters: [FilteringTextInputFormatter.digitsOnly, LengthLimitingTextInputFormatter(11),],
+                inputFormatters: [
+                  FilteringTextInputFormatter.digitsOnly,
+                  LengthLimitingTextInputFormatter(11),
+                ],
               ),
               const SizedBox(height: 10),
 
@@ -656,8 +662,7 @@ class _HeroSectionState extends State<HeroSection> {
                     padding: const EdgeInsets.symmetric(vertical: 14),
                     child: Center(
                       child: _isSubmitting
-                          ? const CircularProgressIndicator(
-                              color: Colors.white)
+                          ? const CircularProgressIndicator(color: Colors.white)
                           : const Text("Register",
                               style: TextStyle(color: Colors.white)),
                     ),
