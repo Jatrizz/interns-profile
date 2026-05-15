@@ -205,13 +205,12 @@ class InternTimeLogTable extends StatelessWidget {
       body = Column(
         children: [
           SizedBox(
-            height: rowH * 2,
+            height: rowH * 8,
             child: Center(
               child: Text('No records found.',
                   style: TextStyle(color: theme.textSecondary, fontSize: 14)),
             ),
           ),
-          for (int i = 2; i < _minRows; i++) emptyRow(i),
         ],
       );
     } else if (needsVScroll) {

@@ -222,25 +222,23 @@ class TimeLogsTable extends StatelessWidget {
 
     Widget body;
     if (logs.isEmpty) {
-      body = Column(
-        children: [
-          SizedBox(
-            height: rowH * 2,
-            child: Center(
-              child: Text(
-                'No records found.',
-                style: TextStyle(
-                  color: isDarkMode ? Colors.grey[500] : Colors.grey[400],
-                  fontSize: 14,
-                ),
+    body = Column(
+      children: [
+        SizedBox(
+          height: rowH * 8,
+          child: Center(
+            child: Text(
+              'No records found.',
+              style: TextStyle(
+                color: isDarkMode ? Colors.grey[500] : Colors.grey[400],
+                fontSize: 14,
               ),
             ),
           ),
-          if (!isSpecificDate)
-            for (int i = 2; i < _minRows; i++) emptyRow(i),
-        ],
-      );
-    } else if (needsVScroll) {
+        ),
+      ],
+    );
+  } else if (needsVScroll) {
       final scrollController = ScrollController();
       body = SizedBox(
         height: rowH * _minRows,
