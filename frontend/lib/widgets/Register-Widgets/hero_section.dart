@@ -177,48 +177,239 @@ class _HeroSectionState extends State<HeroSection> {
   }
 
   void _showOtpDialog() {
-    final otpController = TextEditingController();
+    final controllers = List.generate(6, (_) => TextEditingController());
+    final focusNodes = List.generate(6, (_) => FocusNode());
+    bool isVerifying = false;
+    String? errorMsg;
+
+    String getOtp() => controllers.map((c) => c.text).join();
+
     showDialog(
       context: context,
       barrierDismissible: false,
-      builder: (_) => AlertDialog(
-        title: const Text("Email Verification"),
-        content: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            Text("OTP sent to ${_emailController.text}",
-                textAlign: TextAlign.center),
-            const SizedBox(height: 15),
-            TextField(
-              controller: otpController,
-              keyboardType: TextInputType.number,
-              decoration: const InputDecoration(
-                border: OutlineInputBorder(),
-                hintText: "Enter OTP",
+      builder: (context) => StatefulBuilder(
+        builder: (context, setDialogState) {
+          final dark = widget.isDarkMode;
+          final bg = dark ? const Color(0xFF1E1E1E) : Colors.white;
+          final cardBg =
+              dark ? const Color(0xFF2A2A2A) : const Color(0xFFF5F6FA);
+          final textColor = dark ? Colors.white : Colors.black87;
+          final subColor = dark ? Colors.white54 : Colors.black45;
+
+          return Dialog(
+            backgroundColor: Colors.transparent,
+            insetPadding: const EdgeInsets.symmetric(horizontal: 24),
+            child: Container(
+              constraints: const BoxConstraints(maxWidth: 360),
+              decoration: BoxDecoration(
+                color: bg,
+                borderRadius: BorderRadius.circular(24),
+                boxShadow: [
+                  BoxShadow(
+                    color: Colors.black.withOpacity(dark ? 0.5 : 0.12),
+                    blurRadius: 32,
+                    offset: const Offset(0, 8),
+                  ),
+                ],
+              ),
+              padding:
+                  const EdgeInsets.symmetric(horizontal: 28, vertical: 32),
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  // Icon
+                  Container(
+                    width: 64,
+                    height: 64,
+                    decoration: BoxDecoration(
+                      gradient: const LinearGradient(
+                        colors: [Colors.blue, Color.fromARGB(255, 2, 55, 230)],
+                      ),
+                      borderRadius: BorderRadius.circular(18),
+                    ),
+                    child: const Icon(Icons.mark_email_read_outlined,
+                        color: Colors.white, size: 32),
+                  ),
+                  const SizedBox(height: 20),
+
+                  // Title
+                  Text(
+                    'Verify your email',
+                    style: TextStyle(
+                      color: textColor,
+                      fontSize: 20,
+                      fontWeight: FontWeight.bold,
+                    ),
+                  ),
+                  const SizedBox(height: 8),
+
+                  // Subtitle
+                  Text(
+                    'We sent a 6-digit code to',
+                    style: TextStyle(color: subColor, fontSize: 13),
+                    textAlign: TextAlign.center,
+                  ),
+                  const SizedBox(height: 2),
+                  Text(
+                    _emailController.text.trim(),
+                    style: const TextStyle(
+                      color: Color(0xFF4F46E5),
+                      fontSize: 13,
+                      fontWeight: FontWeight.w600,
+                    ),
+                    textAlign: TextAlign.center,
+                  ),
+                  const SizedBox(height: 28),
+
+                  // OTP boxes
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: List.generate(6, (i) {
+                      return Container(
+                        width: 40,
+                        height: 48,
+                        margin: const EdgeInsets.symmetric(horizontal: 3),
+                        decoration: BoxDecoration(
+                          color: cardBg,
+                          borderRadius: BorderRadius.circular(12),
+                          border: Border.all(
+                            color: controllers[i].text.isNotEmpty
+                                ? const Color(0xFF4F46E5)
+                                : (dark ? Colors.white12 : Colors.black12),
+                            width: 1.5,
+                          ),
+                        ),
+                        child: TextField(
+                          controller: controllers[i],
+                          focusNode: focusNodes[i],
+                          textAlign: TextAlign.center,
+                          keyboardType: TextInputType.number,
+                          maxLength: 1,
+                          cursorColor: const Color(0xFF4F46E5),
+                          style: TextStyle(
+                            color: textColor,
+                            fontSize: 20,
+                            fontWeight: FontWeight.bold,
+                          ),
+                          decoration: const InputDecoration(
+                            border: InputBorder.none,
+                            counterText: '',
+                            contentPadding: EdgeInsets.zero,
+                          ),
+                          inputFormatters: [
+                            FilteringTextInputFormatter.digitsOnly
+                          ],
+                          onChanged: (val) {
+                            setDialogState(() => errorMsg = null);
+                            if (val.isNotEmpty && i < 5) {
+                              focusNodes[i + 1].requestFocus();
+                            } else if (val.isEmpty && i > 0) {
+                              focusNodes[i - 1].requestFocus();
+                            }
+                            setDialogState(() {});
+                          },
+                        ),
+                      );
+                    }),
+                  ),
+
+                  // Error message
+                  if (errorMsg != null) ...[
+                    const SizedBox(height: 12),
+                    Row(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: [
+                        const Icon(Icons.error_outline,
+                            color: Colors.red, size: 14),
+                        const SizedBox(width: 4),
+                        Text(errorMsg!,
+                            style: const TextStyle(
+                                color: Colors.red, fontSize: 12)),
+                      ],
+                    ),
+                  ],
+                  const SizedBox(height: 24),
+
+                  // Verify button
+                  SizedBox(
+                    width: double.infinity,
+                    child: DecoratedBox(
+                      decoration: BoxDecoration(
+                        gradient: const LinearGradient(
+                          colors: [Colors.blue, Color.fromARGB(255, 2, 55, 230)],
+                        ),
+                        borderRadius: BorderRadius.circular(12),
+                      ),
+                      child: InkWell(
+                        borderRadius: BorderRadius.circular(12),
+                        onTap: isVerifying
+                            ? null
+                            : () async {
+                                final otp = getOtp();
+                                if (otp.length < 6) {
+                                  setDialogState(() =>
+                                      errorMsg = 'Please enter all 6 digits');
+                                  return;
+                                }
+                                setDialogState(() => isVerifying = true);
+                                await _verifyOtp(otp, setDialogState, (msg) {
+                                  setDialogState(() => errorMsg = msg);
+                                });
+                                setDialogState(() => isVerifying = false);
+                              },
+                        child: Padding(
+                          padding: const EdgeInsets.symmetric(vertical: 14),
+                          child: Center(
+                            child: isVerifying
+                                ? const SizedBox(
+                                    width: 20,
+                                    height: 20,
+                                    child: CircularProgressIndicator(
+                                        color: Colors.white, strokeWidth: 2),
+                                  )
+                                : const Text(
+                                    'Verify Email',
+                                    style: TextStyle(
+                                      color: Colors.white,
+                                      fontWeight: FontWeight.w600,
+                                      fontSize: 15,
+                                    ),
+                                  ),
+                          ),
+                        ),
+                      ),
+                    ),
+                  ),
+                  const SizedBox(height: 12),
+
+                  // Cancel
+                  TextButton(
+                    onPressed: () => Navigator.pop(context),
+                    child: Text(
+                      'Cancel',
+                      style: TextStyle(color: subColor, fontSize: 13),
+                    ),
+                  ),
+                ],
               ),
             ),
-          ],
-        ),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(context),
-            child: const Text("Cancel"),
-          ),
-          ElevatedButton(
-            onPressed: () async => await _verifyOtp(otpController.text),
-            child: const Text("Verify"),
-          ),
-        ],
+          );
+        },
       ),
     );
   }
 
-  Future<void> _verifyOtp(String otp) async {
+  Future<void> _verifyOtp(
+    String otp,
+    StateSetter setDialogState,
+    void Function(String) onError,
+  ) async {
     try {
       final response = await http.post(
         Uri.parse('http://localhost:8080/verify-otp'),
         headers: {'Content-Type': 'application/json'},
-        body: jsonEncode({'email': _emailController.text.trim(), 'otp': otp}),
+        body:
+            jsonEncode({'email': _emailController.text.trim(), 'otp': otp}),
       );
       if (response.statusCode == 200) {
         Navigator.pop(context);
@@ -235,14 +426,10 @@ class _HeroSectionState extends State<HeroSection> {
         );
       } else {
         final error = jsonDecode(response.body);
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text(error['error'] ?? "Invalid OTP")),
-        );
+        onError(error['error'] ?? 'Invalid OTP');
       }
     } catch (e) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text("Verification failed")),
-      );
+      onError('Verification failed. Check your connection.');
     }
   }
 
@@ -313,7 +500,7 @@ class _HeroSectionState extends State<HeroSection> {
                 "Phone Number",
                 "phonenum",
                 icon: Icons.phone,
-                inputFormatters: [FilteringTextInputFormatter.digitsOnly],
+                inputFormatters: [FilteringTextInputFormatter.digitsOnly, LengthLimitingTextInputFormatter(11),],
               ),
               const SizedBox(height: 10),
 
@@ -360,7 +547,6 @@ class _HeroSectionState extends State<HeroSection> {
                               onPressed: () => setState(() =>
                                   _showConfirmPassword = !_showConfirmPassword),
                             ),
-                            // ── real-time confirm password validation ──
                             onChanged: (_) {
                               setState(() {
                                 if (_confirmpassController.text.isEmpty) {
@@ -420,7 +606,6 @@ class _HeroSectionState extends State<HeroSection> {
                                     _showConfirmPassword =
                                         !_showConfirmPassword),
                               ),
-                              // ── real-time confirm password validation ──
                               onChanged: (_) {
                                 setState(() {
                                   _errors['confirmpass'] =
@@ -436,7 +621,7 @@ class _HeroSectionState extends State<HeroSection> {
                       ),
               ),
 
-              // Password strength — only when focused
+              // Password strength
               if (_passwordFocused) ...[
                 const SizedBox(height: 8),
                 SizedBox(
@@ -471,7 +656,8 @@ class _HeroSectionState extends State<HeroSection> {
                     padding: const EdgeInsets.symmetric(vertical: 14),
                     child: Center(
                       child: _isSubmitting
-                          ? const CircularProgressIndicator(color: Colors.white)
+                          ? const CircularProgressIndicator(
+                              color: Colors.white)
                           : const Text("Register",
                               style: TextStyle(color: Colors.white)),
                     ),
