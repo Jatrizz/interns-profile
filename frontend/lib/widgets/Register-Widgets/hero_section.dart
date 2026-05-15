@@ -489,12 +489,28 @@ class _HeroSectionState extends State<HeroSection> {
                 ),
               ),
               const SizedBox(height: 10),
-              _buildField(_schoolController, "School", "school",
-                  icon: Icons.apartment),
+
+              // School with hint
+              _buildField(
+                _schoolController,
+                "School",
+                "school",
+                icon: Icons.apartment,
+                hintText: 'e.g. Laguna State Polytechnic University',
+              ),
               const SizedBox(height: 10),
-              _buildField(_programController, "Program", "program",
-                  icon: Icons.school),
+
+              // Program with hint
+              _buildField(
+                _programController,
+                "Program",
+                "program",
+                icon: Icons.school,
+                hintText:
+                    'e.g. BS in Computer Science, BS in Information Systems',
+              ),
               const SizedBox(height: 10),
+
               _buildField(_emailController, "Email", "email",
                   icon: Icons.email_outlined),
               const SizedBox(height: 10),
@@ -761,6 +777,7 @@ class _HeroSectionState extends State<HeroSection> {
     ValueChanged<String>? onChanged,
     bool fullWidth = false,
     FocusNode? focusNode,
+    String? hintText,
   }) {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
@@ -788,6 +805,8 @@ class _HeroSectionState extends State<HeroSection> {
               labelText: label,
               labelStyle: TextStyle(color: _labelColor, fontSize: 12),
               suffixIcon: suffixIcon,
+              hintText: hintText, // ✅ added
+              hintStyle: TextStyle(color: _labelColor, fontSize: 11), // ✅ added
             ),
           ),
         ),
