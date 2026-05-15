@@ -121,16 +121,16 @@ void showProfileModal(BuildContext context) {
                     // About
                     _modalSection('About'),
                     _modalBody(
-                      'Full-stack developer specializing in Flutter and web technologies. '
-                      'Loves crafting pixel-perfect interfaces and smooth animations. '
-                      'Matcha-fueled, design-driven, and detail-obsessed.',
+                      'Computer Science student with skills in programming, web and mobile development, and UI/UX design. '
+                      'Driven to create user-centered, reliable digital solutions and eager to contribute to projects '
+                      'that make technology accessible and impactful.',
                     ),
 
                     // Details grid
                     _modalSection('Details'),
                     _modalGrid(items: const {
                       'Email': 'pujedajannatricia@gmail.com',
-                      'Member since': 'Jan 2026',
+                      'Member since': 'Feb 2026',
                       'ID': 'DEV-2026-179',
                       'Department': 'Development',
                     }),
@@ -145,7 +145,7 @@ void showProfileModal(BuildContext context) {
                     _modalWork(
                       'FDS ASYA PHILIPPINES INC. INTERN',
                       'Solutions Dev Intern — Full-stack Developer',
-                      'Jan 2026 – Present',
+                      'Feb 2026 – May 2026',
                     ),
 
                     // Skills
