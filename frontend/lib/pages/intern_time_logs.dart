@@ -212,12 +212,40 @@ class _InternTimeLogsPageState extends State<InternTimeLogsPage> {
     );
   }
 
+  // ── Helpers ──────────────────────────────────────────────────────────────
+
+  static bool _isMobile(BuildContext context) =>
+      MediaQuery.of(context).size.width < 600;
+
+  Widget _buildStatCards(BuildContext context) {
+    final mobile = _isMobile(context);
+
+    final cards = [
+      _StatCard(isDarkMode: isDarkMode, label: 'Present Days',  value: '$presentDays',  accentColor: const Color(0xFF4CAF50)),
+      _StatCard(isDarkMode: isDarkMode, label: 'Late Arrivals', value: '$lateArrivals', accentColor: const Color(0xFFFFA726)),
+      _StatCard(isDarkMode: isDarkMode, label: 'Absences',      value: '$absences',     accentColor: const Color(0xFFEF5350)),
+    ];
+
+    final gap = SizedBox(width: mobile ? 10.0 : 12.0);
+
+    return Row(
+      children: [
+        Expanded(child: cards[0]),
+        gap,
+        Expanded(child: cards[1]),
+        gap,
+        Expanded(child: cards[2]),
+      ],
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     final theme = AppTheme.of(isDarkMode);
+    final mobile = _isMobile(context);
 
-    return Padding(
-      padding: const EdgeInsets.all(24),
+    return SingleChildScrollView(
+      padding: EdgeInsets.all(mobile ? 16 : 24),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
@@ -226,86 +254,15 @@ class _InternTimeLogsPageState extends State<InternTimeLogsPage> {
             'Time Logs',
             style: TextStyle(
               color: theme.textPrimary,
-              fontSize: 20,
+              fontSize: mobile ? 18 : 20,
               fontWeight: FontWeight.bold,
             ),
           ),
-          const SizedBox(height: 16),
+          SizedBox(height: mobile ? 12 : 16),
 
-          // ── Single stat row: hours left | divider | attendance right ──
-          IntrinsicHeight(
-            child: Row(
-              children: [
-                // Left group: Total Hours + Remaining Hours
-                Expanded(
-                  child: Row(
-                    children: [
-                      Expanded(
-                        child: _StatCard(
-                          isDarkMode: isDarkMode,
-                          label: 'Total Hours Rendered',
-                          value: '$totalHours',
-                        ),
-                      ),
-                      const SizedBox(width: 12),
-                      Expanded(
-                        child: _StatCard(
-                          isDarkMode: isDarkMode,
-                          label: 'Remaining Hours',
-                          value: '$remainingHours',
-                        ),
-                      ),
-                    ],
-                  ),
-                ),
-
-                // Divider
-                Padding(
-                  padding: const EdgeInsets.symmetric(horizontal: 16),
-                  child: VerticalDivider(
-                    color: isDarkMode ? Colors.grey[700] : Colors.grey[300],
-                    thickness: 1,
-                    width: 1,
-                  ),
-                ),
-
-                // Right group: Present Days + Late Arrivals + Absences
-                Expanded(
-                  child: Row(
-                    children: [
-                      Expanded(
-                        child: _StatCard(
-                          isDarkMode: isDarkMode,
-                          label: 'Present Days',
-                          value: '$presentDays',
-                          accentColor: const Color(0xFF4CAF50),
-                        ),
-                      ),
-                      const SizedBox(width: 12),
-                      Expanded(
-                        child: _StatCard(
-                          isDarkMode: isDarkMode,
-                          label: 'Late Arrivals',
-                          value: '$lateArrivals',
-                          accentColor: const Color(0xFFFFA726),
-                        ),
-                      ),
-                      const SizedBox(width: 12),
-                      Expanded(
-                        child: _StatCard(
-                          isDarkMode: isDarkMode,
-                          label: 'Absences',
-                          value: '$absences',
-                          accentColor: const Color(0xFFEF5350),
-                        ),
-                      ),
-                    ],
-                  ),
-                ),
-              ],
-            ),
-          ),
-          const SizedBox(height: 24),
+          // ── Stat cards ─────────────────────────────
+          _buildStatCards(context),
+          SizedBox(height: mobile ? 16 : 24),
 
           // ── Filters ────────────────────────────────
           InternTimeLogFilters(
@@ -354,31 +311,18 @@ class _InternTimeLogsPageState extends State<InternTimeLogsPage> {
               applyFilters();
             },
           ),
-          const SizedBox(height: 16),
+          SizedBox(height: mobile ? 12 : 16),
 
-          // ── Table with fixed header + scrollable body ──
-          Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                _isSpecificDate
-                ? InternTimeLogTable(
-                    isDarkMode: isDarkMode,
-                    logs: filteredLogs,
-                    isSpecificDate: _isSpecificDate,
-                  )
-                : Expanded(
-                    child: InternTimeLogTable(
-                      isDarkMode: isDarkMode,
-                      logs: filteredLogs,
-                      isSpecificDate: _isSpecificDate,
-                    ),
-                  ),
-                const SizedBox(height: 12),
-                InternTimeLogLegend(isDarkMode: isDarkMode),
-              ],
-            ),
+          // ── Table ──────────────────────────────────
+          InternTimeLogTable(
+            isDarkMode: isDarkMode,
+            logs: filteredLogs,
+            isSpecificDate: _isSpecificDate,
           ),
+          const SizedBox(height: 12),
+
+          // ── Legend ─────────────────────────────────
+          InternTimeLogLegend(isDarkMode: isDarkMode),
         ],
       ),
     );
@@ -401,31 +345,36 @@ class _StatCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final mobile = MediaQuery.of(context).size.width < 600;
     final bg = isDarkMode ? const Color(0xFF2E2E2E) : const Color(0xFFF5F5F5);
     final labelColor = isDarkMode ? Colors.grey[400] : Colors.grey[600];
     final valueColor = accentColor ?? (isDarkMode ? Colors.white : Colors.black87);
 
     return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 18),
+      padding: EdgeInsets.symmetric(
+        horizontal: mobile ? 10 : 16,
+        vertical: mobile ? 12 : 18,
+      ),
       decoration: BoxDecoration(
         color: bg,
         borderRadius: BorderRadius.circular(12),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.center,
+        mainAxisAlignment: MainAxisAlignment.center,
         children: [
           Text(
             label,
             textAlign: TextAlign.center,
-            style: TextStyle(color: labelColor, fontSize: 12),
+            style: TextStyle(color: labelColor, fontSize: mobile ? 10 : 12),
           ),
-          const SizedBox(height: 8),
+          SizedBox(height: mobile ? 4 : 8),
           Text(
             value,
             textAlign: TextAlign.center,
             style: TextStyle(
               color: valueColor,
-              fontSize: 32,
+              fontSize: mobile ? 22 : 32,
               fontWeight: FontWeight.bold,
             ),
           ),

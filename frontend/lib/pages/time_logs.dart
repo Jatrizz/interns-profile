@@ -6,9 +6,8 @@ import '../widgets/TimeLogs-Widgets/time_logs_search_bar.dart';
 import '../widgets/TimeLogs-Widgets/time_logs_intern_dropdown.dart';
 import '../widgets/TimeLogs-Widgets/time_logs_overview_cards.dart';
 import '../widgets/TimeLogs-Widgets/time_logs_filters.dart';
-import '../widgets/TimeLogs-Widgets/time_logs_table.dart';
+import '../widgets/TimeLogs-Widgets/time_logs_table.dart' show TimeLogsTable;
 import '../widgets/TimeLogs-Widgets/time_logs_legend.dart';
-import '../utils/responsive.dart';
 
 class TimeLogsPage extends StatefulWidget {
   final String firstName;
@@ -53,6 +52,9 @@ class _TimeLogsPageState extends State<TimeLogsPage> {
     'January', 'February', 'March', 'April', 'May', 'June',
     'July', 'August', 'September', 'October', 'November', 'December'
   ];
+
+  static bool _isMobile(BuildContext context) =>
+      MediaQuery.of(context).size.width < 600;
 
   @override
   void initState() {
@@ -179,20 +181,13 @@ class _TimeLogsPageState extends State<TimeLogsPage> {
       result = result.where((log) {
         final status = log['status']?.toString().toLowerCase().trim() ?? '';
         switch (selectedStatus) {
-          case 'Present':
-            return status == 'on-time' || status == 'late';
-          case 'On Time':
-            return status == 'on-time';
-          case 'Late':
-            return status == 'late';
-          case 'Absent':
-            return status == 'absent';
-          case 'Half Day':
-            return status == 'half-day' || status == 'halfday' || status == 'half day';
-          case 'Weekend':
-            return status == 'weekend';
-          default:
-            return status == selectedStatus.toLowerCase().trim();
+          case 'Present':  return status == 'on-time' || status == 'late';
+          case 'On Time':  return status == 'on-time';
+          case 'Late':     return status == 'late';
+          case 'Absent':   return status == 'absent';
+          case 'Half Day': return status == 'half-day' || status == 'halfday' || status == 'half day';
+          case 'Weekend':  return status == 'weekend';
+          default:         return status == selectedStatus.toLowerCase().trim();
         }
       }).toList();
     }
@@ -229,21 +224,22 @@ class _TimeLogsPageState extends State<TimeLogsPage> {
         .toList();
   }
 
-  Widget _buildTopSection() {
-    final isMobile = Responsive.isMobile(context);
+  // ── Top section (filters + overview cards) ────────────────────────────
 
-    final filtersColumn = Column(
+  Widget _buildFiltersColumn(BuildContext context) {
+    final mobile = _isMobile(context);
+    return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         Text(
           'Time Logs',
           style: TextStyle(
             color: widget.isDarkMode ? Colors.white : Colors.black,
-            fontSize: 20,
+            fontSize: mobile ? 18 : 20,
             fontWeight: FontWeight.bold,
           ),
         ),
-        const SizedBox(height: 12),
+        SizedBox(height: mobile ? 10 : 12),
         TimeLogsSearchBar(
           isDarkMode: widget.isDarkMode,
           searchQuery: searchQuery,
@@ -258,7 +254,7 @@ class _TimeLogsPageState extends State<TimeLogsPage> {
             fetchLogsForIntern(name);
           },
         ),
-        const SizedBox(height: 12),
+        SizedBox(height: mobile ? 10 : 12),
         Text(
           'Intern Name',
           style: TextStyle(
@@ -274,22 +270,16 @@ class _TimeLogsPageState extends State<TimeLogsPage> {
           onChanged: (val) {
             if (val != null) {
               if (val == 'All Interns') {
-                setState(() {
-                  selectedIntern = 'All Interns';
-                  _isDefaultView = true;
-                });
+                setState(() { selectedIntern = 'All Interns'; _isDefaultView = true; });
                 fetchTodayLogs();
               } else {
-                setState(() {
-                  selectedIntern = val;
-                  _isDefaultView = false;
-                });
+                setState(() { selectedIntern = val; _isDefaultView = false; });
                 fetchLogsForIntern(val);
               }
             }
           },
         ),
-        const SizedBox(height: 16),
+        SizedBox(height: mobile ? 12 : 16),
         TimeLogsFilters(
           isDarkMode: widget.isDarkMode,
           selectedMonth: selectedMonth,
@@ -313,11 +303,9 @@ class _TimeLogsPageState extends State<TimeLogsPage> {
           onMonthChanged: (DateTime picked) {
             setState(() {
               selectedDate = picked;
-              if (_isSpecificDate) {
-                selectedMonth = '${_months[picked.month - 1]} ${picked.day}, ${picked.year}';
-              } else {
-                selectedMonth = '${_months[picked.month - 1]} ${picked.year}';
-              }
+              selectedMonth = _isSpecificDate
+                  ? '${_months[picked.month - 1]} ${picked.day}, ${picked.year}'
+                  : '${_months[picked.month - 1]} ${picked.year}';
             });
             if (_isDefaultView) {
               fetchTodayLogs();
@@ -325,17 +313,15 @@ class _TimeLogsPageState extends State<TimeLogsPage> {
               fetchLogsForIntern(selectedIntern!);
             }
           },
-          onStatusChanged: (val) {
-            setState(() => selectedStatus = val);
-            applyFilters();
-          },
-          onWeekChanged: (val) {
-            setState(() => selectedWeek = val);
-            applyFilters();
-          },
+          onStatusChanged: (val) { setState(() => selectedStatus = val); applyFilters(); },
+          onWeekChanged:   (val) { setState(() => selectedWeek = val);   applyFilters(); },
         ),
       ],
     );
+  }
+
+  Widget _buildTopSection(BuildContext context) {
+    final mobile = _isMobile(context);
 
     final overviewCards = TimeLogsOverviewCards(
       isDarkMode:   widget.isDarkMode,
@@ -345,52 +331,57 @@ class _TimeLogsPageState extends State<TimeLogsPage> {
       absentToday:  absentToday,
     );
 
-    return isMobile
-        ? Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              filtersColumn,
-              const SizedBox(height: 20),
-              overviewCards,
-            ],
-          )
-        : Row(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Expanded(child: filtersColumn),
-              const SizedBox(width: 24),
-              SizedBox(width: 320, child: overviewCards),
-            ],
-          );
+    if (mobile) {
+      return Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          _buildFiltersColumn(context),
+          const SizedBox(height: 16),
+          overviewCards,
+        ],
+      );
+    }
+
+    // Tablet / desktop: side by side
+    return Row(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Expanded(child: _buildFiltersColumn(context)),
+        const SizedBox(width: 24),
+        SizedBox(width: 300, child: overviewCards),
+      ],
+    );
   }
 
   @override
   Widget build(BuildContext context) {
-    return Padding(
-      padding: const EdgeInsets.fromLTRB(24, 12, 24, 12),
+    final mobile = _isMobile(context);
+
+    return SingleChildScrollView(
+      padding: EdgeInsets.fromLTRB(
+        mobile ? 16 : 24,
+        mobile ? 12 : 12,
+        mobile ? 16 : 24,
+        mobile ? 16 : 12,
+      ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           // ── Fixed top: filters + overview ──
-          _buildTopSection(),
+          _buildTopSection(context),
+          SizedBox(height: mobile ? 16 : 12),
+
+          // ── Table ──────────────────────────
+          TimeLogsTable(
+            isDarkMode:     widget.isDarkMode,
+            logs:           filteredLogs,
+            showName:       _isDefaultView,
+            isSpecificDate: _isSpecificDate,
+          ),
           const SizedBox(height: 12),
 
-          // ── Table + legend: fills remaining space ──
-          Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                TimeLogsTable(
-                  isDarkMode:     widget.isDarkMode,
-                  logs:           filteredLogs,
-                  showName:       _isDefaultView,
-                  isSpecificDate: _isSpecificDate,
-                ),
-                const SizedBox(height: 12),
-                TimeLogsLegend(isDarkMode: widget.isDarkMode),
-              ],
-            ),
-          ),
+          // ── Legend ─────────────────────────
+          TimeLogsLegend(isDarkMode: widget.isDarkMode),
         ],
       ),
     );
