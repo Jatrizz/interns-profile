@@ -225,7 +225,6 @@ func InternTimeLogStats(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	// Fetch all rows with time_in and time_out to compute capped hours per day in Go
 	rows, err := db.Query(`
 		SELECT log_date, time_in::text, time_out::text
 		FROM time_logs
@@ -247,7 +246,6 @@ func InternTimeLogStats(w http.ResponseWriter, r *http.Request) {
 		TotalHours float64 `json:"total_hours"`
 	}
 
-	// Use a map to accumulate hours per day (each day capped at 8h)
 	dailyMap := make(map[string]*DailyHours)
 	var dateOrder []string
 
@@ -275,14 +273,12 @@ func InternTimeLogStats(w http.ResponseWriter, r *http.Request) {
 		if timeIn.Valid && timeIn.String != "" && timeOut.Valid && timeOut.String != "" {
 			capped := capDailyHours(timeIn.String, timeOut.String)
 			dailyMap[dateKey].TotalHours += capped
-			// Hard cap per day at 8 hours
 			if dailyMap[dateKey].TotalHours > 8.0 {
 				dailyMap[dateKey].TotalHours = 8.0
 			}
 		}
 	}
 
-	// Build ordered slice and sum overall total
 	var dailyHours []DailyHours
 	var totalHours float64
 	for _, key := range dateOrder {
@@ -318,12 +314,20 @@ func InternTimeLogStats(w http.ResponseWriter, r *http.Request) {
 		WHERE user_id = $1 AND status = 'absent'
 	`, userID).Scan(&absences)
 
+	// ✅ Count all days considered "present": on-time, present, or late
+	var presentDays int
+	db.QueryRow(`
+		SELECT COUNT(*) FROM time_logs
+		WHERE user_id = $1 AND status IN ('present', 'on-time', 'late', 'half day')
+	`, userID).Scan(&presentDays)
+
 	w.Header().Set("Content-Type", "application/json")
 	json.NewEncoder(w).Encode(map[string]interface{}{
 		"total_hours":     int(totalHours),
 		"remaining_hours": int(remaining),
 		"late_arrivals":   lateArrivals,
 		"absences":        absences,
+		"present_days":    presentDays, // ✅ new field
 		"daily_hours":     dailyHours,
 	})
 }
