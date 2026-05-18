@@ -3,7 +3,9 @@ import 'package:url_launcher/url_launcher.dart';
 import 'package:barcode_widget/barcode_widget.dart';
 
 class LesterCard extends StatefulWidget {
-  const LesterCard({super.key});
+  final bool isDarkMode;
+
+  const LesterCard({super.key, required this.isDarkMode});
 
   @override
   State<LesterCard> createState() => _LesterCardState();
@@ -23,10 +25,12 @@ class _LesterCardState extends State<LesterCard> {
 
   @override
   Widget build(BuildContext context) {
+    final isDark = widget.isDarkMode;
+
     return Column(
       mainAxisSize: MainAxisSize.min,
       children: [
-        const RealisticIDLace(),
+        RealisticIDLace(isDarkMode: isDark),
         MouseRegion(
           cursor: SystemMouseCursors.click,
           onEnter: (_) => setState(() => _isHovered = true),
@@ -36,7 +40,7 @@ class _LesterCardState extends State<LesterCard> {
             child: Stack(
               alignment: Alignment.center,
               children: [
-                const _ProfessionalCard(),
+                _ProfessionalCard(isDarkMode: isDark),
                 AnimatedOpacity(
                   duration: const Duration(milliseconds: 180),
                   opacity: _isHovered ? 1 : 0,
@@ -44,20 +48,29 @@ class _LesterCardState extends State<LesterCard> {
                     width: 260,
                     height: 390,
                     decoration: BoxDecoration(
-                      color: Colors.black.withOpacity(0.65),
+                      color: isDark
+                          ? Colors.black.withOpacity(0.65)
+                          : Colors.white.withOpacity(0.7),
                       borderRadius: BorderRadius.circular(20),
-                      border: Border.all(color: Colors.grey, width: 0.5),
+                      border: Border.all(
+                        color: isDark ? Colors.grey : Colors.black26,
+                        width: 0.5,
+                      ),
                     ),
-                    child: const Center(
+                    child: Center(
                       child: Row(
                         mainAxisAlignment: MainAxisAlignment.center,
                         children: [
-                          Icon(Icons.person, color: Colors.white, size: 16),
-                          SizedBox(width: 6),
+                          Icon(
+                            Icons.person,
+                            color: isDark ? Colors.white : Colors.black,
+                            size: 16,
+                          ),
+                          const SizedBox(width: 6),
                           Text(
                             'VIEW PROFILE',
                             style: TextStyle(
-                              color: Colors.white,
+                              color: isDark ? Colors.white : Colors.black,
                               fontSize: 12,
                               letterSpacing: 2,
                               fontWeight: FontWeight.w600,
@@ -78,7 +91,9 @@ class _LesterCardState extends State<LesterCard> {
           style: TextStyle(
             fontSize: 10,
             letterSpacing: 1.5,
-            color: Colors.white.withOpacity(0.25),
+            color: isDark
+                ? Colors.white.withOpacity(0.25)
+                : Colors.black.withOpacity(0.35),
           ),
         ),
       ],
@@ -87,78 +102,87 @@ class _LesterCardState extends State<LesterCard> {
 }
 
 class RealisticIDLace extends StatelessWidget {
-  const RealisticIDLace({super.key});
+  final bool isDarkMode;
+
+  const RealisticIDLace({super.key, required this.isDarkMode});
 
   @override
   Widget build(BuildContext context) {
-    const Color maroon = Color(0xFF7A0019);
+    final isDark = isDarkMode;
 
     return SizedBox(
       width: 260,
       height: 95,
       child: Column(
-        mainAxisSize: MainAxisSize.min,
         children: [
           Container(
             width: 26,
             height: 85,
-            decoration: const BoxDecoration(
-              borderRadius: BorderRadius.vertical(
-                  top: Radius.circular(7), bottom: Radius.circular(7)),
-              gradient: LinearGradient(
-                begin: Alignment.topCenter,
-                end: Alignment.bottomCenter,
-                colors: [
-                  Colors.white,
-                  Color(0xFFEDEDED),
-                ],
-              ),
-            ),
+            decoration: BoxDecoration(
+                borderRadius: const BorderRadius.vertical(
+                  top: Radius.circular(7),
+                  bottom: Radius.circular(7),
+                ),
+                gradient: LinearGradient(
+                  begin: Alignment.topCenter,
+                  end: Alignment.bottomCenter,
+                  colors: isDark
+                      ? [
+                          const Color.fromARGB(217, 119, 58, 58),
+                          Colors.white,
+                        ]
+                      : [
+                          Colors.white,
+                          const Color.fromARGB(217, 119, 58, 58),
+                        ],
+                ),
+                border: Border.all(
+                    color: isDark ? Colors.grey : Colors.black, width: 0.5)),
             child: Column(
               mainAxisAlignment: MainAxisAlignment.center,
-              mainAxisSize: MainAxisSize.min,
               children: [
                 Container(
-                    width: 24,
-                    height: 24,
-                    decoration: const BoxDecoration(
-                      shape: BoxShape.circle,
-                      color: maroon,
-                    ),
-                    child: Image.asset('../../assets/images/fdsap-logo.png')),
-                const SizedBox(height: 4),
-                Flexible(
-                  child: Column(
-                    mainAxisSize: MainAxisSize.min,
-                    children: const [
-                      Text('F',
-                          style: TextStyle(
-                              fontSize: 8,
-                              fontWeight: FontWeight.w700,
-                              color: maroon)),
-                      Text('D',
-                          style: TextStyle(
-                              fontSize: 8,
-                              fontWeight: FontWeight.w700,
-                              color: maroon)),
-                      Text('S',
-                          style: TextStyle(
-                              fontSize: 8,
-                              fontWeight: FontWeight.w700,
-                              color: maroon)),
-                      Text('A',
-                          style: TextStyle(
-                              fontSize: 8,
-                              fontWeight: FontWeight.w700,
-                              color: maroon)),
-                      Text('P',
-                          style: TextStyle(
-                              fontSize: 8,
-                              fontWeight: FontWeight.w700,
-                              color: maroon)),
-                    ],
+                  width: 22,
+                  height: 22,
+                  decoration: BoxDecoration(
+                    shape: BoxShape.circle,
+                    color: isDark ? Colors.white : const Color(0xFF7A0019),
+                  ),
+                  child: Image.asset(
+                    '../../assets/images/fdsap-logo.png',
+                    color: isDark ? const Color(0xFF7A0019) : Colors.white,
                   ),
                 ),
+                const SizedBox(height: 4),
+                Column(
+                  children: const [
+                    Text('F',
+                        style: TextStyle(
+                            fontSize: 8,
+                            fontWeight: FontWeight.w700,
+                            color: Color(0xFF7A0019))),
+                    Text('D',
+                        style: TextStyle(
+                            fontSize: 8,
+                            fontWeight: FontWeight.w700,
+                            color: Color(0xFF7A0019))),
+                    Text('S',
+                        style: TextStyle(
+                            fontSize: 8,
+                            fontWeight: FontWeight.w700,
+                            color: Color(0xFF7A0019))),
+                    Text('A',
+                        style: TextStyle(
+                            fontSize: 8,
+                            fontWeight: FontWeight.w700,
+                            color: Color(0xFF7A0019))),
+                    Text('P',
+                        style: TextStyle(
+                            fontSize: 8,
+                            fontWeight: FontWeight.w700,
+                            color: Color(0xFF7A0019))),
+                  ],
+                )
               ],
             ),
           ),
@@ -166,10 +190,12 @@ class RealisticIDLace extends StatelessWidget {
             height: 10,
             width: 8,
             decoration: BoxDecoration(
-                color: const Color.fromARGB(255, 165, 165, 165),
-                borderRadius: BorderRadius.only(
-                    bottomLeft: Radius.circular(2),
-                    bottomRight: Radius.circular(2))),
+              color: isDark ? Colors.grey : Colors.grey.shade400,
+              borderRadius: const BorderRadius.only(
+                bottomLeft: Radius.circular(2),
+                bottomRight: Radius.circular(2),
+              ),
+            ),
           ),
         ],
       ),
@@ -178,27 +204,37 @@ class RealisticIDLace extends StatelessWidget {
 }
 
 class _ProfessionalCard extends StatelessWidget {
-  const _ProfessionalCard();
+  final bool isDarkMode;
+
+  const _ProfessionalCard({required this.isDarkMode});
 
   final String portfolioUrl = 'https://eldyey.github.io/Personal-Portfolio/';
 
   @override
   Widget build(BuildContext context) {
+    final isDark = isDarkMode;
+
     return Container(
       width: 260,
       height: 390,
       decoration: BoxDecoration(
-        color: Colors.black,
+        color: isDark ? Colors.black : Colors.white,
         borderRadius: BorderRadius.circular(20),
-        border: Border.all(color: const Color.fromARGB(120, 193, 193, 193)),
+        border: Border.all(
+          color: isDark ? Colors.white24 : Colors.black12,
+        ),
         boxShadow: [
           BoxShadow(
-            color: Colors.white.withOpacity(0.08),
+            color: isDark
+                ? Colors.white.withOpacity(0.08)
+                : Colors.black.withOpacity(0.08),
             blurRadius: 18,
             spreadRadius: 1,
           ),
           BoxShadow(
-            color: Colors.black.withOpacity(0.8),
+            color: isDark
+                ? Colors.black.withOpacity(0.8)
+                : Colors.grey.withOpacity(0.2),
             blurRadius: 30,
             offset: const Offset(0, 18),
           ),
@@ -213,22 +249,24 @@ class _ProfessionalCard extends StatelessWidget {
               height: 85,
               clipBehavior: Clip.antiAlias,
               decoration: BoxDecoration(
-                color: const Color.fromARGB(255, 69, 69, 69),
+                color: isDark
+                    ? const Color.fromARGB(255, 68, 68, 68)
+                    : Colors.white,
                 shape: BoxShape.circle,
                 border: Border.all(
-                  color: const Color.fromARGB(144, 54, 54, 54),
+                  color: isDark ? Colors.white24 : Colors.black12,
                 ),
               ),
               child: Image.asset(
-                'assets/images/lester.png',
+                'assets/images/Lester.png',
                 fit: BoxFit.cover,
               ),
             ),
             const SizedBox(height: 8),
-            const Text(
+            Text(
               'LESTER MANZANERO',
               style: TextStyle(
-                color: Colors.white,
+                color: isDark ? Colors.white : Colors.black,
                 fontSize: 15,
                 fontWeight: FontWeight.w600,
                 letterSpacing: 1.1,
@@ -239,39 +277,42 @@ class _ProfessionalCard extends StatelessWidget {
               padding: const EdgeInsets.symmetric(vertical: 5, horizontal: 10),
               decoration: BoxDecoration(
                 borderRadius: BorderRadius.circular(20),
-                border: Border.all(color: Colors.grey, width: 1),
+                border: Border.all(
+                  color: isDark ? Colors.white24 : Colors.black26,
+                ),
               ),
               child: Text(
                 'FRONT-END DEVELOPER',
                 style: TextStyle(
                   fontSize: 9,
-                  color: Colors.white.withOpacity(0.7),
+                  color: isDark
+                      ? Colors.white.withOpacity(0.7)
+                      : Colors.black.withOpacity(0.7),
                   letterSpacing: 1.1,
                 ),
               ),
             ),
             const SizedBox(height: 10),
-            Divider(color: Colors.white.withOpacity(0.08)),
+            Divider(
+              color: isDark
+                  ? Colors.white.withOpacity(0.08)
+                  : Colors.black.withOpacity(0.08),
+            ),
             const SizedBox(height: 8),
-            _infoRow('School', 'PLSP'),
-            _infoRow('Program', 'Computer Engineering'),
-            _infoRow('Since', 'Aug 2022'),
+            _infoRow(context, 'School', 'PLSP'),
+            _infoRow(context, 'Program', 'Computer Engineering'),
+            _infoRow(context, 'Since', 'Aug 2022'),
             Row(
-              children: [
+              children: const [
                 Text(
                   'STATUS',
                   style: TextStyle(
-                    fontSize: 10,
-                    color: Colors.white.withOpacity(0.35),
-                  ),
+                      fontSize: 10, color: Color.fromARGB(147, 158, 158, 158)),
                 ),
-                const Spacer(),
-                const Text(
-                  '●',
-                  style: TextStyle(fontSize: 8, color: Colors.green),
-                ),
-                const SizedBox(width: 4),
-                const Text(
+                Spacer(),
+                Text('●', style: TextStyle(fontSize: 10, color: Colors.green)),
+                SizedBox(width: 4),
+                Text(
                   'Active',
                   style: TextStyle(
                     fontSize: 11,
@@ -282,14 +323,18 @@ class _ProfessionalCard extends StatelessWidget {
               ],
             ),
             const Spacer(),
-            Divider(color: Colors.white.withOpacity(0.08)),
+            Divider(
+              color: isDark
+                  ? Colors.white.withOpacity(0.08)
+                  : Colors.black.withOpacity(0.08),
+            ),
             Center(
               child: BarcodeWidget(
                 barcode: Barcode.qrCode(),
                 data: portfolioUrl,
                 width: 50,
                 height: 50,
-                color: Colors.white,
+                color: isDark ? Colors.white : Colors.black,
                 backgroundColor: Colors.transparent,
               ),
             ),
@@ -298,7 +343,9 @@ class _ProfessionalCard extends StatelessWidget {
               'DEV-2026-182',
               style: TextStyle(
                 fontSize: 8,
-                color: Colors.white.withOpacity(0.35),
+                color: isDark
+                    ? Colors.white.withOpacity(0.35)
+                    : Colors.black.withOpacity(0.35),
                 letterSpacing: 1.2,
               ),
             ),
@@ -308,7 +355,9 @@ class _ProfessionalCard extends StatelessWidget {
     );
   }
 
-  Widget _infoRow(String label, String value) {
+  Widget _infoRow(BuildContext context, String label, String value) {
+    final isDark = isDarkMode;
+
     return Padding(
       padding: const EdgeInsets.only(bottom: 5),
       child: Row(
@@ -317,15 +366,19 @@ class _ProfessionalCard extends StatelessWidget {
             label.toUpperCase(),
             style: TextStyle(
               fontSize: 10,
-              color: Colors.white.withOpacity(0.35),
+              color: isDark
+                  ? Colors.white.withOpacity(0.35)
+                  : Colors.black.withOpacity(0.5),
             ),
           ),
           const Spacer(),
           Text(
             value,
-            style: const TextStyle(
+            style: TextStyle(
               fontSize: 11,
-              color: Color.fromARGB(181, 255, 255, 255),
+              color: isDark
+                  ? Colors.white.withOpacity(0.7)
+                  : Colors.black.withOpacity(0.7),
               fontWeight: FontWeight.w500,
             ),
           ),
