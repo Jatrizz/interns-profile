@@ -46,10 +46,7 @@ func Login(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	// ======================
 	// VALIDATION
-	// ======================
-
 	req.Email = strings.TrimSpace(strings.ToLower(req.Email))
 
 	if req.Email == "" {
@@ -67,13 +64,10 @@ func Login(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	// ======================
 	// FETCH USER
-	// ======================
-
 	var user User
 	var hashedPassword string
-	var idNumber sql.NullString // ✅ FIX HERE
+	var idNumber sql.NullString
 
 	err := db.QueryRow(`
 		SELECT id, id_number, first_name, password, role
@@ -90,26 +84,20 @@ func Login(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	// ✅ Assign only if valid
+	// Assign only if valid
 	if idNumber.Valid {
 		user.IDNumber = idNumber.String
 	} else {
 		user.IDNumber = ""
 	}
 
-	// ======================
 	// CHECK PASSWORD
-	// ======================
-
 	if err := bcrypt.CompareHashAndPassword([]byte(hashedPassword), []byte(req.Password)); err != nil {
 		jsonError(w, "Invalid password", http.StatusUnauthorized)
 		return
 	}
 
-	// ======================
 	// AUTO TIME-IN (ONLY INTERN)
-	// ======================
-
 	if strings.ToLower(user.Role) == "intern" && user.IDNumber != "" {
 		now := time.Now()
 		status := determineStatus(now)
@@ -130,10 +118,7 @@ func Login(w http.ResponseWriter, r *http.Request) {
 		}
 	}
 
-	// ======================
 	// GENERATE JWT
-	// ======================
-
 	secret := os.Getenv("JWT_SECRET")
 	if secret == "" {
 		secret = "your-secret-key"
@@ -152,10 +137,7 @@ func Login(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	// ======================
 	// RESPONSE
-	// ======================
-
 	w.Header().Set("Content-Type", "application/json")
 	json.NewEncoder(w).Encode(map[string]string{
 		"message":    "Login successful",
