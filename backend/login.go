@@ -31,7 +31,7 @@ func determineStatus(t time.Time) string {
 	if t.After(cutoff) {
 		return "late"
 	}
-	return "present"
+	return "on-time"
 }
 
 func Login(w http.ResponseWriter, r *http.Request) {
