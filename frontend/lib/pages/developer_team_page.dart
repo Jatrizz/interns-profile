@@ -34,6 +34,7 @@ class DeveloperTeamPage extends StatelessWidget {
         );
 
     return Container(
+      key: ValueKey(isDarkMode),
       width: double.infinity,
       height: double.infinity,
       color: isDarkMode ? const Color(0xFF1A1A1A) : Colors.white,
@@ -165,7 +166,9 @@ class DeveloperTeamPage extends StatelessWidget {
                       ? Column(
                           mainAxisAlignment: MainAxisAlignment.center,
                           children: [
-                            _scaledCard(const LesterCard()),
+                            _scaledCard(LesterCard(
+                              isDarkMode: isDarkMode,
+                            )),
                             SizedBox(height: isMobile ? 0 : 24),
                             _scaledCard(const JannaIDCard()),
                             SizedBox(height: isMobile ? 0 : 24),
@@ -179,7 +182,9 @@ class DeveloperTeamPage extends StatelessWidget {
                           children: [
                             Expanded(
                                 child: Center(
-                                    child: _scaledCard(const LesterCard()))),
+                                    child: _scaledCard(LesterCard(
+                              isDarkMode: isDarkMode,
+                            )))),
                             SizedBox(width: isTablet ? 20 : 60),
                             Center(child: _scaledCard(const JannaIDCard())),
                             SizedBox(width: isTablet ? 20 : 60),
