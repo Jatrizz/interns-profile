@@ -113,7 +113,7 @@ func GetRecentActivity(w http.ResponseWriter, r *http.Request) {
         FROM time_logs tl
         JOIN users u ON u.id = tl.user_id
         ORDER BY tl.created_at DESC
-        LIMIT 5
+        LIMIT 20
     `)
 	if err != nil {
 		jsonError(w, "Failed to fetch recent activity", http.StatusInternalServerError)
