@@ -302,7 +302,7 @@ class _JannaCardFace extends StatelessWidget {
                         const CardField(
                             label: 'Program', value: 'Computer Science'),
                         const CardField(
-                            label: 'Intern Since', value: 'Feb 2022'),
+                            label: 'Intern Since', value: 'Feb 2026'),
                         const CardField(
                           label: 'Status',
                           value: '● Active',
