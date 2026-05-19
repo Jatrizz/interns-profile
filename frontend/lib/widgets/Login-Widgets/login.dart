@@ -24,7 +24,6 @@ class _LoginState extends State<Login> {
   final _emailController = TextEditingController();
   final _passwordController = TextEditingController();
 
-  // Forgot-password OTP cooldown — lives here so it persists across dialog open/close
   int _otpCooldown = 0;
   bool _hasSentOtp = false;
   Timer? _cooldownTimer;
@@ -37,7 +36,10 @@ class _LoginState extends State<Login> {
     });
     dialogSetState?.call(() {});
     _cooldownTimer = Timer.periodic(const Duration(seconds: 1), (t) {
-      if (!mounted) { t.cancel(); return; }
+      if (!mounted) {
+        t.cancel();
+        return;
+      }
       setState(() {
         if (_otpCooldown > 0) {
           _otpCooldown--;
@@ -45,7 +47,7 @@ class _LoginState extends State<Login> {
           t.cancel();
         }
       });
-      dialogSetState?.call(() {}); // keep dialog in sync
+      dialogSetState?.call(() {});
     });
   }
 
@@ -104,7 +106,6 @@ class _LoginState extends State<Login> {
         final firstName = data['first_name'] ?? '';
         final userId = data['user_id']?.toString() ?? '';
 
-        // Save to sessionStorage (per-tab) so tabs don't overwrite each other.
         saveSession(role: role, firstName: firstName, userId: userId);
 
         if (!mounted) return;
@@ -129,7 +130,10 @@ class _LoginState extends State<Login> {
   }
 
   void _showForgotPasswordDialog() {
-    final emailController = TextEditingController();
+    // ✅ Option A — pre-fill from login email field if available
+    final emailController = TextEditingController(
+      text: _emailController.text.trim(),
+    );
     final otpController = TextEditingController();
     final newPassController = TextEditingController();
     final confirmPassController = TextEditingController();
@@ -214,12 +218,15 @@ class _LoginState extends State<Login> {
       builder: (context) {
         return StatefulBuilder(
           builder: (context, setStateDialog) {
-            // If a countdown is already running (dialog was closed and reopened),
-            // re-register setStateDialog so the button stays in sync.
-            if (_otpCooldown > 0 && _cooldownTimer != null && _cooldownTimer!.isActive) {
+            if (_otpCooldown > 0 &&
+                _cooldownTimer != null &&
+                _cooldownTimer!.isActive) {
               _cooldownTimer!.cancel();
               _cooldownTimer = Timer.periodic(const Duration(seconds: 1), (t) {
-                if (!mounted) { t.cancel(); return; }
+                if (!mounted) {
+                  t.cancel();
+                  return;
+                }
                 setState(() {
                   if (_otpCooldown > 0) {
                     _otpCooldown--;
@@ -227,90 +234,16 @@ class _LoginState extends State<Login> {
                     t.cancel();
                   }
                 });
-                setStateDialog(() {}); // keep dialog in sync
+                setStateDialog(() {});
               });
             }
 
-            // Keep isOtpValid in sync whenever the OTP field changes
             otpController.addListener(() {
               final valid = otpController.text.trim().length == 6;
               if (valid != isOtpValid) {
                 setStateDialog(() => isOtpValid = valid);
               }
             });
-
-            Future<void> sendOTP() async {
-              final email = emailController.text.trim();
-              if (email.isEmpty) {
-                ScaffoldMessenger.of(context).showSnackBar(
-                  const SnackBar(content: Text("Email is required")),
-                );
-                return;
-              }
-              setStateDialog(() => isSendingOTP = true);
-              try {
-                final response = await http.post(
-                  Uri.parse(
-                      'http://localhost:8080/forgot-password/send-otp'),
-                  headers: {'Content-Type': 'application/json'},
-                  body: jsonEncode({'email': email}),
-                );
-                final data = jsonDecode(response.body);
-                ScaffoldMessenger.of(context).showSnackBar(
-                  SnackBar(
-                      content: Text(
-                          data['message'] ?? data['error'] ?? 'OTP Sent')),
-                );
-                // Start countdown on the parent state so it survives dialog close
-                _startOtpCooldown(setStateDialog);
-                setStateDialog(() => isSendingOTP = false);
-                return;
-              } catch (e) {
-                ScaffoldMessenger.of(context).showSnackBar(
-                  SnackBar(content: Text("Network error: $e")),
-                );
-              }
-              setStateDialog(() => isSendingOTP = false);
-            }
-
-            Future<void> verifyOTP() async {
-              final email = emailController.text.trim();
-              final otp = otpController.text.trim();
-              if (email.isEmpty || otp.isEmpty) {
-                ScaffoldMessenger.of(context).showSnackBar(
-                  const SnackBar(
-                      content: Text("Email and OTP are required")),
-                );
-                return;
-              }
-              setStateDialog(() => isVerifyingOTP = true);
-              try {
-                final response = await http.post(
-                  Uri.parse(
-                      'http://localhost:8080/forgot-password/verify-otp'),
-                  headers: {'Content-Type': 'application/json'},
-                  body: jsonEncode({'email': email, 'otp': otp}),
-                );
-                final data = jsonDecode(response.body);
-                if (response.statusCode == 200) {
-                  setStateDialog(() => step = 2);
-                  ScaffoldMessenger.of(context).showSnackBar(
-                    SnackBar(
-                        content: Text(data['message'] ?? 'OTP Verified')),
-                  );
-                } else {
-                  ScaffoldMessenger.of(context).showSnackBar(
-                    SnackBar(
-                        content: Text(data['error'] ?? 'Invalid OTP')),
-                  );
-                }
-              } catch (e) {
-                ScaffoldMessenger.of(context).showSnackBar(
-                  SnackBar(content: Text("Network error: $e")),
-                );
-              }
-              setStateDialog(() => isVerifyingOTP = false);
-            }
 
             Future<void> resetPassword() async {
               final email = emailController.text.trim();
@@ -325,8 +258,7 @@ class _LoginState extends State<Login> {
               if (pass.length < 8) {
                 ScaffoldMessenger.of(context).showSnackBar(
                   const SnackBar(
-                      content:
-                          Text("Password must be at least 8 characters")),
+                      content: Text("Password must be at least 8 characters")),
                 );
                 return;
               }
@@ -348,13 +280,12 @@ class _LoginState extends State<Login> {
                   Navigator.pop(context);
                   ScaffoldMessenger.of(this.context).showSnackBar(
                     SnackBar(
-                        content: Text(data['message'] ??
-                            'Password reset successful')),
+                        content: Text(
+                            data['message'] ?? 'Password reset successful')),
                   );
                 } else {
                   ScaffoldMessenger.of(context).showSnackBar(
-                    SnackBar(
-                        content: Text(data['error'] ?? 'Reset failed')),
+                    SnackBar(content: Text(data['error'] ?? 'Reset failed')),
                   );
                 }
               } catch (e) {
@@ -394,8 +325,10 @@ class _LoginState extends State<Login> {
                                 fontWeight: FontWeight.w700)),
                         Text(
                           step == 1
-                              ? "Enter your email and OTP to verify"
-                              : "Set your new password",
+                              ? "Enter your email address"
+                              : step == 2
+                                  ? "Enter the OTP sent to your email"
+                                  : "Set your new password",
                           style: TextStyle(
                               color: labelCol,
                               fontSize: 11,
@@ -417,105 +350,178 @@ class _LoginState extends State<Login> {
                   child: Column(
                     mainAxisSize: MainAxisSize.min,
                     children: [
+                      // Step indicator — 3 steps
                       Row(
                         children: [
-                          _StepDot(
-                              active: true, label: "1", done: step == 2),
+                          _StepDot(active: true, label: "1", done: step > 1),
                           Expanded(
                             child: Container(
                               height: 2,
-                              color: step == 2 ? Colors.blue : borderEn,
+                              color: step > 1 ? Colors.blue : borderEn,
                             ),
                           ),
                           _StepDot(
-                              active: step == 2, label: "2", done: false),
+                              active: step >= 2, label: "2", done: step > 2),
+                          Expanded(
+                            child: Container(
+                              height: 2,
+                              color: step > 2 ? Colors.blue : borderEn,
+                            ),
+                          ),
+                          _StepDot(active: step >= 3, label: "3", done: false),
                         ],
                       ),
                       const SizedBox(height: 20),
+
+                      // ── STEP 1: Email (pre-filled if login email was entered) ──
                       if (step == 1) ...[
                         TextField(
                           cursorColor: borderFo,
                           controller: emailController,
                           style: TextStyle(color: textCol, fontSize: 14),
-                          decoration: fieldDecor("Email",
-                                  prefix: Icons.email_outlined)
-                        ),
-                        const SizedBox(height: 12),
-                        Row(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            Expanded(
-                              child: TextField(
-                                cursorColor: borderFo,
-                                controller: otpController,
-                                style: TextStyle(
-                                    color: textCol, fontSize: 14),
-                                keyboardType: TextInputType.number,
-                                maxLength: 6, // enforce max 6 digits
-                                inputFormatters: [FilteringTextInputFormatter.digitsOnly],
-                                decoration: fieldDecor("OTP Code",
-                                    prefix: Icons.pin_outlined).copyWith(
-                                  counterText: '', // hide the maxLength counter
-                                ),
-                              ),
-                            ),
-                            const SizedBox(width: 10),
-                            Container(
-                              decoration: BoxDecoration(
-                                gradient: (isSendingOTP || _otpCooldown > 0)
-                                    ? null
-                                    : blueGrad,
-                                color: (isSendingOTP || _otpCooldown > 0)
-                                    ? Colors.grey
-                                    : null,
-                                borderRadius: BorderRadius.circular(8),
-                              ),
-                              child: InkWell(
-                                borderRadius: BorderRadius.circular(8),
-                                onTap: (isSendingOTP || _otpCooldown > 0)
-                                    ? null
-                                    : sendOTP,
-                                child: Padding(
-                                  padding: const EdgeInsets.symmetric(
-                                      horizontal: 12, vertical: 16),
-                                  child: isSendingOTP
-                                      ? const SizedBox(
-                                          width: 18,
-                                          height: 18,
-                                          child: CircularProgressIndicator(
-                                              color: Colors.white,
-                                              strokeWidth: 2))
-                                      : _otpCooldown > 0
-                                          ? Text(
-                                              "${_otpCooldown}s",
-                                              style: const TextStyle(
-                                                  color: Colors.white,
-                                                  fontWeight: FontWeight.w600,
-                                                  fontSize: 13),
-                                            )
-                                          : Text(
-                                              _hasSentOtp ? "Resend OTP" : "Send OTP",
-                                              style: const TextStyle(
-                                                  color: Colors.white,
-                                                  fontWeight: FontWeight.w600,
-                                                  fontSize: 14)),
-                                ),
-                              ),
-                            ),
-                          ],
+                          keyboardType: TextInputType.emailAddress,
+                          decoration:
+                              fieldDecor("Email", prefix: Icons.email_outlined),
                         ),
                         const SizedBox(height: 16),
-                        // Verify OTP button: disabled until OTP is exactly 6 digits
                         gradientButton(
-                          label: isVerifyingOTP
-                              ? "Verifying…"
-                              : "Verify OTP",
-                          onPressed: (!isOtpValid || isVerifyingOTP)
+                          label: isSendingOTP ? "Sending…" : "Send OTP",
+                          onPressed: isSendingOTP
                               ? null
-                              : verifyOTP,
+                              : () async {
+                                  final email = emailController.text.trim();
+                                  if (email.isEmpty) {
+                                    ScaffoldMessenger.of(context).showSnackBar(
+                                      const SnackBar(
+                                          content: Text("Email is required")),
+                                    );
+                                    return;
+                                  }
+                                  setStateDialog(() => isSendingOTP = true);
+                                  try {
+                                    final response = await http.post(
+                                      Uri.parse(
+                                          'http://localhost:8080/forgot-password/send-otp'),
+                                      headers: {
+                                        'Content-Type': 'application/json'
+                                      },
+                                      body: jsonEncode({'email': email}),
+                                    );
+                                    final data = jsonDecode(response.body);
+                                    ScaffoldMessenger.of(context).showSnackBar(
+                                      SnackBar(
+                                          content: Text(data['message'] ??
+                                              data['error'] ??
+                                              'OTP Sent')),
+                                    );
+                                    _startOtpCooldown(setStateDialog);
+                                    setStateDialog(() {
+                                      isSendingOTP = false;
+                                      step = 2; // advance to OTP step
+                                    });
+                                  } catch (e) {
+                                    ScaffoldMessenger.of(context).showSnackBar(
+                                      SnackBar(
+                                          content: Text("Network error: $e")),
+                                    );
+                                    setStateDialog(() => isSendingOTP = false);
+                                  }
+                                },
                         ),
                       ],
+
+                      // ── STEP 2: OTP only ──
                       if (step == 2) ...[
+                        Text(
+                          "We sent a code to ${emailController.text.trim()}",
+                          style: TextStyle(color: labelCol, fontSize: 12),
+                          textAlign: TextAlign.center,
+                        ),
+                        const SizedBox(height: 12),
+                        TextField(
+                          cursorColor: borderFo,
+                          controller: otpController,
+                          style: TextStyle(color: textCol, fontSize: 14),
+                          keyboardType: TextInputType.number,
+                          maxLength: 6,
+                          inputFormatters: [
+                            FilteringTextInputFormatter.digitsOnly
+                          ],
+                          decoration:
+                              fieldDecor("OTP Code", prefix: Icons.pin_outlined)
+                                  .copyWith(counterText: ''),
+                        ),
+                        const SizedBox(height: 4),
+                        Align(
+                          alignment: Alignment.centerRight,
+                          child: TextButton(
+                            onPressed: _otpCooldown > 0
+                                ? null
+                                : () {
+                                    setStateDialog(() => step = 1);
+                                  },
+                            child: Text(
+                              _otpCooldown > 0
+                                  ? "Resend in ${_otpCooldown}s"
+                                  : "Resend OTP",
+                              style: TextStyle(
+                                color: _otpCooldown > 0
+                                    ? Colors.grey
+                                    : Colors.blue,
+                                fontSize: 12,
+                              ),
+                            ),
+                          ),
+                        ),
+                        const SizedBox(height: 8),
+                        gradientButton(
+                          label: isVerifyingOTP ? "Verifying…" : "Verify OTP",
+                          onPressed: (!isOtpValid || isVerifyingOTP)
+                              ? null
+                              : () async {
+                                  final email = emailController.text.trim();
+                                  final otp = otpController.text.trim();
+                                  setStateDialog(() => isVerifyingOTP = true);
+                                  try {
+                                    final response = await http.post(
+                                      Uri.parse(
+                                          'http://localhost:8080/forgot-password/verify-otp'),
+                                      headers: {
+                                        'Content-Type': 'application/json'
+                                      },
+                                      body: jsonEncode(
+                                          {'email': email, 'otp': otp}),
+                                    );
+                                    final data = jsonDecode(response.body);
+                                    if (response.statusCode == 200) {
+                                      setStateDialog(() {
+                                        isVerifyingOTP = false;
+                                        step = 3; // advance to password step
+                                      });
+                                    } else {
+                                      ScaffoldMessenger.of(context)
+                                          .showSnackBar(
+                                        SnackBar(
+                                            content: Text(data['error'] ??
+                                                'Invalid OTP')),
+                                      );
+                                      setStateDialog(
+                                          () => isVerifyingOTP = false);
+                                    }
+                                  } catch (e) {
+                                    ScaffoldMessenger.of(context).showSnackBar(
+                                      SnackBar(
+                                          content: Text("Network error: $e")),
+                                    );
+                                    setStateDialog(
+                                        () => isVerifyingOTP = false);
+                                  }
+                                },
+                        ),
+                      ],
+
+                      // ── STEP 3: New password ──
+                      if (step == 3) ...[
                         TextField(
                           controller: newPassController,
                           obscureText: !showPass,
@@ -541,8 +547,8 @@ class _LoginState extends State<Login> {
                                 color: iconCol,
                                 size: 20,
                               ),
-                              onPressed: () => setStateDialog(
-                                  () => showPass = !showPass),
+                              onPressed: () =>
+                                  setStateDialog(() => showPass = !showPass),
                             ),
                           ),
                         ),
@@ -604,15 +610,13 @@ class _LoginState extends State<Login> {
           child: Text(
             'Manage your interns, track hours, and monitor attendance with ease.',
             textAlign: TextAlign.center,
-            style: TextStyle(
-                color: _textColor, fontSize: isMobile ? 13 : 15),
+            style: TextStyle(color: _textColor, fontSize: isMobile ? 13 : 15),
           ),
         ),
         const SizedBox(height: 20),
         Container(
           width: isMobile ? double.infinity : 400,
-          margin:
-              isMobile ? const EdgeInsets.symmetric(horizontal: 24) : null,
+          margin: isMobile ? const EdgeInsets.symmetric(horizontal: 24) : null,
           decoration:
               BoxDecoration(gradient: LinearGradient(colors: _fieldGradient)),
           child: TextFormField(
@@ -642,8 +646,7 @@ class _LoginState extends State<Login> {
         const SizedBox(height: 10),
         Container(
           width: isMobile ? double.infinity : 400,
-          margin:
-              isMobile ? const EdgeInsets.symmetric(horizontal: 24) : null,
+          margin: isMobile ? const EdgeInsets.symmetric(horizontal: 24) : null,
           decoration:
               BoxDecoration(gradient: LinearGradient(colors: _fieldGradient)),
           child: TextFormField(
@@ -660,12 +663,9 @@ class _LoginState extends State<Login> {
               label: Text('Password', style: TextStyle(color: _labelColor)),
               suffixIcon: IconButton(
                 icon: Icon(
-                    _showPassword
-                        ? Icons.visibility
-                        : Icons.visibility_off,
+                    _showPassword ? Icons.visibility : Icons.visibility_off,
                     color: _iconColor),
-                onPressed: () =>
-                    setState(() => _showPassword = !_showPassword),
+                onPressed: () => setState(() => _showPassword = !_showPassword),
               ),
               border: InputBorder.none,
             ),
@@ -682,23 +682,21 @@ class _LoginState extends State<Login> {
           ),
         Container(
           width: isMobile ? double.infinity : 420,
-          margin:
-              isMobile ? const EdgeInsets.symmetric(horizontal: 16) : null,
+          margin: isMobile ? const EdgeInsets.symmetric(horizontal: 16) : null,
           alignment: Alignment.centerRight,
           child: TextButton(
             onPressed: _showForgotPasswordDialog,
             child: Text(
               "Forgot Password?",
-              style: TextStyle(
-                  color: _textColor.withOpacity(0.5), fontSize: 12),
+              style:
+                  TextStyle(color: _textColor.withOpacity(0.5), fontSize: 12),
             ),
           ),
         ),
         const SizedBox(height: 10),
         Container(
           width: isMobile ? double.infinity : 400,
-          margin:
-              isMobile ? const EdgeInsets.symmetric(horizontal: 24) : null,
+          margin: isMobile ? const EdgeInsets.symmetric(horizontal: 24) : null,
           decoration: BoxDecoration(
             gradient: const LinearGradient(
               colors: [Colors.blue, Color.fromARGB(255, 2, 55, 230)],
