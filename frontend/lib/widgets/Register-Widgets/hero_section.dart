@@ -30,7 +30,8 @@ class _HeroSectionState extends State<HeroSection> {
   final _confirmpassController = TextEditingController();
 
   final _passwordFocusNode = FocusNode();
-  bool _passwordFocused = true;
+  // Only show checks when password field is focused
+  bool _passwordFocused = false;
 
   final Map<String, String?> _errors = {};
 
@@ -61,10 +62,9 @@ class _HeroSectionState extends State<HeroSection> {
     _checkPassword(_passwordController.text);
     _passwordController
         .addListener(() => _checkPassword(_passwordController.text));
+    // Show checks only when focused, hide when unfocused
     _passwordFocusNode.addListener(() {
-      if (_passwordFocusNode.hasFocus) {
-        setState(() => _passwordFocused = true);
-      }
+      setState(() => _passwordFocused = _passwordFocusNode.hasFocus);
     });
   }
 
@@ -166,17 +166,18 @@ class _HeroSectionState extends State<HeroSection> {
         );
         _showOtpDialog();
       } else {
-      String errorMsg = 'Registration failed';
-      try {
-        final error = jsonDecode(response.body);
-        errorMsg = error['error'] ?? error.toString();
-      } catch (_) {
-        errorMsg = response.body.isNotEmpty ? response.body : 'Registration failed';
+        String errorMsg = 'Registration failed';
+        try {
+          final error = jsonDecode(response.body);
+          errorMsg = error['error'] ?? error.toString();
+        } catch (_) {
+          errorMsg =
+              response.body.isNotEmpty ? response.body : 'Registration failed';
+        }
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text(errorMsg)),
+        );
       }
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text(errorMsg)),
-      );
-    }
     } catch (e) {
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(content: Text("Server connection error")),
@@ -226,7 +227,6 @@ class _HeroSectionState extends State<HeroSection> {
               child: Column(
                 mainAxisSize: MainAxisSize.min,
                 children: [
-                  // Icon
                   Container(
                     width: 64,
                     height: 64,
@@ -240,8 +240,6 @@ class _HeroSectionState extends State<HeroSection> {
                         color: Colors.white, size: 32),
                   ),
                   const SizedBox(height: 20),
-
-                  // Title
                   Text(
                     'Verify your email',
                     style: TextStyle(
@@ -251,8 +249,6 @@ class _HeroSectionState extends State<HeroSection> {
                     ),
                   ),
                   const SizedBox(height: 8),
-
-                  // Subtitle
                   Text(
                     'We sent a 6-digit code to',
                     style: TextStyle(color: subColor, fontSize: 13),
@@ -269,8 +265,6 @@ class _HeroSectionState extends State<HeroSection> {
                     textAlign: TextAlign.center,
                   ),
                   const SizedBox(height: 28),
-
-                  // OTP boxes
                   Row(
                     mainAxisAlignment: MainAxisAlignment.center,
                     children: List.generate(6, (i) {
@@ -321,8 +315,6 @@ class _HeroSectionState extends State<HeroSection> {
                       );
                     }),
                   ),
-
-                  // Error message
                   if (errorMsg != null) ...[
                     const SizedBox(height: 12),
                     Row(
@@ -338,8 +330,6 @@ class _HeroSectionState extends State<HeroSection> {
                     ),
                   ],
                   const SizedBox(height: 24),
-
-                  // Verify button
                   SizedBox(
                     width: double.infinity,
                     child: DecoratedBox(
@@ -393,8 +383,6 @@ class _HeroSectionState extends State<HeroSection> {
                     ),
                   ),
                   const SizedBox(height: 12),
-
-                  // Cancel
                   TextButton(
                     onPressed: () => Navigator.pop(context),
                     child: Text(
@@ -447,6 +435,7 @@ class _HeroSectionState extends State<HeroSection> {
   @override
   Widget build(BuildContext context) {
     final isMobile = Responsive.isMobile(context);
+    // Match login's exact sizing approach
     final fieldWidth = isMobile ? double.infinity : 400.0;
     final hPad = isMobile ? 24.0 : 0.0;
 
@@ -454,6 +443,7 @@ class _HeroSectionState extends State<HeroSection> {
       child: Form(
         key: _formKey,
         child: Padding(
+          // Same padding as login on mobile
           padding: EdgeInsets.symmetric(horizontal: hPad),
           child: Column(
             children: [
@@ -498,55 +488,74 @@ class _HeroSectionState extends State<HeroSection> {
               ),
               const SizedBox(height: 10),
 
-              // School with hint
-              _buildField(
-                _schoolController,
-                "School",
-                "school",
-                icon: Icons.apartment,
-                hintText: 'e.g. Laguna State Polytechnic University',
+              SizedBox(
+                width: fieldWidth,
+                child: _buildField(
+                  _schoolController,
+                  "School",
+                  "school",
+                  icon: Icons.apartment,
+                  fullWidth: true,
+                  hintText: 'e.g. Laguna State Polytechnic University',
+                ),
               ),
               const SizedBox(height: 10),
 
-              // Program with hint
-              _buildField(
-                _programController,
-                "Program",
-                "program",
-                icon: Icons.school,
-                hintText:
-                    'e.g. BS in Computer Science, BS in Information Systems',
+              SizedBox(
+                width: fieldWidth,
+                child: _buildField(
+                  _programController,
+                  "Program",
+                  "program",
+                  icon: Icons.school,
+                  fullWidth: true,
+                  hintText:
+                      'e.g. BS in Computer Science, BS in Information Systems',
+                ),
               ),
               const SizedBox(height: 10),
 
-              _buildField(_emailController, "Email", "email",
-                  icon: Icons.email_outlined),
+              SizedBox(
+                width: fieldWidth,
+                child: _buildField(
+                  _emailController,
+                  "Email",
+                  "email",
+                  icon: Icons.email_outlined,
+                  fullWidth: true,
+                ),
+              ),
               const SizedBox(height: 10),
-              _buildField(
-                _numberController,
-                "Phone Number",
-                "phonenum",
-                icon: Icons.phone,
-                inputFormatters: [
-                  FilteringTextInputFormatter.digitsOnly,
-                  LengthLimitingTextInputFormatter(11),
-                ],
-                onChanged: (_) {
-                setState(() {
-                  final val = _numberController.text;
-                  if (val.isEmpty) {
-                    _errors['phonenum'] = null;
-                  } else if (val.length >= 2 && !val.startsWith('09')) {
-                    _errors['phonenum'] = 'Must start with 09';
-                  } else if (val.length == 11 && !val.startsWith('09')) {
-                    _errors['phonenum'] = 'Must start with 09';
-                  } else if (val.length == 11 && val.startsWith('09')) {
-                    _errors['phonenum'] = null;
-                  } else {
-                    _errors['phonenum'] = null;
-                  }
-                });
-                }
+
+              SizedBox(
+                width: fieldWidth,
+                child: _buildField(
+                  _numberController,
+                  "Phone Number",
+                  "phonenum",
+                  icon: Icons.phone,
+                  fullWidth: true,
+                  inputFormatters: [
+                    FilteringTextInputFormatter.digitsOnly,
+                    LengthLimitingTextInputFormatter(11),
+                  ],
+                  onChanged: (_) {
+                    setState(() {
+                      final val = _numberController.text;
+                      if (val.isEmpty) {
+                        _errors['phonenum'] = null;
+                      } else if (val.length >= 2 && !val.startsWith('09')) {
+                        _errors['phonenum'] = 'Must start with 09';
+                      } else if (val.length == 11 && !val.startsWith('09')) {
+                        _errors['phonenum'] = 'Must start with 09';
+                      } else if (val.length == 11 && val.startsWith('09')) {
+                        _errors['phonenum'] = null;
+                      } else {
+                        _errors['phonenum'] = null;
+                      }
+                    });
+                  },
+                ),
               ),
               const SizedBox(height: 10),
 
@@ -667,7 +676,7 @@ class _HeroSectionState extends State<HeroSection> {
                       ),
               ),
 
-              // Password strength
+              // Password checks — only show when password field is focused
               if (_passwordFocused) ...[
                 const SizedBox(height: 8),
                 SizedBox(
@@ -807,7 +816,8 @@ class _HeroSectionState extends State<HeroSection> {
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         Container(
-          width: fullWidth ? null : 400,
+          // ✅ fullWidth now always fills its parent correctly
+          width: fullWidth ? double.infinity : 400,
           padding: const EdgeInsets.symmetric(horizontal: 1, vertical: 3),
           decoration: BoxDecoration(
             gradient: LinearGradient(colors: _fieldGradient),
@@ -829,8 +839,8 @@ class _HeroSectionState extends State<HeroSection> {
               labelText: label,
               labelStyle: TextStyle(color: _labelColor, fontSize: 12),
               suffixIcon: suffixIcon,
-              hintText: hintText, // ✅ added
-              hintStyle: TextStyle(color: _labelColor, fontSize: 11), // ✅ added
+              hintText: hintText,
+              hintStyle: TextStyle(color: _labelColor, fontSize: 11),
             ),
           ),
         ),
