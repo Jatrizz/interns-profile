@@ -118,6 +118,8 @@ class _HeroSectionState extends State<HeroSection> {
         _errors['phonenum'] = 'Phone number is required';
       } else if (_numberController.text.length != 11) {
         _errors['phonenum'] = 'Phone number must be 11 digits';
+      } else if (!_numberController.text.startsWith('09')) {
+        _errors['phonenum'] = 'Must start with 09';
       } else {
         _errors['phonenum'] = null;
       }
@@ -164,11 +166,17 @@ class _HeroSectionState extends State<HeroSection> {
         );
         _showOtpDialog();
       } else {
+      String errorMsg = 'Registration failed';
+      try {
         final error = jsonDecode(response.body);
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text(error['error'] ?? "Registration failed")),
-        );
+        errorMsg = error['error'] ?? error.toString();
+      } catch (_) {
+        errorMsg = response.body.isNotEmpty ? response.body : 'Registration failed';
       }
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text(errorMsg)),
+      );
+    }
     } catch (e) {
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(content: Text("Server connection error")),
@@ -523,6 +531,22 @@ class _HeroSectionState extends State<HeroSection> {
                   FilteringTextInputFormatter.digitsOnly,
                   LengthLimitingTextInputFormatter(11),
                 ],
+                onChanged: (_) {
+                setState(() {
+                  final val = _numberController.text;
+                  if (val.isEmpty) {
+                    _errors['phonenum'] = null;
+                  } else if (val.length >= 2 && !val.startsWith('09')) {
+                    _errors['phonenum'] = 'Must start with 09';
+                  } else if (val.length == 11 && !val.startsWith('09')) {
+                    _errors['phonenum'] = 'Must start with 09';
+                  } else if (val.length == 11 && val.startsWith('09')) {
+                    _errors['phonenum'] = null;
+                  } else {
+                    _errors['phonenum'] = null;
+                  }
+                });
+                }
               ),
               const SizedBox(height: 10),
 
