@@ -11,7 +11,11 @@ import (
 
 func main() {
 	// Debug: print working directory and uploads contents
-	cwd, _ := os.Getwd()
+	cwd, err := os.Getwd()
+	if err != nil {
+		log.Fatal("Failed to get working directory:", err)
+	}
+
 	log.Println("Working directory:", cwd)
 	log.Println("Uploads path:", filepath.Join(cwd, "uploads"))
 
@@ -33,19 +37,23 @@ func main() {
 	defer c.Stop()
 
 	r := mux.NewRouter()
+	// API Routes
 	RegisterRoutes(r)
+
+	r.PathPrefix("/uploads/").Handler(
+		http.StripPrefix("/uploads/",
+			http.FileServer(http.Dir(filepath.Join(cwd, "uploads"))),
+		),
+	)
 
 	handler := enableCORS(r)
 
-	// Use absolute path to avoid any working directory confusion
-	http.Handle("/uploads/", enableCORS(
-		http.StripPrefix("/uploads/", http.FileServer(http.Dir(filepath.Join(cwd, "uploads")))),
-	))
-
-	http.Handle("/", handler)
-
 	log.Println("Server running on http://localhost:8080")
-	log.Fatal(http.ListenAndServe(":8080", nil))
+
+	err = http.ListenAndServe(":8080", handler)
+	if err != nil {
+		log.Fatal("Server failed:", err)
+	}
 }
 
 // CORS Middleware
