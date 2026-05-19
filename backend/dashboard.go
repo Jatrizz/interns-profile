@@ -42,7 +42,17 @@ func Dashboard(w http.ResponseWriter, r *http.Request) {
 
 	// Get total schools count
 	var totalSchools int
-	err = db.QueryRow("SELECT COUNT(DISTINCT school) FROM users WHERE role = 'intern'").Scan(&totalSchools)
+	err = db.QueryRow(`
+		SELECT COUNT(DISTINCT
+			CASE
+				WHEN LOWER(TRIM(school)) IN ('plsp', 'pamantasan ng lungsod ng san pablo') THEN 'PLSP'
+				WHEN LOWER(TRIM(school)) IN ('cmdi', 'card mri development institute') THEN 'CMDI'
+				WHEN LOWER(TRIM(school)) IN ('lspu', 'laguna state polytechnic university') THEN 'LSPU'
+				ELSE UPPER(TRIM(school))
+			END
+		)
+		FROM users WHERE role = 'intern'
+	`).Scan(&totalSchools)
 	if err != nil {
 		http.Error(w, "Error getting total schools", http.StatusInternalServerError)
 		return
