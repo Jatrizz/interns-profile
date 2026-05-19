@@ -300,16 +300,17 @@ class _JannaCardFace extends StatelessWidget {
                       mainAxisSize: MainAxisSize.min,
                       children: [
                         const CardField(
-                            label: 'Dept', value: 'Computer Science'),
-                        const CardField(label: 'Since', value: 'Jan 2022'),
+                            label: 'Program', value: 'Computer Science'),
+                        const CardField(
+                            label: 'Intern Since', value: 'Feb 2022'),
                         const CardField(
                           label: 'Status',
                           value: '● Active',
                           valueColor: Color(0xFF7fff90),
                         ),
-                        const SizedBox(height: 6),
+                        const SizedBox(height: 8),
                         const CardBarcode(),
-                        const SizedBox(height: 4),
+                        const SizedBox(height: 6),
                         Text(
                           'DEV-2026-179 · JANNA PUJEDA',
                           style: TextStyle(
