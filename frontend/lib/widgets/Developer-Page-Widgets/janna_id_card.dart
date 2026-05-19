@@ -77,7 +77,7 @@ class _JannaCardFace extends StatelessWidget {
   Widget build(BuildContext context) {
     return Container(
       width: 260,
-      height: 390, // back to original — image no longer affects this
+      height: 390,
       decoration: BoxDecoration(
         color: const Color(0xFF111827),
         borderRadius: BorderRadius.circular(20),
@@ -97,12 +97,47 @@ class _JannaCardFace extends StatelessWidget {
       child: ClipRRect(
         borderRadius: BorderRadius.circular(20),
         child: Stack(
-          clipBehavior:
-              Clip.none, // allows image to overflow card edges if needed
+          clipBehavior: Clip.none,
           children: [
+            // IMAGE AT THE BACK — first child = bottom layer
+            Positioned(
+              top: -40,
+              left: 0,
+              right: 0,
+              child: Center(
+                child: Image.asset(
+                  'assets/images/janna.png',
+                  width: 500,
+                  height: 500,
+                  fit: BoxFit.contain,
+                  errorBuilder: (_, __, ___) => Container(
+                    width: 500,
+                    height: 500,
+                    decoration: BoxDecoration(
+                      shape: BoxShape.circle,
+                      color: const Color(0xFF1e3a5f),
+                      border: Border.all(
+                          color: const Color(0xFF3b82f6).withOpacity(0.3),
+                          width: 2),
+                    ),
+                    child: const Center(
+                      child: Text(
+                        'JA',
+                        style: TextStyle(
+                          fontSize: 28,
+                          fontWeight: FontWeight.w500,
+                          color: Color(0xFF93c5fd),
+                        ),
+                      ),
+                    ),
+                  ),
+                ),
+              ),
+            ),
+
             // Orange circle accent top right
             Positioned(
-              top: -14,
+              top: -5,
               right: -18,
               child: Container(
                 width: 130,
@@ -115,8 +150,8 @@ class _JannaCardFace extends StatelessWidget {
             ),
             // Bottom blobs
             Positioned(
-              bottom: 65,
-              left: -14,
+              bottom: -15,
+              left: -20,
               child: Blob(
                 width: 70,
                 height: 56,
@@ -130,7 +165,7 @@ class _JannaCardFace extends StatelessWidget {
               ),
             ),
             Positioned(
-              bottom: 52,
+              bottom: -10,
               right: -12,
               child: Blob(
                 width: 60,
@@ -145,8 +180,8 @@ class _JannaCardFace extends StatelessWidget {
               ),
             ),
             Positioned(
-              bottom: 90,
-              left: 36,
+              bottom: 10,
+              left: 20,
               child: Blob(
                 width: 38,
                 height: 30,
@@ -155,7 +190,7 @@ class _JannaCardFace extends StatelessWidget {
               ),
             ),
             Positioned(
-              bottom: 86,
+              bottom: 10,
               right: 34,
               child: Blob(
                 width: 28,
@@ -192,19 +227,19 @@ class _JannaCardFace extends StatelessWidget {
                 right: 16,
                 child: CardStar(size: 20, color: Color(0xFFffca28))),
             const Positioned(
-                top: 50,
-                left: 20,
+                top: 25,
+                left: 5,
                 child: CardStar(size: 14, color: Colors.white)),
             const Positioned(
-                bottom: 82,
+                bottom: 90,
                 right: 24,
                 child: CardStar(size: 16, color: Color(0xFF00bcd4))),
             const Positioned(
-                bottom: 70,
+                bottom: 100,
                 left: 16,
                 child: CardStar(size: 22, color: Color(0xFFffca28))),
             const Positioned(
-                bottom: 96,
+                bottom: 106,
                 right: 52,
                 child: CardStar(size: 11, color: Color(0xFFf06292))),
             const Positioned(
@@ -212,7 +247,7 @@ class _JannaCardFace extends StatelessWidget {
                 right: 10,
                 child: CardStar(size: 10, color: Colors.white)),
 
-            // Card content (text + info fields) — no image here anymore
+            // Card content (text + info fields)
             Padding(
               padding: const EdgeInsets.fromLTRB(16, 14, 16, 10),
               child: Column(
@@ -254,7 +289,6 @@ class _JannaCardFace extends StatelessWidget {
                       ),
                     ),
                   ),
-                  // Spacer pushes info fields to the bottom
                   const Spacer(),
                   Container(
                     padding: const EdgeInsets.only(top: 8),
@@ -289,43 +323,6 @@ class _JannaCardFace extends StatelessWidget {
                     ),
                   ),
                 ],
-              ),
-            ),
-
-            // IMAGE AS OVERLAY — change size freely, nothing else moves
-            // Adjust `top` to reposition vertically on the card
-            Positioned(
-              top: -450, // move image up/down by changing this
-              left: 0,
-              right: 0,
-              child: Center(
-                child: Image.asset(
-                  'assets/images/janna.png',
-                  width: 1300, // change freely — no overflow risk ever
-                  height: 1300, // change freely — no overflow risk ever
-                  fit: BoxFit.contain,
-                  errorBuilder: (_, __, ___) => Container(
-                    width: 1300,
-                    height: 1300,
-                    decoration: BoxDecoration(
-                      shape: BoxShape.circle,
-                      color: const Color(0xFF1e3a5f),
-                      border: Border.all(
-                          color: const Color(0xFF3b82f6).withOpacity(0.3),
-                          width: 2),
-                    ),
-                    child: const Center(
-                      child: Text(
-                        'JA',
-                        style: TextStyle(
-                          fontSize: 28,
-                          fontWeight: FontWeight.w500,
-                          color: Color(0xFF93c5fd),
-                        ),
-                      ),
-                    ),
-                  ),
-                ),
               ),
             ),
           ],
