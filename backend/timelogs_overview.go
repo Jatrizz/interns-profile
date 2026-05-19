@@ -22,7 +22,7 @@ func TimeLogsOverview(w http.ResponseWriter, r *http.Request) {
 	db.QueryRow(`
 		SELECT COUNT(DISTINCT user_id) FROM time_logs
 		WHERE log_date = CURRENT_DATE
-		AND status IN ('present', 'late')
+		AND status IN ('present', 'on-time', 'late')
 	`).Scan(&presentToday)
 
 	// Late today
