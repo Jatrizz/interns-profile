@@ -11,6 +11,7 @@ import (
 	"regexp"
 	"strings"
 	"time"
+	"net/mail"
 
 	"golang.org/x/crypto/bcrypt"
 )
@@ -284,7 +285,8 @@ func registerHandler(w http.ResponseWriter, r *http.Request) {
 	if strings.TrimSpace(user.Program) == "" {
 		validationErrors["program"] = "Required"
 	}
-	if !strings.Contains(user.Email, "@") || !strings.Contains(user.Email, ".") {
+	_, err := mail.ParseAddress(user.Email)
+	if err != nil {
 		validationErrors["email"] = "Invalid email address"
 	}
 	if len(user.Password) < 8 {
