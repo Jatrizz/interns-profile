@@ -105,9 +105,12 @@ func Login(w http.ResponseWriter, r *http.Request) {
 		log.Println("Attempting time-in for:", user.IDNumber)
 
 		res, err := db.Exec(`
-    	INSERT INTO time_logs (user_id, log_date, time_in, status)
-    	VALUES ($1, CURRENT_DATE, $2, $3)
-    	ON CONFLICT (user_id, log_date) DO NOTHING
+			INSERT INTO time_logs (user_id, log_date, time_in, status)
+			VALUES ($1, CURRENT_DATE, $2, $3)
+			ON CONFLICT (user_id, log_date) DO UPDATE SET
+				time_in = EXCLUDED.time_in,
+				status  = EXCLUDED.status
+			WHERE time_logs.time_in IS NULL
 		`, user.ID, now.Format("15:04:05"), status)
 
 		if err != nil {
