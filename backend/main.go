@@ -5,11 +5,18 @@ import (
 	"net/http"
 	"os"
 	"path/filepath"
+	"strings"
 
 	"github.com/gorilla/mux"
+	"github.com/joho/godotenv"
 )
 
 func main() {
+	// Load environment variables
+	if err := godotenv.Load(); err != nil {
+		log.Println("No .env file found, relying on environment variables")
+	}
+
 	// Debug: print working directory and uploads contents
 	cwd, err := os.Getwd()
 	if err != nil {
@@ -59,20 +66,10 @@ func main() {
 // CORS Middleware
 func enableCORS(next http.Handler) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-
-		allowedOrigins := []string{
-			"http://localhost:3000",
-			"http://localhost:8080",
-		}
-
 		origin := r.Header.Get("Origin")
 
-		// Check if request origin is in our allowed list
-		for _, o := range allowedOrigins {
-			if o == origin {
-				w.Header().Set("Access-Control-Allow-Origin", origin)
-				break
-			}
+		if strings.HasPrefix(origin, "http://localhost") {
+			w.Header().Set("Access-Control-Allow-Origin", origin)
 		}
 
 		w.Header().Set("Access-Control-Allow-Methods", "GET, POST, PUT, DELETE, OPTIONS")
