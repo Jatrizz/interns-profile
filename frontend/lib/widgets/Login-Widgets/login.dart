@@ -721,10 +721,13 @@ class _LoginState extends State<Login> {
     );
 
     final logo = SizedBox(
-      height: isMobile ? 220 : 700,
-      child: widget.isDarkMode
-          ? Image.asset('assets/images/logo_dark.png', fit: BoxFit.contain)
-          : Image.asset('assets/images/logo_light.png', fit: BoxFit.contain),
+      height: isMobile ? 300 : 700,
+      child: Image.asset(
+        widget.isDarkMode
+            ? 'assets/images/logo_dark.png'
+            : 'assets/images/logo_light.png',
+        fit: BoxFit.contain,
+      ),
     );
 
     return isMobile

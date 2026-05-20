@@ -19,9 +19,12 @@ class HeroSection extends StatelessWidget {
     // logo
     final logo = SizedBox(
       height: isMobile ? 300 : 700,
-      child: isDarkMode
-          ? Image.asset('assets/images/logo_dark.png', fit: BoxFit.contain)
-          : Image.asset('assets/images/logo_light.png', fit: BoxFit.contain),
+      child: Image.asset(
+        isDarkMode
+            ? 'assets/images/logo_dark.png'
+            : 'assets/images/logo_light.png',
+        fit: BoxFit.contain,
+      ),
     );
 
     // text + buttons

@@ -11,10 +11,12 @@ class HerosectionAbout extends StatelessWidget {
 
     final logo = SizedBox(
       height: isMobile ? 300 : 700,
-      width: isMobile ? double.infinity : null,
-      child: isDarkMode
-          ? Image.asset('assets/images/logo_dark.png', fit: BoxFit.contain)
-          : Image.asset('assets/images/logo_light.png', fit: BoxFit.contain),
+      child: Image.asset(
+        isDarkMode
+            ? 'assets/images/logo_dark.png'
+            : 'assets/images/logo_light.png',
+        fit: BoxFit.contain,
+      ),
     );
 
     final content = Padding(
