@@ -37,8 +37,18 @@ class _InternTimeLogsPageState extends State<InternTimeLogsPage> {
   String selectedMonth = () {
     final now = DateTime.now();
     const months = [
-      'January', 'February', 'March', 'April', 'May', 'June',
-      'July', 'August', 'September', 'October', 'November', 'December'
+      'January',
+      'February',
+      'March',
+      'April',
+      'May',
+      'June',
+      'July',
+      'August',
+      'September',
+      'October',
+      'November',
+      'December'
     ];
     return '${months[now.month - 1]} ${now.year}';
   }();
@@ -78,8 +88,18 @@ class _InternTimeLogsPageState extends State<InternTimeLogsPage> {
   void _resetToCurrentMonth() {
     final now = DateTime.now();
     const months = [
-      'January', 'February', 'March', 'April', 'May', 'June',
-      'July', 'August', 'September', 'October', 'November', 'December'
+      'January',
+      'February',
+      'March',
+      'April',
+      'May',
+      'June',
+      'July',
+      'August',
+      'September',
+      'October',
+      'November',
+      'December'
     ];
     final currentMonth = '${months[now.month - 1]} ${now.year}';
     if (selectedMonth != currentMonth && !_isSpecificDate) {
@@ -117,18 +137,30 @@ class _InternTimeLogsPageState extends State<InternTimeLogsPage> {
 
   Future<void> fetchTimeLogs() async {
     const months = [
-      'January', 'February', 'March', 'April', 'May', 'June',
-      'July', 'August', 'September', 'October', 'November', 'December'
+      'January',
+      'February',
+      'March',
+      'April',
+      'May',
+      'June',
+      'July',
+      'August',
+      'September',
+      'October',
+      'November',
+      'December'
     ];
     String url;
     if (_isSpecificDate && selectedDate != null) {
       final date = selectedDate!.toIso8601String().split('T')[0];
-      url = 'http://127.0.0.1:8080/intern/timelogs?user_id=${widget.userId}&date=$date';
+      url =
+          'http://127.0.0.1:8080/intern/timelogs?user_id=${widget.userId}&date=$date';
     } else {
       final parts = selectedMonth.split(' ');
       final monthIndex = months.indexOf(parts[0]) + 1;
       final year = parts[1];
-      url = 'http://127.0.0.1:8080/intern/timelogs?user_id=${widget.userId}&month=$monthIndex&year=$year';
+      url =
+          'http://127.0.0.1:8080/intern/timelogs?user_id=${widget.userId}&month=$monthIndex&year=$year';
     }
     try {
       final response = await http.get(Uri.parse(url));
@@ -150,9 +182,11 @@ class _InternTimeLogsPageState extends State<InternTimeLogsPage> {
     if (selectedStatus != 'All') {
       result = result.where((log) {
         final status = log['status']?.toString().toLowerCase() ?? '';
-        if (selectedStatus == 'Present') return status == 'on-time' || status == 'late';
+        if (selectedStatus == 'Present')
+          return status == 'on-time' || status == 'late';
         if (selectedStatus == 'On Time') return status == 'on-time';
-        if (selectedStatus == 'Half Day') return status == 'half-day' || status == 'halfday';
+        if (selectedStatus == 'Half Day')
+          return status == 'half-day' || status == 'halfday';
         return status == selectedStatus.toLowerCase();
       }).toList();
     }
@@ -180,7 +214,8 @@ class _InternTimeLogsPageState extends State<InternTimeLogsPage> {
       builder: (context) => AlertDialog(
         backgroundColor: theme.sidebarBg,
         title: Text('Logout',
-            style: TextStyle(color: theme.textPrimary, fontWeight: FontWeight.bold)),
+            style: TextStyle(
+                color: theme.textPrimary, fontWeight: FontWeight.bold)),
         content: Text('Are you sure you want to logout?',
             style: TextStyle(color: theme.textSecondary)),
         actions: [
@@ -219,9 +254,21 @@ class _InternTimeLogsPageState extends State<InternTimeLogsPage> {
     final mobile = _isMobile(context);
 
     final cards = [
-      _StatCard(isDarkMode: isDarkMode, label: 'Present Days',  value: '$presentDays',  accentColor: const Color(0xFF4CAF50)),
-      _StatCard(isDarkMode: isDarkMode, label: 'Late Arrivals', value: '$lateArrivals', accentColor: const Color(0xFFFFA726)),
-      _StatCard(isDarkMode: isDarkMode, label: 'Absences',      value: '$absences',     accentColor: const Color(0xFFEF5350)),
+      _StatCard(
+          isDarkMode: isDarkMode,
+          label: 'Present Days',
+          value: '$presentDays',
+          accentColor: const Color.fromARGB(255, 255, 255, 255)),
+      _StatCard(
+          isDarkMode: isDarkMode,
+          label: 'Late Arrivals',
+          value: '$lateArrivals',
+          accentColor: const Color(0xFFFFA726)),
+      _StatCard(
+          isDarkMode: isDarkMode,
+          label: 'Absences',
+          value: '$absences',
+          accentColor: const Color(0xFFEF5350)),
     ];
 
     final gap = SizedBox(width: mobile ? 10.0 : 12.0);
@@ -272,14 +319,25 @@ class _InternTimeLogsPageState extends State<InternTimeLogsPage> {
             onToggleMode: (val) {
               final now = DateTime.now();
               const months = [
-                'January', 'February', 'March', 'April', 'May', 'June',
-                'July', 'August', 'September', 'October', 'November', 'December'
+                'January',
+                'February',
+                'March',
+                'April',
+                'May',
+                'June',
+                'July',
+                'August',
+                'September',
+                'October',
+                'November',
+                'December'
               ];
               setState(() {
                 _isSpecificDate = val;
                 if (val) {
                   selectedDate = now;
-                  selectedMonth = '${months[now.month - 1]} ${now.day}, ${now.year}';
+                  selectedMonth =
+                      '${months[now.month - 1]} ${now.day}, ${now.year}';
                 } else {
                   selectedDate = null;
                   selectedMonth = '${months[now.month - 1]} ${now.year}';
@@ -289,8 +347,18 @@ class _InternTimeLogsPageState extends State<InternTimeLogsPage> {
             },
             onMonthChanged: (DateTime picked) {
               const months = [
-                'January', 'February', 'March', 'April', 'May', 'June',
-                'July', 'August', 'September', 'October', 'November', 'December'
+                'January',
+                'February',
+                'March',
+                'April',
+                'May',
+                'June',
+                'July',
+                'August',
+                'September',
+                'October',
+                'November',
+                'December'
               ];
               setState(() {
                 selectedDate = picked;
@@ -346,7 +414,8 @@ class _StatCard extends StatelessWidget {
     final mobile = MediaQuery.of(context).size.width < 600;
     final bg = isDarkMode ? const Color(0xFF2E2E2E) : const Color(0xFFF5F5F5);
     final labelColor = isDarkMode ? Colors.grey[400] : Colors.grey[600];
-    final valueColor = accentColor ?? (isDarkMode ? Colors.white : Colors.black87);
+    final valueColor =
+        accentColor ?? (isDarkMode ? Colors.white : Colors.black87);
 
     return Container(
       padding: EdgeInsets.symmetric(
