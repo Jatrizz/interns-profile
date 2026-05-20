@@ -5,6 +5,7 @@ import (
 	"encoding/json"
 	"log"
 	"net/http"
+	"net/mail"
 	"os"
 	"strconv"
 	"strings"
@@ -54,7 +55,7 @@ func Login(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	if !strings.Contains(req.Email, "@") {
+	if _, err := mail.ParseAddress(req.Email); err != nil {
 		jsonError(w, "Invalid email format", http.StatusBadRequest)
 		return
 	}
@@ -124,7 +125,7 @@ func Login(w http.ResponseWriter, r *http.Request) {
 	// GENERATE JWT
 	secret := os.Getenv("JWT_SECRET")
 	if secret == "" {
-		secret = "your-secret-key"
+		log.Fatal("JWT_SECRET environment variable is not set")
 	}
 
 	token := jwt.NewWithClaims(jwt.SigningMethodHS256, jwt.MapClaims{

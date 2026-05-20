@@ -4,6 +4,7 @@ import (
 	"database/sql"
 	"fmt"
 	"log"
+	"os"
 
 	_ "github.com/lib/pq"
 )
@@ -11,12 +12,11 @@ import (
 var db *sql.DB
 
 func connectDB() error {
-	// Use the database values directly
-	dbHost := "localhost"
-	dbUser := "postgres"
-	dbPassword := "postgres123"
-	dbName := "internsprofile"
-	dbPort := "5432"
+	dbHost := os.Getenv("DB_HOST")
+	dbUser := os.Getenv("DB_USER")
+	dbPassword := os.Getenv("DB_PASSWORD")
+	dbName := os.Getenv("DB_NAME")
+	dbPort := os.Getenv("DB_PORT")
 
 	connStr := fmt.Sprintf(
 		"host=%s user=%s password=%s dbname=%s port=%s sslmode=disable",
